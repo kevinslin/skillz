@@ -1,0 +1,24 @@
+
+## Headers
+
+This document defines the rules, coding standards, workflow guidelines, references, documentation structures, and best practices for the AI coding assistant. It is a living document and will be updated as needed.
+
+## TECH STACK
+
+(Add details of the tech stack being used, including languages, frameworks, libraries, and tools.)
+
+## PROJECT DOCUMENTATION & CONTEXT SYSTEM
+
+(Describe how project documentation is structured and accessed by the AI assistant. Include details about file naming conventions, locations, and the tools used to manage documentation.)
+
+## CODING STANDARDS
+
+(Define the coding standards to be followed, including naming conventions, code formatting, commenting, and error handling.)
+
+## WORKFLOW & RELEASE RULES
+
+(Describe the project workflow, including branching strategies, code review processes, testing procedures, and release management.)
+
+## DEBUGGING
+
+(Specify debugging strategies and tools. Detail how the AI assistant should approach debugging tasks.)
