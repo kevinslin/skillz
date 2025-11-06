@@ -56,6 +56,7 @@ export async function renderSkills(skills: Skill[], config: Config, cwd?: string
     })),
     lastSync: new Date().toISOString(),
     sources: config.skillDirectories,
+    sectionName: config.skillsSectionName,
   };
 
   return await renderTemplate(templatePath, data);

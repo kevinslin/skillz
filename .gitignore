@@ -32,3 +32,5 @@ Thumbs.db
 *.backup-*
 .specstory
 .specstory
+.claude/settings.local.json
+llm

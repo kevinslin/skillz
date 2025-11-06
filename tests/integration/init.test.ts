@@ -65,7 +65,7 @@ describe('init command', () => {
 
     // Check AGENTS.md was updated with managed section
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+    expect(agentsContent).toContain('## Additional Instructions');
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
     expect(agentsContent).toMatchSnapshot();

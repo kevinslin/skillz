@@ -42,19 +42,9 @@ export async function initCommand(options: InitOptions): Promise<void> {
     config = getDefaultConfig(options.preset);
     info(`Using preset: ${options.preset}`);
   } else {
-    // Detect existing configuration
-    const detected: DetectedConfig = await inferConfig(cwd);
-
-    if (detected.targets.length > 0) {
-      info(`Detected existing target files: ${detected.targets.join(', ')}`);
-    }
-
     config = getDefaultConfig();
-
-    if (detected.targets.length > 0) {
-      config.targets = detected.targets;
-    }
   }
+
   // Override with command line options
   if (options.target) {
     config.targets = [options.target];
@@ -73,6 +63,19 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   if (options.includeInstructions !== undefined) {
     config.includeInstructions = options.includeInstructions;
+  }
+
+  // if targets, additionalSkills not specified, infer from existing files
+  if (!config.targets.length && !config.additionalSkills.length) {
+    const detected: DetectedConfig = await inferConfig(cwd);
+    if (detected.targets.length > 0) {
+      info(`Detected existing target files: ${detected.targets.join(', ')}`);
+      config.targets = detected.targets;
+    }
+    if (detected.skillDirectories.length > 0) {
+      info(`Detected existing skill directories: ${detected.skillDirectories.join(', ')}`);
+      config.additionalSkills = detected.skillDirectories;
+    }
   }
 
   // Save configuration

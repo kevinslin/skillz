@@ -59,7 +59,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   }
 
   // Load cache
-  let cache = await loadCache(cwd);
+  const cache = await loadCache(cwd);
 
   // Detect changes if not forcing and cache exists
   if (!options.force && cache) {
@@ -80,7 +80,9 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     if (options.verbose) {
       for (const change of changes) {
         if (change.type !== 'unchanged') {
-          debug(`  ${formatChangeType(change.type)} ${formatSkillName(change.skill?.name || 'unknown')}`);
+          debug(
+            `  ${formatChangeType(change.type)} ${formatSkillName(change.skill?.name || 'unknown')}`
+          );
         }
       }
     }

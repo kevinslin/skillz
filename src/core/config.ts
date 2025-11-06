@@ -51,6 +51,7 @@ export function getDefaultConfig(preset?: string): Config {
     ignore: [],
     includeInstructions: false,
     autoSync: false,
+    skillsSectionName: '## Additional Instructions',
   };
 
   if (preset === 'agentsmd') {

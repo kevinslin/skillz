@@ -2,78 +2,109 @@ import type { Skill, Config, ManagedSection, TargetContent } from '../types/inde
 import { safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
 import { renderSkills } from './template-engine.js';
 
-const BEGIN_MARKER = '<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->';
-const END_MARKER = '<!-- END SKILLZ MANAGED SECTION -->';
+/**
+ * Find all occurrences of a section name in content
+ */
+function findSectionOccurrences(content: string, sectionName: string): number[] {
+  const lines = content.split('\n');
+  const occurrences: number[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === sectionName.trim()) {
+      occurrences.push(i);
+    }
+  }
+
+  return occurrences;
+}
 
 /**
- * Extract managed section from content
+ * Validate that section name appears at most once
  */
-export function extractManagedSection(content: string): ManagedSection | null {
-  const beginIndex = content.indexOf(BEGIN_MARKER);
-  const endIndex = content.indexOf(END_MARKER);
+export function validateNoDuplicateSections(content: string, sectionName: string): void {
+  const occurrences = findSectionOccurrences(content, sectionName);
 
-  if (beginIndex === -1 || endIndex === -1) {
+  if (occurrences.length > 1) {
+    throw new Error(
+      `Section "${sectionName}" appears ${occurrences.length} times in the target file (lines: ${occurrences.map(n => n + 1).join(', ')}). ` +
+      `Please manually remove duplicate sections or choose a different skillsSectionName in .skills.json.`
+    );
+  }
+}
+
+/**
+ * Extract managed section from content based on section name
+ * Returns everything from the section heading to EOF
+ */
+export function extractManagedSection(content: string, sectionName: string): ManagedSection | null {
+  const lines = content.split('\n');
+  let startLine = -1;
+
+  // Find the section heading
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === sectionName.trim()) {
+      startLine = i;
+      break;
+    }
+  }
+
+  if (startLine === -1) {
     return null;
   }
 
-  const sectionContent = content.substring(beginIndex, endIndex + END_MARKER.length);
-
-  // Extract metadata from HTML comments
-  const lastSyncMatch = sectionContent.match(/<!-- Last synced: (.+?) -->/);
-  const sourcesMatch = sectionContent.match(/<!-- Source: (.+?) -->/);
+  // Extract from section to end of file
+  const sectionLines = lines.slice(startLine);
+  const sectionContent = sectionLines.join('\n');
 
   return {
-    startLine: content.substring(0, beginIndex).split('\n').length - 1,
-    endLine: content.substring(0, endIndex + END_MARKER.length).split('\n').length,
+    startLine,
+    endLine: lines.length,
     content: sectionContent,
     metadata: {
-      lastSync: lastSyncMatch ? lastSyncMatch[1] : '',
-      sources: sourcesMatch ? sourcesMatch[1].split(', ') : [],
+      lastSync: '',
+      sources: [],
     },
   };
 }
 
 /**
  * Replace managed section in content
+ * Replaces everything from the section heading to EOF, or appends if not found
  */
-export function replaceManagedSection(content: string, newSection: string): string {
-  const managedSection = extractManagedSection(content);
+export function replaceManagedSection(
+  content: string,
+  newSection: string,
+  sectionName: string
+): string {
+  const managedSection = extractManagedSection(content, sectionName);
 
   if (!managedSection) {
     // No existing section, append to end
-    return content.trim() + '\n\n' + newSection + '\n';
+    const trimmedContent = content.trim();
+    return trimmedContent + (trimmedContent ? '\n\n' : '') + newSection + '\n';
   }
 
-  // Replace existing section
-  const before = content.substring(0, content.indexOf(BEGIN_MARKER));
-  const after = content.substring(content.indexOf(END_MARKER) + END_MARKER.length);
+  // Replace existing section (from section heading to EOF)
+  const lines = content.split('\n');
+  const before = lines.slice(0, managedSection.startLine).join('\n');
+  const trimmedBefore = before.trim();
 
-  return before + newSection + after;
+  return trimmedBefore + (trimmedBefore ? '\n\n' : '') + newSection + '\n';
 }
 
 /**
- * Create managed section
+ * Create managed section content
  */
 export async function createManagedSection(skills: Skill[], config: Config, cwd: string): Promise<string> {
-  const lastSync = new Date().toISOString();
-  const sources = [...config.skillDirectories, ...config.additionalSkills].join(', ');
-
-  const skillsContent = await renderSkills(skills, config, cwd);
-
-  return `${BEGIN_MARKER}
-<!-- Last synced: ${lastSync} -->
-<!-- Source: ${sources} -->
-
-${skillsContent}
-${END_MARKER}`;
+  return await renderSkills(skills, config, cwd);
 }
 
 /**
  * Read target file
  */
-export async function readTargetFile(filePath: string): Promise<TargetContent> {
+export async function readTargetFile(filePath: string, sectionName: string): Promise<TargetContent> {
   const fullContent = await safeReadFile(filePath);
-  const managedSection = fullContent ? extractManagedSection(fullContent) : null;
+  const managedSection = fullContent ? extractManagedSection(fullContent, sectionName) : null;
 
   return {
     fullContent,
@@ -91,9 +122,17 @@ export async function writeTargetFile(
   config: Config,
   cwd: string
 ): Promise<void> {
-  const targetContent = await readTargetFile(filePath);
+  const targetContent = await readTargetFile(filePath, config.skillsSectionName);
+
+  // Validate no duplicate sections before writing
+  validateNoDuplicateSections(targetContent.fullContent, config.skillsSectionName);
+
   const newSection = await createManagedSection(skills, config, cwd);
-  const updatedContent = replaceManagedSection(targetContent.fullContent, newSection);
+  const updatedContent = replaceManagedSection(
+    targetContent.fullContent,
+    newSection,
+    config.skillsSectionName
+  );
 
   await safeWriteFile(filePath, updatedContent);
 }

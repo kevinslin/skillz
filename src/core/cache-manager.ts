@@ -21,7 +21,7 @@ export async function loadCache(cwd: string): Promise<CacheFile | null> {
   }
 
   try {
-    const cache = JSON.parse(content);
+    const cache = JSON.parse(content) as CacheFile;
     const validation = validateCacheFile(cache);
 
     if (!validation.success) {
@@ -29,7 +29,7 @@ export async function loadCache(cwd: string): Promise<CacheFile | null> {
       return null;
     }
 
-    return cache as CacheFile;
+    return cache;
   } catch {
     return null;
   }

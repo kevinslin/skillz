@@ -27,7 +27,7 @@ describe('sync command', () => {
     expect(result.exitCode).toBe(0);
 
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+    expect(agentsContent).toContain('## Additional Instructions');
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
   });
@@ -53,7 +53,7 @@ describe('sync command', () => {
     const updatedContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(updatedContent).toContain('My Project Agents');
     expect(updatedContent).toContain('Project Context');
-    expect(updatedContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+    expect(updatedContent).toContain('## Additional Instructions');
   });
 
   it('should detect and sync only changed skills', async () => {
@@ -96,5 +96,35 @@ describe('sync command', () => {
     // File should not be modified
     const afterContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(afterContent).toBe(originalContent);
+  });
+
+  it('should respect glob ignore patterns from config', async () => {
+    const ignoredDir = path.join(workspace.skillsDir, 'sandbox.test');
+    await fs.ensureDir(ignoredDir);
+    await fs.writeFile(
+      path.join(ignoredDir, 'SKILL.md'),
+      `---
+name: sandbox-test
+description: Skill used to verify *.test ignore patterns
+---
+`
+    );
+
+    const configPath = path.join(workspace.root, '.skills.json');
+    const config = await fs.readJson(configPath);
+    config.ignore = ['*.test'];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+    // CLI outputs progress to stderr, which is normal - just check no errors occurred
+    expect(result.stderr).not.toContain('Error');
+    expect(result.stderr).not.toContain('Failed');
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).not.toContain('sandbox-test');
   });
 });

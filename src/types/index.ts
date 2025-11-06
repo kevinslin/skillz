@@ -23,6 +23,7 @@ export interface Config {
   ignore: string[];
   includeInstructions: boolean;
   autoSync: boolean;
+  skillsSectionName: string;
 }
 
 /**
@@ -148,4 +149,5 @@ export interface TemplateData {
   }>;
   lastSync: string;
   sources: string[];
+  sectionName: string;
 }
