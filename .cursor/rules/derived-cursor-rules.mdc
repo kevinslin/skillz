@@ -27,3 +27,19 @@ This document defines the rules, coding standards, workflow guidelines, referenc
 ## DEBUGGING
 
 (Specify debugging strategies and tools. Detail how the AI assistant should approach debugging tasks.)
+- When encountering ESLint errors related to `tsconfig.json` inclusion, consider creating a separate `tsconfig.eslint.json` that includes test files. This allows for type-aware linting in tests without affecting the main build configuration. The `tsconfig.eslint.json` should:
+    - Extend the main `tsconfig.json`.
+    - Set `"noEmit": true`.
+    - Set `"rootDir": "."`.
+    - Include source and test files in the `"include"` array (e.g., `"include": ["src/**/*.ts", "tests/**/*.ts"]`).
+    - Exclude `node_modules` and `dist` directories in the `"exclude"` array (e.g., `"exclude": ["node_modules", "dist"]`).
+- Ensure ESLint configuration (`.eslintrc.cjs`) uses the correct `tsconfig.eslint.json` for parser options:
+```javascript
+parserOptions: {
+  ecmaVersion: 2022,
+  sourceType: 'module',
+  project: './tsconfig.eslint.json',
+},
+```
+- When reading JSON configuration files in tests, explicitly type the result using generics (e.g., `fs.readJson<SkillsConfig>(configPath)`) to avoid `any` types and improve type safety.
+- After making changes to ESLint configurations or test files, run ESLint directly on the test files (e.g., `npx eslint tests/integration/init.test.ts`) to verify the fixes.

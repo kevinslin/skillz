@@ -30,3 +30,4 @@ Thumbs.db
 # Cache
 .skillz-cache.json
 *.backup-*
+.specstory
