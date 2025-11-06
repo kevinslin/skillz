@@ -1,0 +1,206 @@
+# Skillz CLI
+
+Skillz is a TypeScript-powered command line tool that lets you manage Claude Agent skills and surface them inside any AI development environment. It scans local and global skill directories, renders them through configurable templates, and keeps downstream instruction files such as `AGENTS.md`, `.cursorrules`, or `.github/copilot-instructions.md` in sync.
+
+## Key Features
+- Discover skills from project-local `.claude/skills/` and user-level `~/.claude/skills/` folders.
+- Normalize skill output across multiple LLM tooling targets with a single managed section format.
+- Apply custom Handlebars templates or embed full instruction bodies on demand.
+- Detect skill changes via hashing and warn about manual edits before overwriting targets.
+- Safeguard edits with automatic backups and a rollback command to restore the previous sync.
+
+## Requirements
+- Node.js 18 or newer
+- npm (or pnpm/yarn) for dependency management
+
+## Installation
+```bash
+git clone https://github.com/your-org/skillz.git
+cd skillz
+npm install
+npm run build
+npm link   # optional: expose the CLI globally during development
+```
+
+Once published to npm you will be able to install it directly:
+```bash
+npm install -g skillz-cli
+```
+
+## Quick Start
+1. Initialize the project and generate `.skills.json`:
+   ```bash
+   skillz init --preset agentsmd
+   ```
+2. Sync skills into your target file:
+   ```bash
+   skillz sync
+   ```
+
+After syncing, the CLI maintains a managed section similar to:
+```markdown
+<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
+<!-- Last synced: 2025-01-01T12:34:56Z -->
+<!-- Source: .claude/skills/, ~/.claude/skills/ -->
+- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices
+<!-- END SKILLZ MANAGED SECTION -->
+```
+
+## Configuration
+The CLI stores project settings in `.skills.json`. A typical file looks like:
+```json
+{
+  "version": "1.0",
+  "preset": "agentsmd",
+  "targets": ["AGENTS.md"],
+  "skillDirectories": [".claude/skills"],
+  "additionalSkills": [],
+  "ignore": ["*.test"],
+  "includeInstructions": false,
+  "autoSync": false,
+  "backup": true
+}
+```
+
+Key fields:
+- `targets`: Instruction files that receive the managed section.
+- `skillDirectories` / `additionalSkills`: Folders that will be scanned for `SKILL.md`.
+- `ignore`: Glob patterns to exclude skills.
+- `includeInstructions`: When `true`, embeds full skill text instead of links.
+- `backup`: Controls whether the CLI writes timestamped backups before updates.
+
+You can edit `.skills.json` manually or use `skillz config` (see below).
+
+## Commands
+
+### `skillz init`
+Initialize Skillz in the current directory, detect existing targets, and create `.skills.json`.
+
+Options:
+- `--preset <name>`: Apply a preset (`agentsmd`, `aider`) for default targets.
+- `--target <path>`: Supply one or more custom target files.
+- `--additional-skills <path>`: Add extra skill directories (repeatable).
+- `--global-skills`: Include the global `~/.claude/skills/` directory.
+- `--template <path>`: Use a custom Handlebars template for rendered output.
+- `--include-instructions`: Embed full skill bodies instead of link lists.
+- `--no-sync`: Skip the initial synchronization run.
+
+Examples:
+```bash
+skillz init
+skillz init --preset aider --global-skills
+skillz init --target .cursorrules --template ./templates/company.hbs
+```
+
+### `skillz sync`
+Scan configured skill directories and update every target file with the latest skills.
+
+Options:
+- `--dry-run`: Show pending updates without touching the filesystem.
+- `--force`: Ignore change detection and rewrite targets even if nothing changed.
+- `--no-backup`: Skip automatic backup creation.
+- `--verbose`: Print detailed scanning and write activity.
+- `--only <skill>`: Restrict the sync to one or more named skills (repeatable).
+
+Examples:
+```bash
+skillz sync
+skillz sync --dry-run
+skillz sync --only python-expert --only react-patterns --verbose
+```
+
+### `skillz list`
+Display available skills in the configured directories.
+
+Options:
+- `--format <table|json|markdown>`: Choose the output format (`table` is default).
+- `--synced-only`: Limit the list to skills currently present in targets.
+- `--unsynced-only`: List skills that have not been synced yet.
+
+Examples:
+```bash
+skillz list
+skillz list --format json --unsynced-only
+```
+
+### `skillz validate`
+Validate `.skills.json` and all discovered `SKILL.md` files.
+
+Checks include schema validation, required frontmatter, naming conventions, description length, file accessibility, and duplicate skill names.
+
+Example:
+```bash
+skillz validate
+```
+
+### `skillz config`
+Inspect or modify `.skills.json` without opening the file manually.
+
+Usage:
+- `skillz config`: Print the entire configuration.
+- `skillz config <key>`: Show a single key (e.g., `targets`).
+- `skillz config <key> <value>`: Set a new value.
+- Array helpers: `--add <value>` and `--remove <value>` when working with list fields like `additionalSkills`.
+
+Examples:
+```bash
+skillz config
+skillz config targets
+skillz config backup false
+skillz config additionalSkills --add ~/company/skills
+```
+
+### `skillz watch`
+Watch skill directories and run `sync` automatically whenever files change.
+
+Options:
+- `--interval <ms>`: Adjust the polling interval (default `1000` ms).
+- `--no-debounce`: Disable the default 2-second debounce before syncing.
+
+Examples:
+```bash
+skillz watch
+skillz watch --interval 2000
+```
+
+### `skillz clean`
+Remove the Skillz-managed sections and optional cache files.
+
+Options:
+- `--dry-run`: Preview what would be removed.
+- `--keep-backup`: Leave backup files in place after cleaning.
+- `--force`: Skip the confirmation prompt.
+
+Examples:
+```bash
+skillz clean
+skillz clean --dry-run --keep-backup
+```
+
+### `skillz rollback`
+Restore the most recent backup generated during sync, effectively undoing the last update.
+
+Options:
+- `--target <path>`: Restore a specific target (repeatable). Defaults to all known targets.
+- `--force`: Skip interactive confirmation.
+
+Examples:
+```bash
+skillz rollback
+skillz rollback --target AGENTS.md --force
+```
+
+## Development Scripts
+- `npm run build`: Compile TypeScript sources to `dist/`.
+- `npm run dev`: Run the CLI in watch mode via `tsx`.
+- `npm run test`: Run the Jest test suite.
+- `npm run lint`: Run ESLint.
+- `npm run format`: Run Prettier.
+
+## Contributing
+1. Fork the repository and create a branch for your changes.
+2. Run the unit and integration test suites (`npm run test`).
+3. Open a pull request with a clear description of the problem and proposed solution.
+
+## License
+Skillz CLI is released under the MIT License. See `LICENSE` for details once the repository is published.

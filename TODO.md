@@ -86,7 +86,6 @@
     ignore: string[];
     includeInstructions: boolean;
     autoSync: boolean;
-    backup: boolean;
   }
   ```
 - [ ] Define `CacheFile` interface
@@ -183,7 +182,6 @@
 - [ ] Implement `saveConfig(config: Config, cwd: string): Promise<void>`
   - Validate config before saving
   - Pretty print JSON with 2-space indent
-  - Create backup if file exists
 - [ ] Implement `getDefaultConfig(preset?: string): Config`
   - Return defaults based on preset
   - agentsmd: targets = ["AGENTS.md"]
@@ -325,7 +323,6 @@
   - Create new managed section
   - Replace old section
   - Write atomically
-  - Create backup if enabled
 
 ## Phase 8: Change Detection
 
@@ -354,23 +351,6 @@
 - [ ] Implement `summarizeChanges(changes: SkillChange[]): ChangeSummary`
   - Count each type
   - Return summary object
-
-### 8.2 Backup Manager
-- [ ] Create `src/core/backup-manager.ts`
-- [ ] Implement `createBackup(filePath: string): Promise<string>`
-  - Generate backup filename: `{file}.backup-{timestamp}`
-  - Copy file to backup location
-  - Return backup path
-- [ ] Implement `restoreBackup(backupPath: string, targetPath: string): Promise<void>`
-  - Copy backup to target
-  - Validate restoration
-- [ ] Implement `listBackups(filePath: string): Promise<string[]>`
-  - Find all backups for file
-  - Sort by timestamp
-  - Return array of paths
-- [ ] Implement `pruneBackups(filePath: string, keep: number): Promise<void>`
-  - Keep only N most recent backups
-  - Delete older backups
 
 ## Phase 9: Command Implementation
 
@@ -420,8 +400,6 @@
 - [ ] Implement --force mode
   - Skip change detection
   - Sync all skills
-- [ ] Implement --no-backup mode
-  - Skip backup creation
 - [ ] Implement verbose logging
   - Honor --verbose flag for detailed output
   - Surface change detection details and file paths when verbose
@@ -429,7 +407,6 @@
   - Parse skill names
   - Filter to only specified skills
 - [ ] Implement file writing
-  - Create backups if enabled
   - Write each target file
   - Update cache
 - [ ] Add progress indicators
@@ -437,7 +414,6 @@
   - Progress for writing
   - Success messages
 - [ ] Handle errors gracefully
-  - Restore from backup on failure
   - Show clear error messages
 
 ### 9.3 List Command
@@ -543,28 +519,10 @@
 - [ ] Implement cache removal
   - Delete .skillz-cache.json
   - Show confirmation
-- [ ] Implement --keep-backup flag
-  - Create backup before cleaning
-  - Keep backup after cleaning
 - [ ] Add confirmation prompt
   - Ask user to confirm (unless --force)
   - Show what will be removed
 - [ ] Show success message
-
-### 9.8 Rollback Command
-- [ ] Create `src/commands/rollback.ts`
-- [ ] Implement backup discovery
-  - Locate most recent backup for each target file
-  - Support targeting specific files or all via flags
-- [ ] Implement confirmation flow
-  - Show backup metadata before restoring
-  - Require confirmation unless --force provided
-- [ ] Implement restore logic
-  - Use backup manager to restore selected backup
-  - Refresh cache or warn user to resync
-- [ ] Handle error reporting
-  - Surface missing backup errors clearly
-  - Exit with non-zero code on rollback failure
 
 ## Phase 10: CLI Integration
 
@@ -581,7 +539,6 @@
   - config
   - watch
   - clean
-  - rollback
 - [ ] Add command aliases
   - `s` for sync
   - `l` for list
@@ -672,16 +629,12 @@
   - Modify one skill
   - Second sync
   - Verify only modified skill synced
-- [ ] Test: Create backup
-  - Verify backup file created
 - [ ] Test: Dry run mode
   - Verify file not modified
   - Verify output shows what would change
 - [ ] Test: Only specific skills (--only)
   - Sync with --only flag
   - Verify only specified skill synced
-- [ ] Test: No backup mode (--no-backup)
-  - Verify no backup created
 
 ### 11.5 Integration Tests - List Command
 - [ ] Create tests/integration/list.test.ts
@@ -723,18 +676,9 @@
 - [ ] Test: Remove managed section
 - [ ] Test: Remove cache file
 - [ ] Test: Dry run mode
-- [ ] Test: Keep backup flag
 - [ ] Test: Confirmation prompt
 
-### 11.10 Integration Tests - Rollback Command
-- [ ] Create tests/integration/rollback.test.ts
-- [ ] Test: Rollback to latest backup
-- [ ] Test: List available backups
-- [ ] Test: Rollback specific file
-- [ ] Test: Confirmation prompt
-- [ ] Test: Error when no backup exists
-
-### 11.11 End-to-End Workflows
+### 11.10 End-to-End Workflows
 - [ ] Test: Complete workflow
   - Init with preset
   - Verify sync
@@ -908,7 +852,7 @@
    - Implement init and sync first (MVP)
    - Write tests for each command as you build
    - Then list, validate, config
-   - Finally watch, clean, and rollback
+   - Finally watch and clean
 
 5. **Week 5**: Phases 10-11 (CLI Integration, Complete Testing)
    - Wire everything together

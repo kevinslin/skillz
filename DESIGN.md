@@ -45,8 +45,7 @@ All targets use the same managed section format with skill links.
   ],
   "ignore": ["*.test", "experimental-*"],
   "includeInstructions": false, // Include full SKILL.md body or just link to skill
-  "autoSync": false,
-  "backup": true
+  "autoSync": false
 }
 ```
 
@@ -127,15 +126,13 @@ Synchronizes skills from source directories to target files.
 1. Reads `.skills.json` configuration
 2. Scans all configured skill directories
 3. Parses SKILL.md files and extracts frontmatter + instructions
-4. Creates backup of target file(s) if enabled
-5. Generates skill section using template
-6. Updates target file(s) with skill information
-7. Reports summary of changes
+4. Generates skill section using template
+5. Updates target file(s) with skill information
+6. Reports summary of changes
 
 **Options:**
 - `--dry-run` - Show what would be synced without making changes
 - `--force` - Overwrite target even if manual edits detected
-- `--no-backup` - Skip backup creation
 - `--verbose` - Show detailed operation logs
 - `--only <skill-name>` - Sync only specific skill(s)
 
@@ -214,7 +211,6 @@ Removes the managed section from target file(s).
 
 **Options:**
 - `--dry-run` - Show what would be removed
-- `--keep-backup` - Keep backup after cleaning
 
 #### `skillz validate`
 
@@ -257,7 +253,6 @@ skillz config targets
 
 # Set value
 skillz config autoSync true
-skillz config backup false
 
 # Add to array
 skillz config additionalSkills --add /new/path
@@ -398,22 +393,10 @@ function calculateSkillHash(skill: Skill): string {
 - Automatically recreated if missing (treats all skills as new)
 - Use `skillz clean` to remove cache along with managed section
 
-### 5. Backup Strategy
-
-```typescript
-interface BackupManager {
-  create(filePath: string): string; // Returns backup path
-  restore(backupPath: string): void;
-  list(filePath: string): string[]; // List all backups
-  prune(filePath: string, keep: number): void; // Keep only N recent backups
-}
-```
-
-### 6. Safety Features
+### 5. Safety Features
 
 - **Manual Edit Detection**: Warn if managed section was manually edited
 - **Atomic Writes**: Use temp files + rename for atomic updates
-- **Rollback**: Provide `skillz rollback` command to undo last sync
 - **Validation**: Always validate before writing
 - **Dry Run**: Support for all destructive operations
 
@@ -448,8 +431,8 @@ skillz/
 │   │   ├── skill-parser.ts    # SKILL.md parsing
 │   │   ├── skill-scanner.ts   # Directory scanning
 │   │   ├── change-detector.ts # Hash-based change detection
-│   │   ├── target-manager.ts  # Target file read/write operations
-│   │   └── backup-manager.ts  # Backup/restore logic
+│   │   ├── cache-manager.ts   # Cache file management
+│   │   └── target-manager.ts  # Target file read/write operations
 │   ├── templates/
 │   │   ├── skills-list.hbs    # Default template (links only)
 │   │   └── skills-full.hbs    # Full content template
@@ -510,9 +493,8 @@ Use `pkg` or `ncc` to create standalone binaries for:
 5. **CI/CD Integration**: GitHub Actions for auto-syncing
 6. **Multi-workspace**: Support for monorepos with multiple skill configs
 7. **Skill Dependencies**: Allow skills to depend on other skills
-8. **Versioning**: Track skill versions and support rollback
-9. **Skill Testing**: Framework for testing skill effectiveness
-10. **Analytics**: Track which skills are most used/effective
+8. **Skill Testing**: Framework for testing skill effectiveness
+9. **Analytics**: Track which skills are most used/effective
 
 ## Migration Path
 
