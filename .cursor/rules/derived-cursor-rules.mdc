@@ -27,3 +27,4 @@ This document defines the rules, coding standards, workflow guidelines, referenc
 ## DEBUGGING
 
 (Specify debugging strategies and tools. Detail how the AI assistant should approach debugging tasks.)
+- When encountering ESLint errors related to `tsconfig.json` not including specific files (e.g., test files), a common solution is to create a dedicated `tsconfig.eslint.json` file. This file extends the main `tsconfig.json`, includes the relevant files (e.g., test files), and sets `noEmit` to `true`. The `.eslintrc.cjs` file should then be updated to use this `tsconfig.eslint.json` for parser options.
