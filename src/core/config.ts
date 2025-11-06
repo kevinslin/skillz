@@ -9,30 +9,19 @@ const CONFIG_FILE = '.skills.json';
  * Load configuration from file
  */
 export async function loadConfig(cwd: string): Promise<Config | null> {
-  const configPath = path.join(cwd, CONFIG_FILE);
-  const exists = await fileExists(configPath);
+  const config = await detectExistingConfig(cwd);
 
-  if (!exists) {
+  if (!config) {
     return null;
   }
 
-  const content = await safeReadFile(configPath);
-  if (!content) {
-    return null;
+  const validation = validateConfig(config);
+
+  if (!validation.success) {
+    throw new Error(`Invalid configuration: ${JSON.stringify(validation.error.errors)}`);
   }
 
-  try {
-    const config = JSON.parse(content);
-    const validation = validateConfig(config);
-
-    if (!validation.success) {
-      throw new Error(`Invalid configuration: ${JSON.stringify(validation.error.errors)}`);
-    }
-
-    return config as Config;
-  } catch (error) {
-    throw new Error(`Failed to parse config file: ${(error as Error).message}`);
-  }
+  return config;
 }
 
 /**
@@ -87,13 +76,35 @@ export function getDefaultConfig(preset?: string): Config {
 }
 
 /**
- * Detect existing configuration in directory
+ * Read existing configuration in directory if present
  */
-export async function detectExistingConfig(cwd: string): Promise<DetectedConfig> {
+export async function detectExistingConfig(cwd: string): Promise<Config | null> {
+  const configPath = path.join(cwd, CONFIG_FILE);
+  const exists = await fileExists(configPath);
+
+  if (!exists) {
+    return null;
+  }
+
+  const content = await safeReadFile(configPath);
+  if (!content) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(content) as Config;
+  } catch (error) {
+    throw new Error(`Failed to parse config file: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Infer configuration details from existing files and directories
+ */
+export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   const targets: string[] = [];
   const skillDirectories: string[] = [];
 
-  // Check for common target files
   const potentialTargets = ['AGENTS.md', '.cursorrules', '.aider/conventions.md'];
 
   for (const target of potentialTargets) {
@@ -103,8 +114,10 @@ export async function detectExistingConfig(cwd: string): Promise<DetectedConfig>
     }
   }
 
-  // Check for skill directories
-  const potentialSkillDirs = ['.claude/skills', path.join(process.env.HOME || '~', '.claude/skills')];
+  const potentialSkillDirs = [
+    '.claude/skills',
+    path.join(process.env.HOME || '~', '.claude/skills'),
+  ];
 
   for (const dir of potentialSkillDirs) {
     const resolvedDir = dir.startsWith('~') ? dir : path.join(cwd, dir);
@@ -113,13 +126,9 @@ export async function detectExistingConfig(cwd: string): Promise<DetectedConfig>
     }
   }
 
-  // Check if config already exists
-  const hasExistingConfig = await fileExists(path.join(cwd, CONFIG_FILE));
-
   return {
     targets,
     skillDirectories,
-    hasExistingConfig,
   };
 }
 

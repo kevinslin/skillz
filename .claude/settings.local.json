@@ -5,7 +5,8 @@
       "Bash(npm run build:*)",
       "Bash(chmod:*)",
       "Bash(node dist/cli.js:*)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

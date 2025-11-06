@@ -116,7 +116,6 @@ export interface ValidationWarning {
 export interface DetectedConfig {
   targets: string[];
   skillDirectories: string[];
-  hasExistingConfig: boolean;
 }
 
 /**

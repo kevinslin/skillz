@@ -1,5 +1,5 @@
 import path from 'path';
-import minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import type { Skill, Config } from '../types/index.js';
 import { readDirectories, isSkillDirectory, fileExists, resolveHome } from '../utils/fs-helpers.js';
 import { parseSkill, validateSkill } from './skill-parser.js';
@@ -22,18 +22,15 @@ export async function scanDirectory(directory: string, ignore: string[] = []): P
   for (const subdir of subdirs) {
     const dirName = path.basename(subdir);
 
-    // Check if should be ignored
-    const shouldIgnore = await Promise.all(
-      ignore.map(async (pattern) => {
-        try {
-          const files = await readDirectories(subdir);
-          return minimatch.match(files, pattern, { dot: true });
-        } catch (error) {
-          warning(`Invalid ignore pattern "${pattern}": ${(error as Error).message}`);
-          return false;
-        }
-      })
-    );
+    // Check if directory name matches any ignore pattern
+    const shouldIgnore = ignore.some((pattern) => {
+      try {
+        return minimatch(dirName, pattern, { dot: true });
+      } catch (error) {
+        warning(`Invalid ignore pattern "${pattern}": ${(error as Error).message}`);
+        return false;
+      }
+    });
 
     if (shouldIgnore) {
       debug(`Ignoring directory: ${dirName}`);

@@ -1,6 +1,6 @@
 import path from 'path';
-import type { Config } from '../types/index.js';
-import { getDefaultConfig, saveConfig, detectExistingConfig } from '../core/config.js';
+import type { Config, DetectedConfig } from '../types/index.js';
+import { getDefaultConfig, saveConfig, inferConfig, detectExistingConfig } from '../core/config.js';
 import { info, success, warning } from '../utils/logger.js';
 import { fileExists, safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
 
@@ -30,12 +30,20 @@ export async function initCommand(options: InitOptions): Promise<void> {
   // Generate config based on preset or options
   let config: Config;
 
+  // if existing config, print and exit
+  const existingConfig = await detectExistingConfig(cwd);
+  if (existingConfig) {
+    info('Existing configuration detected:');
+    success(JSON.stringify(existingConfig, null, 2));
+    process.exit(0);
+  }
+
   if (options.preset) {
     config = getDefaultConfig(options.preset);
     info(`Using preset: ${options.preset}`);
   } else {
     // Detect existing configuration
-    const detected = await detectExistingConfig(cwd);
+    const detected: DetectedConfig = await inferConfig(cwd);
 
     if (detected.targets.length > 0) {
       info(`Detected existing target files: ${detected.targets.join(', ')}`);
@@ -47,7 +55,6 @@ export async function initCommand(options: InitOptions): Promise<void> {
       config.targets = detected.targets;
     }
   }
-
   // Override with command line options
   if (options.target) {
     config.targets = [options.target];
@@ -71,6 +78,8 @@ export async function initCommand(options: InitOptions): Promise<void> {
   // Save configuration
   await saveConfig(config, cwd);
   success('Created configuration file: .skills.json');
+  success('Previewing configuration...');
+  success(JSON.stringify(config, null, 2));
 
   // Add .skillz-cache.json to .gitignore
   await addToGitignore(cwd);

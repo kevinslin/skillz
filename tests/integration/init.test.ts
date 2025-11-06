@@ -4,6 +4,11 @@ import { execCli } from '../helpers/cli.js';
 import fs from 'fs-extra';
 import path from 'path';
 
+type SkillsConfig = {
+  preset: string;
+  targets: string[];
+};
+
 describe('init command', () => {
   let workspace: MockWorkspace;
 
@@ -25,7 +30,7 @@ describe('init command', () => {
     const configPath = path.join(workspace.root, '.skills.json');
     expect(await fs.pathExists(configPath)).toBe(true);
 
-    const config = await fs.readJson(configPath);
+    const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('agentsmd');
     expect(config.targets).toContain('AGENTS.md');
   });
@@ -37,7 +42,7 @@ describe('init command', () => {
 
     expect(result.exitCode).toBe(0);
 
-    const config = await fs.readJson(path.join(workspace.root, '.skills.json'));
+    const config = (await fs.readJson(path.join(workspace.root, '.skills.json'))) as SkillsConfig;
     expect(config.targets).toContain('.cursorrules');
   });
 
