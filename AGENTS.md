@@ -31,13 +31,8 @@
 - Include brief PR summaries, highlight testing evidence, and call out any follow-up tasks in `NEXT_STEPS.md` when relevant.
 - Request reviews for significant changes and respond to feedback promptly with follow-up commits.
 
-<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
-<!-- Last synced: 2025-11-06T15:39:40.515Z -->
-<!-- Source: .claude/skills -->
-
 ## Additional Instructions
 You can use skills. These are custom instructions that help you accomplish specific tasks. Your list of available skills below:
 
 - [testing](.claude/skills/testing/SKILL.md): Guidelines for writing integration and unit tests for the skillz CLI
 
-<!-- END SKILLZ MANAGED SECTION -->
