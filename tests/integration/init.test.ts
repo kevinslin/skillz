@@ -5,8 +5,9 @@ import fs from 'fs-extra';
 import path from 'path';
 
 type SkillsConfig = {
-  preset: string;
+  preset?: string;
   targets: string[];
+  skillDirectories: string[];
 };
 
 describe('init command', () => {
@@ -69,5 +70,41 @@ describe('init command', () => {
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
     expect(agentsContent).toMatchSnapshot();
+  });
+
+  it('should create skillz.json with no targets when no preset or target specified', async () => {
+    const result = await execCli(['init', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    expect(await fs.pathExists(configPath)).toBe(true);
+
+    const config = (await fs.readJson(configPath)) as SkillsConfig;
+    expect(config.targets).toEqual([]);
+    expect(config.preset).toBeUndefined();
+    expect(config.skillDirectories).toContain('.claude/skills');
+
+    // Output should mention skill management only
+    expect(result.stdout).toContain('No targets configured');
+    expect(result.stdout).toContain('skillz create');
+    expect(result.stdout).toContain('skillz list');
+  });
+
+  it('should not run sync when no targets configured', async () => {
+    const result = await execCli(['init'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    // Should not create cache file since no sync happened
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    expect(await fs.pathExists(cachePath)).toBe(false);
+
+    // Output should mention no targets
+    expect(result.stdout).toContain('No targets configured');
   });
 });
