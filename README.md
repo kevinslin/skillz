@@ -92,6 +92,27 @@ skillz init --preset aider --global-skills
 skillz init --target .cursorrules --template ./templates/company.hbs
 ```
 
+### `skillz create`
+Create a new skill with a template `SKILL.md` file in your configured skill directory.
+
+Usage:
+```bash
+skillz create <name> <description>
+```
+
+Options:
+- `--path <directory>`: Custom directory path (overrides config).
+- `--skill-version <semver>`: Skill version in semver format (default: `0.0.0`).
+
+The command automatically normalizes skill names by converting to lowercase, replacing underscores and spaces with hyphens, and removing special characters. The original name format is preserved in the SKILL.md frontmatter.
+
+Examples:
+```bash
+skillz create python-expert "Expert Python development assistance"
+skillz create bake_cake "Bake delicious cakes" --skill-version 1.0.0
+skillz create custom-skill "Custom location" --path ~/my-skills
+```
+
 ### `skillz sync`
 Scan configured skill directories and update every target file with the latest skills.
 
