@@ -29,7 +29,7 @@ The core `init` and `sync` commands are working. Now we need to complete the rem
 
 **Tasks:**
 1. Create `src/commands/validate.ts`
-2. Validate .skills.json with existing Zod schemas
+2. Validate skillz.json with existing Zod schemas
 3. Scan and validate all skills
 4. Check file permissions
 5. Detect duplicates

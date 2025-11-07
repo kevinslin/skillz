@@ -26,8 +26,8 @@ export function validateNoDuplicateSections(content: string, sectionName: string
 
   if (occurrences.length > 1) {
     throw new Error(
-      `Section "${sectionName}" appears ${occurrences.length} times in the target file (lines: ${occurrences.map(n => n + 1).join(', ')}). ` +
-      `Please manually remove duplicate sections or choose a different skillsSectionName in .skills.json.`
+      `Section "${sectionName}" appears ${occurrences.length} times in the target file (lines: ${occurrences.map((n) => n + 1).join(', ')}). ` +
+        `Please manually remove duplicate sections or choose a different skillsSectionName in skillz.json.`
     );
   }
 }
@@ -95,14 +95,21 @@ export function replaceManagedSection(
 /**
  * Create managed section content
  */
-export async function createManagedSection(skills: Skill[], config: Config, cwd: string): Promise<string> {
+export async function createManagedSection(
+  skills: Skill[],
+  config: Config,
+  cwd: string
+): Promise<string> {
   return await renderSkills(skills, config, cwd);
 }
 
 /**
  * Read target file
  */
-export async function readTargetFile(filePath: string, sectionName: string): Promise<TargetContent> {
+export async function readTargetFile(
+  filePath: string,
+  sectionName: string
+): Promise<TargetContent> {
   const fullContent = await safeReadFile(filePath);
   const managedSection = fullContent ? extractManagedSection(fullContent, sectionName) : null;
 

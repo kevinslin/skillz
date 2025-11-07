@@ -20,14 +20,14 @@ describe('init command', () => {
     await workspace.cleanup();
   });
 
-  it('should create .skills.json with agentsmd preset', async () => {
+  it('should create skillz.json with agentsmd preset', async () => {
     const result = await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
       cwd: workspace.root,
     });
 
     expect(result.exitCode).toBe(0);
 
-    const configPath = path.join(workspace.root, '.skills.json');
+    const configPath = path.join(workspace.root, 'skillz.json');
     expect(await fs.pathExists(configPath)).toBe(true);
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
@@ -35,14 +35,14 @@ describe('init command', () => {
     expect(config.targets).toContain('AGENTS.md');
   });
 
-  it('should create .skills.json with custom target', async () => {
+  it('should create skillz.json with custom target', async () => {
     const result = await execCli(['init', '--target', '.cursorrules', '--no-sync'], {
       cwd: workspace.root,
     });
 
     expect(result.exitCode).toBe(0);
 
-    const config = (await fs.readJson(path.join(workspace.root, '.skills.json'))) as SkillsConfig;
+    const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig;
     expect(config.targets).toContain('.cursorrules');
   });
 

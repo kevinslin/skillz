@@ -28,7 +28,7 @@ npm install -g skillz-cli
 ```
 
 ## Quick Start
-1. Initialize the project and generate `.skills.json`:
+1. Initialize the project and generate `skillz.json`:
    ```bash
    skillz init --preset agentsmd
    ```
@@ -47,7 +47,7 @@ After syncing, the CLI maintains a managed section similar to:
 ```
 
 ## Configuration
-The CLI stores project settings in `.skills.json`. A typical file looks like:
+The CLI stores project settings in `skillz.json`. A typical file looks like:
 ```json
 {
   "version": "1.0",
@@ -69,12 +69,12 @@ Key fields:
 - `includeInstructions`: When `true`, embeds full skill text instead of links.
 - `backup`: Controls whether the CLI writes timestamped backups before updates.
 
-You can edit `.skills.json` manually or use `skillz config` (see below).
+You can edit `skillz.json` manually or use `skillz config` (see below).
 
 ## Commands
 
 ### `skillz init`
-Initialize Skillz in the current directory, detect existing targets, and create `.skills.json`.
+Initialize Skillz in the current directory, detect existing targets, and create `skillz.json`.
 
 Options:
 - `--preset <name>`: Apply a preset (`agentsmd`, `aider`) for default targets.
@@ -145,7 +145,7 @@ skillz list --format json --unsynced-only
 ```
 
 ### `skillz validate`
-Validate `.skills.json` and all discovered `SKILL.md` files.
+Validate `skillz.json` and all discovered `SKILL.md` files.
 
 Checks include schema validation, required frontmatter, naming conventions, description length, file accessibility, and duplicate skill names.
 
@@ -155,7 +155,7 @@ skillz validate
 ```
 
 ### `skillz config`
-Inspect or modify `.skills.json` without opening the file manually.
+Inspect or modify `skillz.json` without opening the file manually.
 
 Usage:
 - `skillz config`: Print the entire configuration.

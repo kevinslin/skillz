@@ -41,7 +41,7 @@ Successfully implemented Phases 1-3 of the skillz CLI project with **all integra
 
 ### ✅ Phase 4: Configuration Management
 - **config.ts**: Complete configuration handling
-  - Load/save configuration from `.skills.json`
+  - Load/save configuration from `skillz.json`
   - Preset support (agentsmd, aider)
   - Auto-detection of existing configs
   - Config validation
@@ -97,8 +97,8 @@ Successfully implemented Phases 1-3 of the skillz CLI project with **all integra
 Created comprehensive integration tests covering:
 
 **Init Command (4 tests):**
-- ✓ Create .skills.json with agentsmd preset
-- ✓ Create .skills.json with custom target
+- ✓ Create skillz.json with agentsmd preset
+- ✓ Create skillz.json with custom target
 - ✓ Add .skillz-cache.json to .gitignore
 - ✓ Run sync by default after init
 

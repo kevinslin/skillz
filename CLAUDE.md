@@ -33,7 +33,7 @@ node dist/cli.js sync --dry-run --verbose
 
 ### Current Implementation
 
-- ✅ `init` - Initialize .skills.json with presets (agentsmd, aider)
+- ✅ `init` - Initialize skillz.json with presets (agentsmd, aider)
 - ✅ `sync` - Scan skills and update target files with managed sections
 - ✅ `create` - Create new skill with template (name normalization, version support)
 - ❌ `list` - Display available skills (not implemented)
@@ -47,7 +47,7 @@ node dist/cli.js sync --dry-run --verbose
 ### Data Flow
 
 ```
-1. Config (.skills.json) → specifies targets & skill directories
+1. Config (skillz.json) → specifies targets & skill directories
 2. Scanner (skill-scanner.ts) → finds all SKILL.md files
 3. Parser (skill-parser.ts) → extracts frontmatter + content
 4. Cache (.skillz-cache.json) → stores hashes for change detection
@@ -60,10 +60,10 @@ node dist/cli.js sync --dry-run --verbose
 
 **src/core/config.ts**
 
-- Loads/saves/validates `.skills.json`
+- Loads/saves/validates `skillz.json`
 - `getDefaultConfig(preset)` - Returns preset configs (agentsmd, aider)
 - `inferConfig(cwd)` - Auto-detects existing targets and skill dirs
-- `detectExistingConfig(cwd)` - Checks if .skills.json already exists
+- `detectExistingConfig(cwd)` - Checks if skillz.json already exists
 
 **src/core/skill-scanner.ts**
 
@@ -131,7 +131,7 @@ node dist/cli.js sync --dry-run --verbose
 **Key interfaces (src/types/index.ts):**
 
 - `Skill` - Parsed skill with name, description, content, path, hash
-- `Config` - .skills.json structure with targets, directories, preset, ignore patterns
+- `Config` - skillz.json structure with targets, directories, preset, ignore patterns
 - `CacheFile` - .skillz-cache.json structure with skill metadata
 - `SkillChange` - Change detection result (new/modified/removed)
 
@@ -181,7 +181,7 @@ it('should sync skills', async () => {
 
 ## Configuration Files
 
-**.skills.json** (created by init command):
+**skillz.json** (created by init command):
 
 ```json
 {
@@ -275,17 +275,15 @@ Build script copies templates to `dist/templates/` - must rebuild after template
 
 1. **Never remove backup functionality mentioned in README** - The README describes backup/rollback features that aren't implemented yet. These are planned features, don't remove them from docs.
 
-2. **Preserve managed section format** - The HTML comment delimiters are critical:
-   - `<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->`
-   - `<!-- END SKILLZ MANAGED SECTION -->`
+2. **Atomic file writes** - Always use temp file + rename pattern (safeWriteFile) to prevent corruption.
 
-3. **Atomic file writes** - Always use temp file + rename pattern (safeWriteFile) to prevent corruption.
+3. **Preset behavior** - When `--preset` is specified, it should NOT be overwritten by auto-detection logic. See init.ts for proper if/else structure.
 
-4. **Preset behavior** - When `--preset` is specified, it should NOT be overwritten by auto-detection logic. See init.ts for proper if/else structure.
+4. **Test isolation** - Each integration test must create its own workspace and clean up in afterEach.
 
-5. **Test isolation** - Each integration test must create its own workspace and clean up in afterEach.
+5. Always run the `lint` and `testing` skill at the end of feature development
 
-6. Always run the `lint` and `testing` skill at the end of feature development
+6. When doing a modification, examine
 
 ## Development Notes from AGENTS.md
 

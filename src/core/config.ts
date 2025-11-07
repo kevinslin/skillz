@@ -3,7 +3,7 @@ import type { Config, DetectedConfig } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateConfig } from '../utils/validation.js';
 
-const CONFIG_FILE = '.skills.json';
+const CONFIG_FILE = 'skillz.json';
 
 /**
  * Load configuration from file
@@ -70,10 +70,8 @@ export function getDefaultConfig(preset?: string): Config {
     };
   }
 
-  return {
-    ...baseConfig,
-    targets: ['AGENTS.md'],
-  };
+  // No preset: return empty targets for skill management only
+  return baseConfig;
 }
 
 /**

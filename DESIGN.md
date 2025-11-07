@@ -28,7 +28,7 @@ All targets use the same managed section format with skill links.
 ### Configuration Schema
 
 ```typescript
-// .skills.json
+// skillz.json
 {
   "version": "1.0",
   "preset": "agentsmd", // Optional: agentsmd, aider
@@ -69,7 +69,7 @@ Presets provide quick setup for common LLM tools:
 }
 ```
 
-Users can start with a preset and customize further using `skillz config` or by editing `.skills.json` directly.
+Users can start with a preset and customize further using `skillz config` or by editing `skillz.json` directly.
 
 ### Commands
 
@@ -81,7 +81,7 @@ Initializes skillz in the current directory.
 1. Scans current directory and ancestors for target files (AGENTS.md, .cursorrules, etc.)
 2. Detects existing `.claude/skills/` directories
 3. Prompts user to confirm/customize detected configuration
-4. Creates `.skills.json` with sensible defaults
+4. Creates `skillz.json` with sensible defaults
 5. Optionally runs initial sync
 
 **Options:**
@@ -123,7 +123,7 @@ skillz init --preset agentsmd --no-sync
 Synchronizes skills from source directories to target files.
 
 **Behavior:**
-1. Reads `.skills.json` configuration
+1. Reads `skillz.json` configuration
 2. Scans all configured skill directories
 3. Parses SKILL.md files and extracts frontmatter + instructions
 4. Generates skill section using template
@@ -217,7 +217,7 @@ Removes the managed section from target file(s).
 Validates skill files and configuration.
 
 **Checks:**
-- `.skills.json` schema validity
+- `skillz.json` schema validity
 - SKILL.md file format (frontmatter, required fields)
 - Skill name format (lowercase, hyphens, max 64 chars)
 - Description length (max 1024 chars)
@@ -227,7 +227,7 @@ Validates skill files and configuration.
 **Output:**
 ```
 Validating configuration...
-✓ .skills.json is valid
+✓ skillz.json is valid
 
 Validating skills...
 ✓ python-expert (.claude/skills/python-expert/SKILL.md)
@@ -482,7 +482,7 @@ Use `pkg` or `ncc` to create standalone binaries for:
 2. **Command Injection**: Sanitize any shell command execution
 3. **File Permissions**: Check read/write permissions before operations
 4. **Symlink Handling**: Resolve symlinks safely
-5. **Config Validation**: Validate .skills.json against schema
+5. **Config Validation**: Validate skillz.json against schema
 
 ## Future Enhancements
 

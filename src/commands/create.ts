@@ -88,9 +88,9 @@ export async function createCommand(
   const version = options.skillVersion || '0.0.0';
 
   // Load configuration
-  const configPath = path.join(cwd, '.skills.json');
+  const configPath = path.join(cwd, 'skillz.json');
   if (!(await fileExists(configPath))) {
-    logError('No .skills.json found in current directory');
+    logError('No skillz.json found in current directory');
     logError('Run `skillz init` first to initialize the project');
     process.exit(1);
   }
@@ -98,7 +98,7 @@ export async function createCommand(
   const config = await loadConfig(cwd);
 
   if (!config) {
-    logError('Failed to load .skills.json');
+    logError('Failed to load skillz.json');
     process.exit(1);
   }
 
@@ -111,7 +111,7 @@ export async function createCommand(
   } else {
     // Use first skill directory from config
     if (!config.skillDirectories || config.skillDirectories.length === 0) {
-      logError('No skill directories configured in .skills.json');
+      logError('No skill directories configured in skillz.json');
       logError('Add at least one directory to skillDirectories array or use --path option');
       process.exit(1);
     }

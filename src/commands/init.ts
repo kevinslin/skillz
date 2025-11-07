@@ -18,9 +18,9 @@ export async function initCommand(options: InitOptions): Promise<void> {
   const cwd = process.cwd();
 
   // Check if already initialized
-  const configPath = path.join(cwd, '.skills.json');
+  const configPath = path.join(cwd, 'skillz.json');
   if (await fileExists(configPath)) {
-    warning('Configuration file already exists at .skills.json');
+    warning('Configuration file already exists at skillz.json');
     warning('Remove it first or use `skillz config` to modify settings');
     process.exit(1);
   }
@@ -65,13 +65,19 @@ export async function initCommand(options: InitOptions): Promise<void> {
     config.includeInstructions = options.includeInstructions;
   }
 
-  // if targets, additionalSkills not specified, infer from existing files
-  if (!config.targets.length && !config.additionalSkills.length) {
+  // Only infer targets if a preset was specified but no explicit target given
+  // This allows users to init without any targets for skill management only
+  if (options.preset && !options.target && !config.targets.length) {
     const detected: DetectedConfig = await inferConfig(cwd);
     if (detected.targets.length > 0) {
       info(`Detected existing target files: ${detected.targets.join(', ')}`);
       config.targets = detected.targets;
     }
+  }
+
+  // Infer skill directories if not specified
+  if (!config.skillDirectories.length && !config.additionalSkills.length) {
+    const detected: DetectedConfig = await inferConfig(cwd);
     if (detected.skillDirectories.length > 0) {
       info(`Detected existing skill directories: ${detected.skillDirectories.join(', ')}`);
       config.additionalSkills = detected.skillDirectories;
@@ -80,19 +86,22 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   // Save configuration
   await saveConfig(config, cwd);
-  success('Created configuration file: .skills.json');
+  success('Created configuration file: skillz.json');
   success('Previewing configuration...');
   success(JSON.stringify(config, null, 2));
 
   // Add .skillz-cache.json to .gitignore
   await addToGitignore(cwd);
 
-  // Run initial sync unless --no-sync is specified
+  // Run initial sync only if targets are configured and --no-sync is not specified
   // Commander converts --no-sync to options.sync = false
-  if (options.sync !== false) {
+  if (config.targets.length > 0 && options.sync !== false) {
     info('Running initial sync...');
     const { syncCommand } = await import('./sync.js');
     await syncCommand({});
+  } else if (config.targets.length === 0) {
+    info('No targets configured. Use `skillz create` and `skillz list` to manage skills.');
+    info('Add targets later with `skillz config targets --add <file>` to enable syncing.');
   } else {
     info('Skipping initial sync (use `skillz sync` to sync skills)');
   }

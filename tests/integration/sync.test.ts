@@ -110,7 +110,7 @@ description: Skill used to verify *.test ignore patterns
 `
     );
 
-    const configPath = path.join(workspace.root, '.skills.json');
+    const configPath = path.join(workspace.root, 'skillz.json');
     const config = await fs.readJson(configPath);
     config.ignore = ['*.test'];
     await fs.writeJson(configPath, config, { spaces: 2 });

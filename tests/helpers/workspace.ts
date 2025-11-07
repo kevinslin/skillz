@@ -32,10 +32,7 @@ export async function createMockWorkspace(): Promise<MockWorkspace> {
   await fs.writeFile(agentsFile, getAgentsMdContent());
 
   // Create .gitignore
-  await fs.writeFile(
-    path.join(root, '.gitignore'),
-    'node_modules/\ndist/\n.skillz-cache.json\n'
-  );
+  await fs.writeFile(path.join(root, '.gitignore'), 'node_modules/\ndist/\n.skillz-cache.json\n');
 
   return {
     root,

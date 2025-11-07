@@ -15,7 +15,7 @@ The `init` command orchestrates config creation and optionally performs an initi
 
 ## Command Layer
 - `src/cli.ts` registers commands and global options. Each Commander action is wrapped in a try/catch to surface errors and exit with a non-zero status on failure.
-- `src/commands/init.ts` builds or detects configuration, writes `.skills.json`, updates `.gitignore`, and optionally chains into `sync`.
+- `src/commands/init.ts` builds or detects configuration, writes `skillz.json`, updates `.gitignore`, and optionally chains into `sync`.
 - `src/commands/sync.ts` is the primary entry point for synchronization. It handles verbose logging, `--dry-run`, `--force`, and `--only` semantics before delegating to core services.
 
 ## Core Services
@@ -72,5 +72,5 @@ Managed sections are wrapped in HTML comments:
 
 ## Runtime Expectations
 - Requires Node.js 18+.
-- Assumes `SKILL.md` files contain valid frontmatter (`name`, `description`) and stores state in `.skills.json` (config) and `.skillz-cache.json` (cache).
+- Assumes `SKILL.md` files contain valid frontmatter (`name`, `description`) and stores state in `skillz.json` (config) and `.skillz-cache.json` (cache).
 - Fails fast on invalid configuration or skill metadata, guiding users through logs and warnings emitted from the logger utility.

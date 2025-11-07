@@ -106,7 +106,7 @@ describe('my command', () => {
 #### Testing Configuration Files
 ```typescript
 const config = (await fs.readJson(
-  path.join(workspace.root, '.skills.json')
+  path.join(workspace.root, 'skillz.json')
 )) as Config;
 expect(config.preset).toBe('agentsmd');
 ```
@@ -212,7 +212,7 @@ it('should do something', async () => {
     // Add this to see what files exist
     console.log('Files:', await fs.readdir(workspace.root));
     console.log('Config:', await fs.readFile(
-      path.join(workspace.root, '.skills.json'),
+      path.join(workspace.root, 'skillz.json'),
       'utf-8'
     ));
   } finally {

@@ -107,7 +107,7 @@ describe('create command', () => {
     });
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('.skills.json');
+    expect(result.stderr).toContain('skillz.json');
   });
 
   it('should error when skill already exists', async () => {
@@ -169,10 +169,7 @@ describe('create command', () => {
 
     expect(result.exitCode).toBe(0);
 
-    const skillFilePath = path.join(
-      workspace.root,
-      '.claude/skills/versioned-skill/SKILL.md'
-    );
+    const skillFilePath = path.join(workspace.root, '.claude/skills/versioned-skill/SKILL.md');
     const content = await fs.readFile(skillFilePath, 'utf-8');
     const parsed = matter(content);
 
@@ -269,7 +266,7 @@ describe('create command', () => {
     });
 
     // Manually edit config to have empty skillDirectories
-    const configPath = path.join(workspace.root, '.skills.json');
+    const configPath = path.join(workspace.root, 'skillz.json');
     const config = await fs.readJson(configPath);
     config.skillDirectories = [];
     await fs.writeJson(configPath, config);
@@ -308,7 +305,7 @@ describe('create command', () => {
     });
 
     // Manually edit config to use ~ path
-    const configPath = path.join(workspace.root, '.skills.json');
+    const configPath = path.join(workspace.root, 'skillz.json');
     const config = await fs.readJson(configPath);
     config.skillDirectories = ['~/.test-skills'];
     await fs.writeJson(configPath, config);
