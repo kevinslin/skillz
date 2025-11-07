@@ -23,10 +23,7 @@ export const SkillFrontmatterSchema = z.object({
     .string()
     .min(1, 'Skill name is required')
     .max(64, 'Skill name must be 64 characters or less')
-    .regex(
-      /^[a-z0-9-]+$/,
-      'Skill name must contain only lowercase letters, numbers, and hyphens'
-    ),
+    .regex(/^[a-z0-9- ]+$/, 'Skill name must contain only lowercase letters, numbers, and hyphens'),
   description: z
     .string()
     .min(1, 'Skill description is required')
@@ -76,7 +73,7 @@ export function validateCacheFile(cache: unknown): z.SafeParseReturnType<unknown
  * Check if skill name is valid
  */
 export function isValidSkillName(name: string): boolean {
-  return /^[a-z0-9-]+$/.test(name) && name.length > 0 && name.length <= 64;
+  return /^[A-Za-z0-9-_\s]+$/.test(name) && name.length > 0 && name.length <= 64;
 }
 
 /**

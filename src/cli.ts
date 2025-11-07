@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { syncCommand } from './commands/sync.js';
 import { listCommand } from './commands/list.js';
+import { createCommand } from './commands/create.js';
 
 const program = new Command();
 
@@ -59,6 +60,21 @@ program
   .action(async (options) => {
     try {
       await listCommand(options);
+    } catch (error) {
+      console.error('Error:', (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+// Create command
+program
+  .command('create <name> <description>')
+  .description('Create a new skill with template')
+  .option('--path <directory>', 'Custom directory path (overrides config)')
+  .option('--skill-version <semver>', 'Skill version (default: 0.0.0)')
+  .action(async (name, description, options) => {
+    try {
+      await createCommand(name, description, options);
     } catch (error) {
       console.error('Error:', (error as Error).message);
       process.exit(1);

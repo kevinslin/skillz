@@ -2,7 +2,11 @@ import matter from 'gray-matter';
 import path from 'path';
 import type { Skill, ValidationResult } from '../types/index.js';
 import { safeReadFile, getFileStats } from '../utils/fs-helpers.js';
-import { validateSkillFrontmatter, isValidSkillName, isValidSkillDescription } from '../utils/validation.js';
+import {
+  validateSkillFrontmatter,
+  isValidSkillName,
+  isValidSkillDescription,
+} from '../utils/validation.js';
 import { calculateSkillHash } from '../utils/hash.js';
 
 /**
