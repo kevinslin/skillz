@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Skillz is a TypeScript CLI that scans Claude Agent Skills (SKILL.md files) and syncs them to various LLM tool configuration files (AGENTS.md, .cursorrules, etc.). It's designed to make Claude skills usable across any LLM development environment.
 
-**Current Status:** MVP with `init`, `sync`, and `create` commands implemented (~65% complete). Commands remaining: `list`, `validate`, `config`, `watch`, `clean`.
+**Current Status:** MVP with `init`, `sync`, `list`, and `create` commands implemented (~75% complete). Commands remaining: `validate`, `config`, `watch`, `clean`.
+
+**📋 See TODO.md for comprehensive, up-to-date task list and implementation status.**
 
 ## Essential Commands
 
@@ -33,14 +35,17 @@ node dist/cli.js sync --dry-run --verbose
 
 ### Current Implementation
 
-- ✅ `init` - Initialize skillz.json with presets (agentsmd, aider)
+**See TODO.md for the comprehensive, up-to-date task list and implementation status.**
+
+Quick summary:
+- ✅ `init` - Initialize skillz.json with presets (agentsmd, aider) or no-target mode
 - ✅ `sync` - Scan skills and update target files with managed sections
+- ✅ `list` - Display available skills (table, json, markdown formats)
 - ✅ `create` - Create new skill with template (name normalization, version support)
-- ❌ `list` - Display available skills (not implemented)
-- ❌ `validate` - Validate config and skill files (not implemented)
-- ❌ `config` - View/modify config (not implemented)
-- ❌ `watch` - Auto-sync on file changes (not implemented)
-- ❌ `clean` - Remove managed sections (not implemented)
+- ❌ `validate` - Validate config and skill files (TODO)
+- ❌ `config` - View/modify config (TODO)
+- ❌ `watch` - Auto-sync on file changes (TODO)
+- ❌ `clean` - Remove managed sections (TODO)
 
 ## Architecture
 
@@ -283,7 +288,7 @@ Build script copies templates to `dist/templates/` - must rebuild after template
 
 5. Always run the `lint` and `testing` skill at the end of feature development
 
-6. When doing a modification, examine
+6. Update documentation after finishing a user facing modifiaction or architectural change
 
 ## Development Notes from AGENTS.md
 
