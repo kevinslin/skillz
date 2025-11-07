@@ -23,6 +23,7 @@ This document defines the rules, coding standards, workflow guidelines, referenc
 ## WORKFLOW & RELEASE RULES
 
 (Describe the project workflow, including branching strategies, code review processes, testing procedures, and release management.)
+- After running `npm run build` to create `./dist/cli.js`, execute the CLI using either `node ./dist/cli.js …` directly. Alternatively, after running `npm link` (or installing the package), the CLI can be called directly using `skillz …`.
 
 ## DEBUGGING
 
