@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`init command should run sync by default after init 1`] = `
+"# My Project Agents
+
+This file contains configuration for AI agents working on this project.
+
+## Project Context
+
+This is a Python web application built with FastAPI and React.
+
+## Additional Instructions
+You can use skills. These are custom instructions that help you accomplish specific tasks. Your list of available skills below:
+
+- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
+- [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
+
+"
+`;

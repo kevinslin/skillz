@@ -14,6 +14,7 @@ This document defines the rules, coding standards, workflow guidelines, referenc
 ## PROJECT DOCUMENTATION & CONTEXT SYSTEM
 
 (Describe how project documentation is structured and accessed by the AI assistant. Include details about file naming conventions, locations, and the tools used to manage documentation.)
+
 - New files should be named with a `DESIGN-combined.md` format when combining design documents.
 
 ## CODING STANDARDS
@@ -24,16 +25,20 @@ This document defines the rules, coding standards, workflow guidelines, referenc
 
 (Describe the project workflow, including branching strategies, code review processes, testing procedures, and release management.)
 
+- After running `npm run build` to create `./dist/cli.js`, execute the CLI using either `node ./dist/cli.js …` directly. Alternatively, after running `npm link` (or installing the package), the CLI can be called directly using `skillz …`.
+
 ## DEBUGGING
 
 (Specify debugging strategies and tools. Detail how the AI assistant should approach debugging tasks.)
+
 - When encountering ESLint errors related to `tsconfig.json` inclusion, consider creating a separate `tsconfig.eslint.json` that includes test files. This allows for type-aware linting in tests without affecting the main build configuration. The `tsconfig.eslint.json` should:
-    - Extend the main `tsconfig.json`.
-    - Set `"noEmit": true`.
-    - Set `"rootDir": "."`.
-    - Include source and test files in the `"include"` array (e.g., `"include": ["src/**/*.ts", "tests/**/*.ts"]`).
-    - Exclude `node_modules` and `dist` directories in the `"exclude"` array (e.g., `"exclude": ["node_modules", "dist"]`).
+  - Extend the main `tsconfig.json`.
+  - Set `"noEmit": true`.
+  - Set `"rootDir": "."`.
+  - Include source and test files in the `"include"` array (e.g., `"include": ["src/**/*.ts", "tests/**/*.ts"]`).
+  - Exclude `node_modules` and `dist` directories in the `"exclude"` array (e.g., `"exclude": ["node_modules", "dist"]`).
 - Ensure ESLint configuration (`.eslintrc.cjs`) uses the correct `tsconfig.eslint.json` for parser options:
+
 ```javascript
 parserOptions: {
   ecmaVersion: 2022,
@@ -41,5 +46,6 @@ parserOptions: {
   project: './tsconfig.eslint.json',
 },
 ```
+
 - When reading JSON configuration files in tests, explicitly type the result using generics (e.g., `fs.readJson<SkillsConfig>(configPath)`) to avoid `any` types and improve type safety.
 - After making changes to ESLint configurations or test files, run ESLint directly on the test files (e.g., `npx eslint tests/integration/init.test.ts`) to verify the fixes.

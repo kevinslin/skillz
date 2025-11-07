@@ -31,3 +31,5 @@ Thumbs.db
 .skillz-cache.json
 *.backup-*
 .specstory
+.claude/settings.local.json
+llm
