@@ -217,7 +217,7 @@ describe('create command', () => {
     });
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Description');
+    expect(result.stderr).toContain('Skill description is required');
   });
 
   it('should handle descriptions with quotes', async () => {

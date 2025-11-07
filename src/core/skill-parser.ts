@@ -2,11 +2,7 @@ import matter from 'gray-matter';
 import path from 'path';
 import type { Skill, ValidationResult } from '../types/index.js';
 import { safeReadFile, getFileStats } from '../utils/fs-helpers.js';
-import {
-  validateSkillFrontmatter,
-  isValidSkillName,
-  isValidSkillDescription,
-} from '../utils/validation.js';
+import { validateSkillFrontmatter } from '../utils/validation.js';
 import { calculateSkillHash } from '../utils/hash.js';
 
 /**
@@ -54,44 +50,12 @@ export async function parseSkill(skillPath: string): Promise<Skill> {
 
 /**
  * Validate a skill
+ * Note: Name and description are already validated by Zod schema in parseSkill
+ * This function only checks for additional warnings
  */
 export function validateSkill(skill: Skill): ValidationResult {
   const errors: Array<{ field: string; message: string; value?: unknown }> = [];
   const warnings: Array<{ field: string; message: string; value?: unknown }> = [];
-
-  // Validate name
-  if (!isValidSkillName(skill.name)) {
-    errors.push({
-      field: 'name',
-      message:
-        'Skill name must contain only lowercase letters, numbers, and hyphens, and be 64 characters or less',
-      value: skill.name,
-    });
-  }
-
-  // Validate description
-  if (!isValidSkillDescription(skill.description)) {
-    errors.push({
-      field: 'description',
-      message: 'Skill description must be between 1 and 1024 characters',
-      value: skill.description,
-    });
-  }
-
-  // Check for required fields
-  if (!skill.name) {
-    errors.push({
-      field: 'name',
-      message: 'Skill name is required',
-    });
-  }
-
-  if (!skill.description) {
-    errors.push({
-      field: 'description',
-      message: 'Skill description is required',
-    });
-  }
 
   // Warnings
   if (skill.content.length === 0) {

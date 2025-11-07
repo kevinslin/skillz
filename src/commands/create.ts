@@ -2,6 +2,7 @@ import path from 'path';
 import { loadConfig } from '../core/config.js';
 import { info, success, error as logError } from '../utils/logger.js';
 import { fileExists, ensureDir, safeWriteFile, resolveHome } from '../utils/fs-helpers.js';
+import { SkillFrontmatterSchema } from '../utils/validation.js';
 
 interface CreateOptions {
   path?: string;
@@ -25,25 +26,20 @@ function normalizeSkillName(name: string): string {
 }
 
 /**
- * Validates a skill name
+ * Validates skill frontmatter using Zod schema
  */
-function validateSkillName(name: string): void {
-  if (!name || name.trim().length === 0) {
-    throw new Error('Skill name cannot be empty');
+function validateFrontmatter(name: string, description: string): void {
+  const result = SkillFrontmatterSchema.safeParse({ name, description });
+
+  if (!result.success) {
+    const errorMessages = result.error.errors.map((err) => err.message).join('; ');
+    throw new Error(`Invalid skill frontmatter: ${errorMessages}`);
   }
 
+  // Additional check: ensure normalized name is not empty
   const normalized = normalizeSkillName(name);
   if (normalized.length === 0) {
     throw new Error('Skill name must contain at least one alphanumeric character');
-  }
-}
-
-/**
- * Validates a description
- */
-function validateDescription(description: string): void {
-  if (!description || description.trim().length === 0) {
-    throw new Error('Description cannot be empty');
   }
 }
 
@@ -83,8 +79,7 @@ export async function createCommand(
   const cwd = process.cwd();
 
   // Validate inputs
-  validateSkillName(name);
-  validateDescription(description);
+  validateFrontmatter(name, description);
 
   // Validate version if provided, otherwise use default
   if (options.skillVersion) {

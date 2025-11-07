@@ -285,7 +285,7 @@ Build script copies templates to `dist/templates/` - must rebuild after template
 
 5. **Test isolation** - Each integration test must create its own workspace and clean up in afterEach.
 
-6. Always run the `lint` skill at the end of feature development.
+6. Always run the `lint` and `testing` skill at the end of feature development
 
 ## Development Notes from AGENTS.md
 
