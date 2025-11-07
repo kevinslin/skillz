@@ -175,7 +175,7 @@
 ### 4.1 Config File Operations
 - [ ] Create `src/core/config.ts`
 - [ ] Implement `loadConfig(cwd: string): Promise<Config | null>`
-  - Look for .skills.json in cwd
+  - Look for skillz.json in cwd
   - Parse and validate with Zod
   - Return null if not found
   - Throw error if invalid
@@ -371,7 +371,7 @@
   - Allow customization
   - Use inquirer for prompts
 - [ ] Implement configuration creation
-  - Generate .skills.json
+  - Generate skillz.json
   - Save to disk
   - Show success message
 - [ ] Support formatting flags
@@ -440,7 +440,7 @@
 ### 9.4 Validate Command
 - [ ] Create `src/commands/validate.ts`
 - [ ] Implement config validation
-  - Load .skills.json
+  - Load skillz.json
   - Validate with Zod schema
   - Show validation errors
 - [ ] Implement skill validation
@@ -597,7 +597,7 @@
 ### 11.3 Integration Tests - Init Command
 - [ ] Create tests/integration/init.test.ts
 - [ ] Test: Initialize with agentsmd preset
-  - Verify .skills.json created
+  - Verify skillz.json created
   - Verify preset field set
   - Verify targets include AGENTS.md
 - [ ] Test: Initialize with custom target
