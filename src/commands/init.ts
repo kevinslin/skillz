@@ -9,7 +9,7 @@ interface InitOptions {
   target?: string;
   additionalSkills?: string[];
   globalSkills?: boolean;
-  noSync?: boolean;
+  sync?: boolean;
   template?: string;
   includeInstructions?: boolean;
 }
@@ -88,7 +88,8 @@ export async function initCommand(options: InitOptions): Promise<void> {
   await addToGitignore(cwd);
 
   // Run initial sync unless --no-sync is specified
-  if (!options.noSync) {
+  // Commander converts --no-sync to options.sync = false
+  if (options.sync !== false) {
     info('Running initial sync...');
     const { syncCommand } = await import('./sync.js');
     await syncCommand({});

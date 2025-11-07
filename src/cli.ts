@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { syncCommand } from './commands/sync.js';
+import { listCommand } from './commands/list.js';
 
 const program = new Command();
 
@@ -42,6 +43,22 @@ program
   .action(async (options) => {
     try {
       await syncCommand(options);
+    } catch (error) {
+      console.error('Error:', (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+// List command
+program
+  .command('list')
+  .description('Display available skills')
+  .option('--format <type>', 'Output format: table, json, or markdown', 'table')
+  .option('--synced-only', 'Show only skills that have been synced')
+  .option('--unsynced-only', 'Show only skills that have not been synced')
+  .action(async (options) => {
+    try {
+      await listCommand(options);
     } catch (error) {
       console.error('Error:', (error as Error).message);
       process.exit(1);
