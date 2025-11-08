@@ -33,6 +33,7 @@ type ListOptions = {
 type CreateOptions = {
   path?: string;
   skillVersion?: string;
+  interactive?: boolean;
 };
 
 const program = new Command();
@@ -97,11 +98,12 @@ program
 
 // Create command
 program
-  .command('create <name> <description>')
+  .command('create [name] [description]')
   .description('Create a new skill with template')
+  .option('-i, --interactive', 'Interactive mode with guided prompts (recommended)')
   .option('--path <directory>', 'Custom directory path (overrides config)')
   .option('--skill-version <semver>', 'Skill version (default: 0.0.0)')
-  .action(async (name: string, description: string, options: CreateOptions) => {
+  .action(async (name: string | undefined, description: string | undefined, options: CreateOptions) => {
     try {
       await createCommand(name, description, options);
     } catch (error) {

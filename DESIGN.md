@@ -118,6 +118,103 @@ skillz init --preset agentsmd --additional-skills /path/to/company/skills --glob
 skillz init --preset agentsmd --no-sync
 ```
 
+#### `skillz create [options]`
+
+Creates a new skill with optional interactive guidance.
+
+**Modes:**
+
+1. **Interactive Mode (Recommended):**
+   ```bash
+   skillz create --interactive
+   # or
+   skillz create -i
+   ```
+
+   Guides you through skill creation with prompts for:
+   - Skill name and description
+   - Detailed purpose/context
+   - Tags for categorization
+   - Sections to include (capabilities, guidelines, examples, anti-patterns)
+   - Content for each section
+
+   Generates well-structured SKILL.md with all requested sections.
+
+2. **Quick Mode:**
+   ```bash
+   skillz create <name> <description>
+   ```
+
+   Creates minimal skill with just frontmatter. Requires manual editing to add content.
+
+**Options:**
+- `-i, --interactive` - Launch interactive mode with guided prompts
+- `--path <directory>` - Custom directory path (overrides config)
+- `--skill-version <semver>` - Skill version (default: 0.0.0)
+
+**Interactive Prompt Flow:**
+```
+1. Skill name → validates and normalizes
+2. Brief description → max 100 characters
+3. Detailed purpose → multi-line, optional
+4. Tags → comma-separated, optional
+5. Sections → checkbox (capabilities, guidelines, examples, anti-patterns)
+6. For selected sections:
+   - Capabilities: iteratively add items
+   - Guidelines: iteratively add items
+   - Examples: placeholder added
+   - Anti-patterns: placeholder added
+7. Preview and confirm
+```
+
+**Examples:**
+```bash
+# Interactive mode (recommended for new skills)
+skillz create --interactive
+
+# Quick mode (requires manual editing)
+skillz create python-expert "Expert Python assistance"
+
+# Interactive with custom version
+skillz create -i --skill-version 1.0.0
+
+# Interactive with custom path
+skillz create -i --path ~/.claude/skills
+
+# Trigger interactive mode by omitting arguments
+skillz create
+```
+
+**Generated Skill Structure (Interactive Mode):**
+```markdown
+---
+name: python-testing
+description: Expert pytest and testing best practices
+version: 0.0.0
+tags: [python, testing, pytest]
+---
+
+# Python Testing
+
+Help write comprehensive test suites with pytest.
+
+## Capabilities
+
+- Write pytest fixtures for database testing
+- Create parametrized tests for edge cases
+- Mock external dependencies
+
+## Guidelines
+
+1. Use descriptive test names (test_should_xxx_when_yyy)
+2. One assertion per test for clarity
+3. Use fixtures for shared setup
+
+## Examples
+
+[Add your code examples here]
+```
+
 #### `skillz sync [options]`
 
 Synchronizes skills from source directories to target files.

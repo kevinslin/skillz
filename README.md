@@ -95,22 +95,45 @@ skillz init --target .cursorrules --template ./templates/company.hbs
 ### `skillz create`
 Create a new skill with a template `SKILL.md` file in your configured skill directory.
 
-Usage:
+**Interactive Mode (Recommended):**
+```bash
+skillz create --interactive
+# or
+skillz create -i
+```
+
+Launches an interactive prompt that guides you through creating a well-structured skill with:
+- Capabilities section
+- Guidelines section
+- Examples placeholder
+- Anti-patterns section (optional)
+
+**Quick Mode:**
 ```bash
 skillz create <name> <description>
 ```
 
-Options:
-- `--path <directory>`: Custom directory path (overrides config).
-- `--skill-version <semver>`: Skill version in semver format (default: `0.0.0`).
+Creates a minimal skill with just frontmatter. You'll need to manually edit the SKILL.md file to add content.
+
+**Options:**
+- `-i, --interactive`: Launch interactive mode with guided prompts (recommended)
+- `--path <directory>`: Custom directory path (overrides config)
+- `--skill-version <semver>`: Skill version in semver format (default: `0.0.0`)
 
 The command automatically normalizes skill names by converting to lowercase, replacing underscores and spaces with hyphens, and removing special characters. The original name format is preserved in the SKILL.md frontmatter.
 
-Examples:
+**Examples:**
 ```bash
+# Interactive mode - creates well-structured skill
+skillz create --interactive
+
+# Quick mode - minimal skill (requires manual editing)
 skillz create python-expert "Expert Python development assistance"
 skillz create bake_cake "Bake delicious cakes" --skill-version 1.0.0
 skillz create custom-skill "Custom location" --path ~/my-skills
+
+# Trigger interactive mode by omitting arguments
+skillz create
 ```
 
 ### `skillz sync`

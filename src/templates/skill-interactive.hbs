@@ -1,0 +1,43 @@
+---
+name: {{name}}
+description: {{description}}
+version: {{version}}
+{{#if tags}}
+tags: [{{#each tags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}]
+{{/if}}
+---
+
+# {{titleCase name}}
+
+{{#if purpose}}
+{{purpose}}
+
+{{/if}}
+{{#if capabilities}}
+## Capabilities
+
+{{#each capabilities}}
+- {{this}}
+{{/each}}
+
+{{/if}}
+{{#if guidelines}}
+## Guidelines
+
+{{#each guidelines}}
+{{add @index 1}}. {{this}}
+{{/each}}
+
+{{/if}}
+{{#if includeExamples}}
+## Examples
+
+[Add your code examples here]
+
+{{/if}}
+{{#if includeAntiPatterns}}
+## Anti-patterns
+
+[Document what NOT to do]
+
+{{/if}}
