@@ -114,10 +114,14 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     throw err;
   }
 
-  // Update cache
-  const newCache = updateCache(filteredSkills, config.targets[0]);
-  await saveCache(newCache, cwd);
-  debug('Updated cache');
+  // Update cache only if we have targets
+  if (config.targets.length > 0) {
+    const newCache = updateCache(filteredSkills, config.targets[0]);
+    await saveCache(newCache, cwd);
+    debug('Updated cache');
+  } else {
+    debug('No targets configured, skipping cache update');
+  }
 
   success(`Successfully synced ${filteredSkills.length} skill(s)`);
 }

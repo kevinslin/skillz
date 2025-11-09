@@ -156,7 +156,7 @@ Creates a new skill with optional interactive guidance.
 ```
 1. Skill name → validates and normalizes
 2. Brief description → max 100 characters
-3. Detailed purpose → multi-line, optional
+3. Detailed purpose → single-line text, optional
 4. Tags → comma-separated, optional
 5. Sections → checkbox (capabilities, guidelines, examples, anti-patterns)
 6. For selected sections:

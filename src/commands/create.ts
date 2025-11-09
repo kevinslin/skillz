@@ -222,11 +222,10 @@ async function runInteractiveCreate(options: CreateOptions): Promise<void> {
       },
     },
     {
-      type: 'editor',
+      type: 'input',
       name: 'purpose',
-      message: 'Detailed purpose (optional, opens editor - press Enter to skip):',
+      message: 'Detailed purpose (optional, press Enter to skip):',
       default: '',
-      waitUserInput: false,
     },
     {
       type: 'input',
