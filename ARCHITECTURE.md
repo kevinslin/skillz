@@ -40,15 +40,18 @@ Handlebars templates live in `src/templates/` and are bundled at build time. `sk
 `src/types/index.ts` defines the shared TypeScript interfaces (`Config`, `Skill`, `CacheFile`, `SkillChange`, etc.) that flow between all layers. These types mirror on-disk JSON schemas to keep runtime validation and compile-time safety aligned.
 
 ## Target File Structure
-Managed sections are wrapped in HTML comments:
+Managed sections start with a configurable heading and extend to the end of the file:
+```markdown
+## Additional Instructions
+
+You now have access to Skills...
+[comprehensive skill usage instructions]
+
+### Available Skills
+
+- [skill-name](path/to/SKILL.md): Description
 ```
-<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
-<!-- Last synced: 2024-01-01T00:00:00.000Z -->
-<!-- Source: .claude/skills -->
-...rendered content...
-<!-- END SKILLZ MANAGED SECTION -->
-```
-`target-manager` either appends this block or replaces an existing one, preserving manual content outside the guarded section.
+`target-manager` finds the section by its heading name (default: `## Additional Instructions`) and replaces everything from that heading to EOF. Content before the heading is preserved.
 
 ## Testing Strategy
 - **Integration tests** (`tests/integration`) exercise CLI commands end-to-end using temporary workspaces.

@@ -114,7 +114,8 @@ expect(config.preset).toBe('agentsmd');
 #### Testing Generated Content
 ```typescript
 const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-expect(agentsContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+expect(agentsContent).toContain('## Additional Instructions');
+expect(agentsContent).toContain('Available Skills');
 expect(agentsContent).toContain('python-expert');
 ```
 

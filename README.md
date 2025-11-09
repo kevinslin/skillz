@@ -7,7 +7,6 @@ Skillz is a TypeScript-powered command line tool that lets you manage Claude Age
 - Normalize skill output across multiple LLM tooling targets with a single managed section format.
 - Apply custom Handlebars templates or embed full instruction bodies on demand.
 - Detect skill changes via hashing and warn about manual edits before overwriting targets.
-- Safeguard edits with automatic backups and a rollback command to restore the previous sync.
 
 ## Requirements
 - Node.js 18 or newer
@@ -37,14 +36,20 @@ npm install -g skillz-cli
    skillz sync
    ```
 
-After syncing, the CLI maintains a managed section similar to:
+After syncing, the CLI maintains a managed section in your target file(s). For example, in `AGENTS.md`:
 ```markdown
-<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
-<!-- Last synced: 2025-01-01T12:34:56Z -->
-<!-- Source: .claude/skills/, ~/.claude/skills/ -->
+## Additional Instructions
+
+You now have access to Skills. Skills are specialized instruction sets...
+[comprehensive skill usage instructions]
+
+### Available Skills
+
 - [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices
-<!-- END SKILLZ MANAGED SECTION -->
+- [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns and best practices
 ```
+
+The section starts with a configurable heading (`skillsSectionName` in config) and continues to the end of the file.
 
 ## Configuration
 The CLI stores project settings in `skillz.json`. A typical file looks like:
@@ -57,8 +62,7 @@ The CLI stores project settings in `skillz.json`. A typical file looks like:
   "additionalSkills": [],
   "ignore": ["*.test"],
   "includeInstructions": false,
-  "autoSync": false,
-  "backup": true
+  "autoSync": false
 }
 ```
 
@@ -67,9 +71,8 @@ Key fields:
 - `skillDirectories` / `additionalSkills`: Folders that will be scanned for `SKILL.md`.
 - `ignore`: Glob patterns to exclude skills.
 - `includeInstructions`: When `true`, embeds full skill text instead of links.
-- `backup`: Controls whether the CLI writes timestamped backups before updates.
 
-You can edit `skillz.json` manually or use `skillz config` (see below).
+You can edit `skillz.json` manually.
 
 ## Commands
 
@@ -165,73 +168,6 @@ Examples:
 ```bash
 skillz list
 skillz list --format json --unsynced-only
-```
-
-### `skillz validate`
-Validate `skillz.json` and all discovered `SKILL.md` files.
-
-Checks include schema validation, required frontmatter, naming conventions, description length, file accessibility, and duplicate skill names.
-
-Example:
-```bash
-skillz validate
-```
-
-### `skillz config`
-Inspect or modify `skillz.json` without opening the file manually.
-
-Usage:
-- `skillz config`: Print the entire configuration.
-- `skillz config <key>`: Show a single key (e.g., `targets`).
-- `skillz config <key> <value>`: Set a new value.
-- Array helpers: `--add <value>` and `--remove <value>` when working with list fields like `additionalSkills`.
-
-Examples:
-```bash
-skillz config
-skillz config targets
-skillz config backup false
-skillz config additionalSkills --add ~/company/skills
-```
-
-### `skillz watch`
-Watch skill directories and run `sync` automatically whenever files change.
-
-Options:
-- `--interval <ms>`: Adjust the polling interval (default `1000` ms).
-- `--no-debounce`: Disable the default 2-second debounce before syncing.
-
-Examples:
-```bash
-skillz watch
-skillz watch --interval 2000
-```
-
-### `skillz clean`
-Remove the Skillz-managed sections and optional cache files.
-
-Options:
-- `--dry-run`: Preview what would be removed.
-- `--keep-backup`: Leave backup files in place after cleaning.
-- `--force`: Skip the confirmation prompt.
-
-Examples:
-```bash
-skillz clean
-skillz clean --dry-run --keep-backup
-```
-
-### `skillz rollback`
-Restore the most recent backup generated during sync, effectively undoing the last update.
-
-Options:
-- `--target <path>`: Restore a specific target (repeatable). Defaults to all known targets.
-- `--force`: Skip interactive confirmation.
-
-Examples:
-```bash
-skillz rollback
-skillz rollback --target AGENTS.md --force
 ```
 
 ## Development Scripts

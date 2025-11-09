@@ -247,28 +247,28 @@ skillz sync --only python-expert --only react-patterns
 
 **Target File Format:**
 
-The sync command maintains a delimited section in the target file:
+The sync command maintains a managed section in the target file:
 
 ```markdown
 # Your custom agents configuration
 
 ... your custom content ...
 
-<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
-<!-- Last synced: 2025-11-05T10:30:00Z -->
-<!-- Source: .claude/skills/, ~/.claude/skills/ -->
-
 ## Additional Instructions
-You can use skills. These are custom instructions that help you accomplish specific tasks. Your list of available skills below:
+
+You now have access to Skills. Skills are specialized instruction sets stored as markdown files...
+[comprehensive skill usage instructions]
+
+### Available Skills
+
+Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
 
 - [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices
 - [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns and best practices
 - [typescript-helper](.claude/skills/typescript-helper/SKILL.md): TypeScript type safety and advanced patterns
-
-<!-- END SKILLZ MANAGED SECTION -->
-
-... more custom content ...
 ```
+
+The managed section starts at the configurable section heading (default: `## Additional Instructions`) and continues to the end of the file. Any content before this heading is preserved.
 
 **Note:** When `includeInstructions: true` is set in config, the full SKILL.md content will be embedded instead of just links.
 

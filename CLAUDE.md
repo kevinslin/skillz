@@ -104,16 +104,13 @@ Quick summary:
 **src/core/target-manager.ts**
 
 - `writeTargetFile(target, skills, config, cwd)` - Injects managed section
-- `extractManagedSection()` - Finds existing managed section
-- `replaceManagedSection()` - Updates content between HTML comments
+- `extractManagedSection()` - Finds section by heading name
+- `replaceManagedSection()` - Replaces content from section heading to EOF
 - Managed section format:
-  ```html
-  <!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
-  <!-- Last synced: 2025-01-01T12:00:00Z -->
-  <!-- Source: .claude/skills -->
-  [skill links here]
-  <!-- END SKILLZ MANAGED SECTION -->
-  ```
+  - Starts with configurable heading (e.g., `## Additional Instructions`)
+  - Contains rendered skill content from templates
+  - Extends to end of file
+  - Content before the section heading is preserved
 
 **src/utils/fs-helpers.ts**
 
@@ -169,7 +166,8 @@ it('should sync skills', async () => {
   expect(result.exitCode).toBe(0);
 
   const content = await fs.readFile(workspace.agentsFile, 'utf-8');
-  expect(content).toContain('BEGIN SKILLZ MANAGED SECTION');
+  expect(content).toContain('## Additional Instructions');
+  expect(content).toContain('Available Skills');
 });
 ```
 

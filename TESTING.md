@@ -254,21 +254,15 @@ This is a Python web application built with FastAPI and React.
 - React: Use functional components with TypeScript
 - Always write tests for new features
 
-<!-- BEGIN SKILLZ MANAGED SECTION - DO NOT EDIT MANUALLY -->
-<!-- Last synced: 2025-11-05T10:00:00Z -->
-<!-- Source: .claude/skills/ -->
-
 ## Additional Instructions
-You can use skills. These are custom instructions that help you accomplish specific tasks. Your list of available skills below:
+
+You now have access to Skills. Skills are specialized instruction sets stored as markdown files...
+[comprehensive skill usage instructions]
+
+### Available Skills
 
 - [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
 - [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
-
-<!-- END SKILLZ MANAGED SECTION -->
-
-## Additional Context
-
-Remember to update documentation when making changes.
 ```
 
 ### Mock .gitignore
@@ -506,7 +500,7 @@ describe('init command', () => {
 
     // Check AGENTS.md was created with managed section
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+    expect(agentsContent).toContain('## Additional Instructions');
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
   });
@@ -557,7 +551,7 @@ describe('sync command', () => {
     expect(result.exitCode).toBe(0);
 
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+    expect(agentsContent).toContain('## Additional Instructions');
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
   });
@@ -591,7 +585,7 @@ describe('sync command', () => {
 
     const updatedContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(updatedContent).toContain(customContent);
-    expect(updatedContent).toContain('BEGIN SKILLZ MANAGED SECTION');
+    expect(updatedContent).toContain('## Additional Instructions');
   });
 
   it('should detect and sync only changed skills', async () => {
