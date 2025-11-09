@@ -1,5 +1,39 @@
 {{sectionName}}
-You can use skills. These are custom instructions that help you accomplish specific tasks. Your list of available skills below:
+
+You now have access to Skills. Skills are specialized instruction sets stored as markdown files that extend your capabilities. When a task matches a skill's purpose, load and follow that skill's instructions.
+
+### Skill Structure
+
+Each skill contains:
+- **SKILL.md**: Core instructions with YAML frontmatter
+- **scripts/**: Optional executable code for deterministic tasks
+- **references/**: Optional detailed documentation
+- **assets/**: Optional templates, images, or files
+
+### How to Use Skills
+
+1. **Match task to skill**: Check the skill list below for relevant descriptions
+2. **Load the skill**: Read the SKILL.md file when needed
+3. **Follow instructions**: Apply the skill's guidelines exactly
+4. **Use resources**: Reference bundled scripts/docs/assets as directed
+5. **Combine skills**: Use multiple skills together when appropriate
+
+### When to Load a Skill
+
+- Task matches a skill's description
+- User mentions a skill by name
+- Task requires specialized knowledge (file formats, workflows, domain expertise)
+
+### Key Principles
+
+- **Load only when needed** - Don't load skills for simple tasks
+- **Apply naturally** - Don't announce "loading skill X" unless relevant
+- **Use bundled resources** - Scripts and references are there to help
+- **Be precise** - Skills often include exact patterns and code to follow
+
+### Available Skills
+
+Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
 
 {{#each skills}}
 - [{{name}}]({{path}}): {{description}}
