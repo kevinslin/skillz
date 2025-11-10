@@ -24,6 +24,8 @@ export interface Config {
   includeInstructions: boolean;
   autoSync: boolean;
   skillsSectionName: string;
+  defaultEditor?: string;
+  autoSyncAfterEdit?: boolean;
 }
 
 /**

@@ -5,6 +5,7 @@ import { initCommand } from './commands/init.js';
 import { syncCommand } from './commands/sync.js';
 import { listCommand } from './commands/list.js';
 import { createCommand } from './commands/create.js';
+import { editCommand } from './commands/edit.js';
 
 // Types for command options
 type InitOptions = {
@@ -36,12 +37,16 @@ type CreateOptions = {
   interactive?: boolean;
 };
 
+type EditOptions = {
+  editor?: string;
+};
+
 const program = new Command();
 
 program
   .name('skillz')
   .description('A CLI tool to sync Claude Agent Skills across different LLM tools')
-  .version('0.1.0');
+  .version('0.2.0');
 
 // Init command
 program
@@ -103,9 +108,25 @@ program
   .option('-i, --interactive', 'Interactive mode with guided prompts (recommended)')
   .option('--path <directory>', 'Custom directory path (overrides config)')
   .option('--skill-version <semver>', 'Skill version (default: 0.0.0)')
-  .action(async (name: string | undefined, description: string | undefined, options: CreateOptions) => {
+  .action(
+    async (name: string | undefined, description: string | undefined, options: CreateOptions) => {
+      try {
+        await createCommand(name, description, options);
+      } catch (error) {
+        console.error('Error:', (error as Error).message);
+        process.exit(1);
+      }
+    }
+  );
+
+// Edit command
+program
+  .command('edit <skill-name>')
+  .description('Edit an existing skill in your preferred editor')
+  .option('--editor <name>', 'Editor to use (overrides config and $EDITOR)')
+  .action(async (skillName: string, options: EditOptions) => {
     try {
-      await createCommand(name, description, options);
+      await editCommand(skillName, options);
     } catch (error) {
       console.error('Error:', (error as Error).message);
       process.exit(1);

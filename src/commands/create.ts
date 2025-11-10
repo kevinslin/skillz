@@ -83,7 +83,7 @@ async function promptForListItems(itemType: string): Promise<string[]> {
   let addMore = true;
 
   while (addMore) {
-    const { item } = await inquirer.prompt([
+    const { item } = (await inquirer.prompt([
       {
         type: 'input',
         name: 'item',
@@ -95,18 +95,18 @@ async function promptForListItems(itemType: string): Promise<string[]> {
           return true;
         },
       },
-    ]);
+    ])) as { item: string };
 
     items.push(item);
 
-    const { more } = await inquirer.prompt([
+    const { more } = (await inquirer.prompt([
       {
         type: 'confirm',
         name: 'more',
         message: `  Add another ${itemType}?`,
         default: false,
       },
-    ]);
+    ])) as { more: boolean };
 
     addMore = more;
   }
@@ -281,14 +281,14 @@ async function runInteractiveCreate(options: CreateOptions): Promise<void> {
   info('');
 
   // Confirm
-  const { confirmed } = await inquirer.prompt([
+  const { confirmed } = (await inquirer.prompt([
     {
       type: 'confirm',
       name: 'confirmed',
       message: 'Create skill with this configuration?',
       default: true,
     },
-  ]);
+  ])) as { confirmed: boolean };
 
   if (!confirmed) {
     info('Skill creation cancelled');

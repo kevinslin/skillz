@@ -72,7 +72,9 @@ The CLI stores project settings in `skillz.json`. A typical file looks like:
   "additionalSkills": [],
   "ignore": ["*.test"],
   "includeInstructions": false,
-  "autoSync": false
+  "autoSync": false,
+  "defaultEditor": "vi",
+  "autoSyncAfterEdit": true
 }
 ```
 
@@ -82,6 +84,8 @@ Key fields:
 - `skillDirectories` / `additionalSkills`: Folders that will be scanned for `SKILL.md`.
 - `ignore`: Glob patterns to exclude skills.
 - `includeInstructions`: When `true`, embeds full skill text instead of links.
+- `defaultEditor`: Default editor for the `edit` command (defaults to `$EDITOR` or `vi`).
+- `autoSyncAfterEdit`: Automatically run `sync` after editing a skill (defaults to `true`).
 
 You can edit `skillz.json` manually.
 
@@ -194,6 +198,66 @@ Examples:
 ```bash
 skillz list
 skillz list --format json --unsynced-only
+```
+
+### `skillz edit`
+
+Open an existing skill in your preferred editor for editing.
+
+Usage:
+
+```bash
+skillz edit <skill-name>
+```
+
+The command will:
+1. Find the skill by name (case-insensitive, handles hyphens/underscores interchangeably)
+2. Open it in your configured editor
+3. Automatically run `sync` after you close the editor (unless `autoSyncAfterEdit` is set to `false`)
+
+**Editor Selection Priority:**
+1. `--editor` flag (if provided)
+2. `defaultEditor` from `skillz.json`
+3. `$EDITOR` environment variable
+4. `vi` (fallback)
+
+**Special Behavior:**
+- For VS Code and Cursor editors, opens the entire skill folder
+- For other editors, opens the `SKILL.md` file directly
+
+Options:
+
+- `--editor <name>`: Override the default editor for this session
+
+Examples:
+
+```bash
+# Edit using default editor
+skillz edit python-expert
+
+# Edit using specific editor
+skillz edit python-expert --editor code
+
+# Skill names are case-insensitive and flexible
+skillz edit PYTHON-EXPERT    # Same as python-expert
+skillz edit python_expert    # Same as python-expert
+```
+
+**Configuration:**
+
+Set your preferred editor in `skillz.json`:
+
+```json
+{
+  "defaultEditor": "code",
+  "autoSyncAfterEdit": true
+}
+```
+
+Or set the `EDITOR` environment variable:
+
+```bash
+export EDITOR=vim
 ```
 
 ## Development Scripts

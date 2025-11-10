@@ -52,6 +52,8 @@ export function getDefaultConfig(preset?: string): Config {
     includeInstructions: false,
     autoSync: false,
     skillsSectionName: '## Additional Instructions',
+    defaultEditor: process.env.EDITOR || 'vi',
+    autoSyncAfterEdit: true,
   };
 
   if (preset === 'agentsmd') {

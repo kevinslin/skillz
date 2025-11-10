@@ -42,11 +42,15 @@ describe('list command', () => {
 
     expect(result.exitCode).toBe(0);
 
-    const output = JSON.parse(result.stdout);
+    const output = JSON.parse(result.stdout) as Array<{
+      name: string;
+      description: string;
+      path: string;
+    }>;
     expect(Array.isArray(output)).toBe(true);
     expect(output.length).toBe(2);
 
-    const names = output.map((s: { name: string }) => s.name);
+    const names = output.map((s) => s.name);
     expect(names).toContain('python-expert');
     expect(names).toContain('react-patterns');
 

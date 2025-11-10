@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createMockWorkspace, MockWorkspace } from '../helpers/workspace.js';
 import { execCli } from '../helpers/cli.js';
+import type { Config, CacheFile } from '../../src/types/index.js';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -40,7 +41,7 @@ describe('sync command', () => {
     const cachePath = path.join(workspace.root, '.skillz-cache.json');
     expect(await fs.pathExists(cachePath)).toBe(true);
 
-    const cache = await fs.readJson(cachePath);
+    const cache = (await fs.readJson(cachePath)) as CacheFile;
     expect(cache.skills['python-expert']).toBeDefined();
     expect(cache.skills['react-patterns']).toBeDefined();
   });
@@ -111,7 +112,7 @@ description: Skill used to verify *.test ignore patterns
     );
 
     const configPath = path.join(workspace.root, 'skillz.json');
-    const config = await fs.readJson(configPath);
+    const config = (await fs.readJson(configPath)) as Config;
     config.ignore = ['*.test'];
     await fs.writeJson(configPath, config, { spaces: 2 });
 

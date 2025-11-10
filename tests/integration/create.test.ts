@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createMockWorkspace, MockWorkspace } from '../helpers/workspace.js';
 import { execCli } from '../helpers/cli.js';
+import type { Config } from '../../src/types/index.js';
 import fs from 'fs-extra';
 import path from 'path';
 import matter from 'gray-matter';
+import os from 'os';
 
 describe('create command', () => {
   let workspace: MockWorkspace;
@@ -267,7 +269,7 @@ describe('create command', () => {
 
     // Manually edit config to have empty skillDirectories
     const configPath = path.join(workspace.root, 'skillz.json');
-    const config = await fs.readJson(configPath);
+    const config = (await fs.readJson(configPath)) as Config;
     config.skillDirectories = [];
     await fs.writeJson(configPath, config);
 
@@ -306,7 +308,7 @@ describe('create command', () => {
 
     // Manually edit config to use ~ path
     const configPath = path.join(workspace.root, 'skillz.json');
-    const config = await fs.readJson(configPath);
+    const config = (await fs.readJson(configPath)) as Config;
     config.skillDirectories = ['~/.test-skills'];
     await fs.writeJson(configPath, config);
 
@@ -317,7 +319,7 @@ describe('create command', () => {
     expect(result.exitCode).toBe(0);
 
     // Should expand ~ to home directory
-    const homeDir = require('os').homedir();
+    const homeDir = os.homedir();
     const skillPath = path.join(homeDir, '.test-skills/tilde-test');
     expect(await fs.pathExists(skillPath)).toBe(true);
 
@@ -343,7 +345,7 @@ describe('create command', () => {
     expect(result.exitCode).toBe(0);
 
     // Should expand ~ to home directory
-    const homeDir = require('os').homedir();
+    const homeDir = os.homedir();
     const skillPath = path.join(homeDir, '.test-skills-path/tilde-path');
     expect(await fs.pathExists(skillPath)).toBe(true);
 
