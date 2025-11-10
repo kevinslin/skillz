@@ -67,6 +67,7 @@ Each skill contains:
 ### Available Skills
 
 Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
-- [lint](../../.claude/skills/lint/SKILL.md): lint project
+
+- [lint](.claude/skills/lint/SKILL.md): lint project (project, gitignored)
 - [testing](.claude/skills/testing/SKILL.md): Guidelines for writing integration and unit tests for the skillz CLI
 

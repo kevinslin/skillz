@@ -1,10 +1,7 @@
 {
   "version": "1.0",
   "targets": ["AGENTS.md"],
-  "skillDirectories": [
-    "~/.claude/skills",
-    ".claude/skills"
-  ],
+  "skillDirectories": [".claude/skills"],
   "additionalSkills": [],
   "ignore": [],
   "includeInstructions": false,
