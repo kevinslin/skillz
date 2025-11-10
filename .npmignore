@@ -11,6 +11,7 @@ node_modules/
 
 # Config files
 tsconfig.json
+tsconfig.eslint.json
 jest.config.cjs
 .eslintrc.cjs
 .prettierrc
@@ -19,12 +20,30 @@ jest.config.cjs
 TODO.md
 CLAUDE.md
 COMPLETION_STATUS.md
+AGENTS.md
+ARCHITECTURE.md
+DESIGN.md
+TESTING.md
 .skillz-cache.json
 
 # Git
 .git/
 .gitignore
 .github/
+
+# Editor and IDE files
+.cursor/
+.cursorignore
+.cursorindexingignore
+.editorconfig
+.vscode/
+
+# Session history and LLM-specific files
+.specstory/
+llm/
+
+# Example config (users will generate their own)
+skillz.json
 
 # Keep these files in the package:
 # - dist/
