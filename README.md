@@ -1,4 +1,6 @@
-# Skillz CLI
+# Skillz
+
+<img width="400" height="400" alt="ChatGPT Image Nov 9, 2025, 05_20_01 PM" src="https://github.com/user-attachments/assets/61e1d52b-4ba3-4fb6-9968-cb15e2749b3a" />
 
 Skillz is a TypeScript-powered command line tool that lets you manage Claude Agent skills and surface them inside any AI development environment. It scans local and global skill directories, renders them through configurable templates, and keeps downstream instruction files such as `AGENTS.md`, `.cursorrules`, or `.github/copilot-instructions.md` in sync.
 
