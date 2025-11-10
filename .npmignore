@@ -1,0 +1,33 @@
+# Source files (we publish dist/ only)
+src/
+tests/
+
+# Development files
+.claude/
+coverage/
+node_modules/
+*.log
+.DS_Store
+
+# Config files
+tsconfig.json
+jest.config.cjs
+.eslintrc.cjs
+.prettierrc
+
+# Documentation (internal)
+TODO.md
+CLAUDE.md
+COMPLETION_STATUS.md
+.skillz-cache.json
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Keep these files in the package:
+# - dist/
+# - package.json
+# - README.md
+# - LICENSE (if exists)

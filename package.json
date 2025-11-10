@@ -1,5 +1,5 @@
 {
-  "name": "skillz-cli",
+  "name": "skillz",
   "version": "0.1.0",
   "description": "A TypeScript-based CLI that enables any LLM to understand and utilize Claude Agent Skills",
   "main": "dist/cli.js",

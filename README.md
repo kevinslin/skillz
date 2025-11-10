@@ -25,7 +25,7 @@ npm link   # optional: expose the CLI globally during development
 
 Once published to npm you will be able to install it directly:
 ```bash
-npm install -g skillz-cli
+npm install -g skillz
 ```
 
 ## Quick Start

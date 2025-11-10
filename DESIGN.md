@@ -564,7 +564,7 @@ skillz/
 
 ### NPM Package
 ```bash
-npm install -g skillz-cli
+npm install -g skillz
 ```
 
 ### Binary Distribution
