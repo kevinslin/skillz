@@ -95,9 +95,23 @@ You can edit `skillz.json` manually.
 
 Initialize Skillz in the current directory, detect existing targets, and create `skillz.json`.
 
+**Automatic Environment Detection:**
+
+When you run `skillz init` without flags in an interactive terminal, Skillz automatically detects your development environment and recommends the appropriate configuration:
+
+- **Codex/AGENTS.md**: Detects `AGENTS.md` files and suggests the `agentsmd` preset
+- **Cursor**: Detects `.cursorrules` or `.cursor/rules` files and suggests the `cursor` preset
+- **Claude Code**: Detects `CLAUDE.md` or `.claude/CLAUDE.md` files and suggests the `claude` preset
+- **Aider**: Detects `.aider/conventions.md` files and suggests the `aider` preset
+
+After detection, you can:
+- Accept the suggested configuration
+- Edit the configuration in your `$EDITOR` before saving
+- Cancel and configure manually
+
 Options:
 
-- `--preset <name>`: Apply a preset (`agentsmd`, `aider`) for default targets.
+- `--preset <name>`: Apply a preset (`agentsmd`, `aider`, `cursor`, `claude`) for default targets.
 - `--target <path>`: Supply one or more custom target files.
 - `--additional-skills <path>`: Add extra skill directories (repeatable).
 - `--global-skills`: Include the global `~/.claude/skills/` directory.
@@ -108,8 +122,16 @@ Options:
 Examples:
 
 ```bash
+# Auto-detect environment and configure interactively
 skillz init
+
+# Use specific preset (skips detection)
+skillz init --preset cursor
+
+# Multiple environments
 skillz init --preset aider --global-skills
+
+# Custom target
 skillz init --target .cursorrules --template ./templates/company.hbs
 ```
 

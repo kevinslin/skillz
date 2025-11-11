@@ -5,7 +5,7 @@ import { z } from 'zod';
  */
 export const ConfigSchema = z.object({
   version: z.string(),
-  preset: z.enum(['agentsmd', 'aider']).optional(),
+  preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
   targets: z.array(z.string()), // Allow empty array for skill management only
   skillDirectories: z.array(z.string()),
   additionalSkills: z.array(z.string()),

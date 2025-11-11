@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "targets": [],
+  "skillDirectories": [
+    ".claude/skills"
+  ],
+  "additionalSkills": [],
+  "ignore": [],
+  "includeInstructions": false,
+  "autoSync": false,
+  "skillsSectionName": "## Additional Instructions",
+  "defaultEditor": "vim",
+  "autoSyncAfterEdit": true
+}

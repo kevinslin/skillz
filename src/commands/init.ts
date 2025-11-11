@@ -1,8 +1,10 @@
 import path from 'path';
 import type { Config, DetectedConfig } from '../types/index.js';
-import { getDefaultConfig, saveConfig, inferConfig, detectExistingConfig } from '../core/config.js';
-import { info, success, warning } from '../utils/logger.js';
+import { getDefaultConfig, saveConfig, inferConfig } from '../core/config.js';
+import { info, success, warning, error } from '../utils/logger.js';
 import { fileExists, safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
+import { detectEnvironments, type DetectedEnvironment } from '../core/environment-detector.js';
+import { confirm, select, editInEditor, isInteractive } from '../utils/prompts.js';
 
 interface InitOptions {
   preset?: string;
@@ -29,20 +31,37 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   // Generate config based on preset or options
   let config: Config;
+  let detectedEnv: DetectedEnvironment | null = null;
 
-  // if existing config, print and exit
-  const existingConfig = await detectExistingConfig(cwd);
-  if (existingConfig) {
-    info('Existing configuration detected:');
-    success(JSON.stringify(existingConfig, null, 2));
-    process.exit(0);
-  }
+  // Skip detection if explicit preset or target is provided
+  const skipDetection = !!(options.preset || options.target);
 
-  if (options.preset) {
-    config = getDefaultConfig(options.preset);
-    info(`Using preset: ${options.preset}`);
+  // Detect environment if no explicit options and running interactively
+  if (!skipDetection && isInteractive()) {
+    const environments = await detectEnvironments(cwd);
+
+    if (environments.length > 0) {
+      detectedEnv = await handleEnvironmentDetection(environments);
+
+      if (detectedEnv) {
+        info(`Using detected environment: ${detectedEnv.name}`);
+        config = getDefaultConfig(detectedEnv.preset);
+      } else {
+        info('Skipping environment detection, using default configuration');
+        config = getDefaultConfig();
+      }
+    } else {
+      info('No known environments detected, using default configuration');
+      config = getDefaultConfig();
+    }
   } else {
-    config = getDefaultConfig();
+    // Use explicit preset or default
+    if (options.preset) {
+      config = getDefaultConfig(options.preset);
+      info(`Using preset: ${options.preset}`);
+    } else {
+      config = getDefaultConfig();
+    }
   }
 
   // Override with command line options
@@ -84,10 +103,15 @@ export async function initCommand(options: InitOptions): Promise<void> {
     }
   }
 
+  // Allow user to edit config before saving (if interactive)
+  if (isInteractive() && detectedEnv) {
+    config = await confirmOrEditConfig(config);
+  }
+
   // Save configuration
   await saveConfig(config, cwd);
   success('Created configuration file: skillz.json');
-  success('Previewing configuration...');
+  success('Configuration:');
   success(JSON.stringify(config, null, 2));
 
   // Add .skillz-cache.json to .gitignore
@@ -107,6 +131,100 @@ export async function initCommand(options: InitOptions): Promise<void> {
   }
 
   success('Initialization complete!');
+}
+
+/**
+ * Handle environment detection with interactive prompts
+ */
+async function handleEnvironmentDetection(
+  environments: DetectedEnvironment[]
+): Promise<DetectedEnvironment | null> {
+  if (environments.length === 0) {
+    return null;
+  }
+
+  // Single environment detected
+  if (environments.length === 1) {
+    const env = environments[0];
+    info(`Detected ${env.name} environment (${env.description})`);
+    info(`Preset: ${env.preset}`);
+    info(`Targets: ${env.targets.join(', ')}`);
+
+    const shouldUse = await confirm('Use this environment configuration?', true);
+    return shouldUse ? env : null;
+  }
+
+  // Multiple environments detected - let user choose
+  info(`Multiple environments detected:`);
+  environments.forEach((env, idx) => {
+    info(`  ${idx + 1}. ${env.name} - ${env.description}`);
+  });
+
+  const selectedValue = await select('Select an environment:', [
+    ...environments.map((env) => ({
+      label: `${env.name} (${env.preset})`,
+      value: env.id,
+    })),
+    { label: 'Skip detection', value: 'skip' },
+  ]);
+
+  if (selectedValue === 'skip') {
+    return null;
+  }
+
+  return environments.find((env) => env.id === selectedValue) || null;
+}
+
+/**
+ * Allow user to confirm or edit configuration
+ */
+async function confirmOrEditConfig(config: Config): Promise<Config> {
+  info('\nConfiguration preview:');
+  console.log(JSON.stringify(config, null, 2));
+
+  const action = await select('\nWhat would you like to do?', [
+    { label: 'Accept and continue', value: 'accept' },
+    { label: 'Edit in $EDITOR', value: 'edit' },
+    { label: 'Cancel', value: 'cancel' },
+  ]);
+
+  if (action === 'cancel') {
+    info('Initialization cancelled');
+    process.exit(0);
+  }
+
+  if (action === 'edit') {
+    try {
+      const editedJson = await editInEditor(JSON.stringify(config, null, 2));
+      const editedConfig = JSON.parse(editedJson) as Config;
+
+      // Validate the edited config
+      const { validateConfig } = await import('../utils/validation.js');
+      const validation = validateConfig(editedConfig);
+
+      if (!validation.success) {
+        error('Invalid configuration after editing:');
+        error(JSON.stringify(validation.error.errors, null, 2));
+        const retry = await confirm('Would you like to edit again?', true);
+        if (retry) {
+          return confirmOrEditConfig(editedConfig);
+        }
+        process.exit(1);
+      }
+
+      success('Configuration updated successfully');
+      return editedConfig;
+    } catch (err) {
+      error(`Failed to edit configuration: ${(err as Error).message}`);
+      const retry = await confirm('Would you like to try again?', true);
+      if (retry) {
+        return confirmOrEditConfig(config);
+      }
+      process.exit(1);
+    }
+  }
+
+  return config;
 }
 
 async function addToGitignore(cwd: string): Promise<void> {
