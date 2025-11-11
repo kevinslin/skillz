@@ -72,7 +72,6 @@ The CLI stores project settings in `skillz.json`. A typical file looks like:
   "additionalSkills": [],
   "ignore": ["*.test"],
   "includeInstructions": false,
-  "autoSync": false,
   "defaultEditor": "vi",
   "autoSyncAfterEdit": true
 }

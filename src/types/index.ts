@@ -22,7 +22,6 @@ export interface Config {
   additionalSkills: string[];
   ignore: string[];
   includeInstructions: boolean;
-  autoSync: boolean;
   skillsSectionName: string;
   defaultEditor?: string;
   autoSyncAfterEdit?: boolean;

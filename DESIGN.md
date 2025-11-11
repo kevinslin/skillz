@@ -44,8 +44,7 @@ All targets use the same managed section format with skill links.
     "/custom/path/to/skills"
   ],
   "ignore": ["*.test", "experimental-*"],
-  "includeInstructions": false, // Include full SKILL.md body or just link to skill
-  "autoSync": false
+  "includeInstructions": false // Include full SKILL.md body or just link to skill
 }
 ```
 
@@ -349,7 +348,7 @@ skillz config
 skillz config targets
 
 # Set value
-skillz config autoSync true
+skillz config includeInstructions true
 
 # Add to array
 skillz config additionalSkills --add /new/path

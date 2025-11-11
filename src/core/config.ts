@@ -50,7 +50,6 @@ export function getDefaultConfig(preset?: string): Config {
     additionalSkills: [],
     ignore: [],
     includeInstructions: false,
-    autoSync: false,
     skillsSectionName: '## Additional Instructions',
     defaultEditor: process.env.EDITOR || 'vi',
     autoSyncAfterEdit: true,

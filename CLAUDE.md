@@ -196,7 +196,6 @@ it('should sync skills', async () => {
   "additionalSkills": [],
   "ignore": ["*.test", "experimental-*"],
   "includeInstructions": false,
-  "autoSync": false,
   "defaultEditor": "vi",
   "autoSyncAfterEdit": true
 }
