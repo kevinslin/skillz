@@ -70,6 +70,22 @@ export function getDefaultConfig(preset?: string): Config {
     };
   }
 
+  if (preset === 'cursor') {
+    return {
+      ...baseConfig,
+      preset: 'cursor',
+      targets: ['.cursorrules'],
+    };
+  }
+
+  if (preset === 'claude') {
+    return {
+      ...baseConfig,
+      preset: 'claude',
+      targets: ['CLAUDE.md'],
+    };
+  }
+
   // No preset: return empty targets for skill management only
   return baseConfig;
 }
@@ -104,7 +120,14 @@ export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   const targets: string[] = [];
   const skillDirectories: string[] = [];
 
-  const potentialTargets = ['AGENTS.md', '.cursorrules', '.aider/conventions.md'];
+  const potentialTargets = [
+    'AGENTS.md',
+    '.cursorrules',
+    '.cursor/rules',
+    'CLAUDE.md',
+    '.claude/CLAUDE.md',
+    '.aider/conventions.md',
+  ];
 
   for (const target of potentialTargets) {
     const targetPath = path.join(cwd, target);

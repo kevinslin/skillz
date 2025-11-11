@@ -16,7 +16,7 @@ export interface Skill {
  */
 export interface Config {
   version: string;
-  preset?: 'agentsmd' | 'aider';
+  preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   targets: string[];
   skillDirectories: string[];
   additionalSkills: string[];

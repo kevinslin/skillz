@@ -107,4 +107,49 @@ describe('init command', () => {
     // Output should mention no targets
     expect(result.stdout).toContain('No targets configured');
   });
+
+  it('should create skillz.json with cursor preset', async () => {
+    const result = await execCli(['init', '--preset', 'cursor', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    expect(await fs.pathExists(configPath)).toBe(true);
+
+    const config = (await fs.readJson(configPath)) as SkillsConfig;
+    expect(config.preset).toBe('cursor');
+    expect(config.targets).toContain('.cursorrules');
+  });
+
+  it('should create skillz.json with claude preset', async () => {
+    const result = await execCli(['init', '--preset', 'claude', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    expect(await fs.pathExists(configPath)).toBe(true);
+
+    const config = (await fs.readJson(configPath)) as SkillsConfig;
+    expect(config.preset).toBe('claude');
+    expect(config.targets).toContain('CLAUDE.md');
+  });
+
+  it('should create skillz.json with aider preset', async () => {
+    const result = await execCli(['init', '--preset', 'aider', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    expect(await fs.pathExists(configPath)).toBe(true);
+
+    const config = (await fs.readJson(configPath)) as SkillsConfig;
+    expect(config.preset).toBe('aider');
+    expect(config.targets).toContain('.aider/conventions.md');
+  });
 });

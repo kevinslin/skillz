@@ -103,14 +103,16 @@ program
   .option('-i, --interactive', 'Interactive mode with guided prompts (recommended)')
   .option('--path <directory>', 'Custom directory path (overrides config)')
   .option('--skill-version <semver>', 'Skill version (default: 0.0.0)')
-  .action(async (name: string | undefined, description: string | undefined, options: CreateOptions) => {
-    try {
-      await createCommand(name, description, options);
-    } catch (error) {
-      console.error('Error:', (error as Error).message);
-      process.exit(1);
+  .action(
+    async (name: string | undefined, description: string | undefined, options: CreateOptions) => {
+      try {
+        await createCommand(name, description, options);
+      } catch (error) {
+        console.error('Error:', (error as Error).message);
+        process.exit(1);
+      }
     }
-  });
+  );
 
 program.parse();
 

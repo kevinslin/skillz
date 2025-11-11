@@ -1,10 +1,14 @@
 {
   "version": "1.0",
-  "targets": ["AGENTS.md"],
-  "skillDirectories": [".claude/skills"],
+  "targets": [],
+  "skillDirectories": [
+    ".claude/skills"
+  ],
   "additionalSkills": [],
   "ignore": [],
   "includeInstructions": false,
   "autoSync": false,
-  "skillsSectionName": "## Additional Instructions"
+  "skillsSectionName": "## Additional Instructions",
+  "defaultEditor": "vim",
+  "autoSyncAfterEdit": true
 }
