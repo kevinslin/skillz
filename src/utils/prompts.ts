@@ -5,9 +5,24 @@ import path from 'path';
 import os from 'os';
 
 /**
+ * Global state for non-interactive mode
+ */
+let nonInteractiveMode = false;
+
+/**
+ * Set non-interactive mode
+ */
+export function setNonInteractive(value: boolean): void {
+  nonInteractiveMode = value;
+}
+
+/**
  * Ask a yes/no question and return boolean
  */
 export async function confirm(question: string, defaultValue = true): Promise<boolean> {
+  if (nonInteractiveMode) {
+    return defaultValue;
+  }
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -32,6 +47,9 @@ export async function confirm(question: string, defaultValue = true): Promise<bo
  * Ask a question and return the answer
  */
 export async function question(query: string, defaultValue?: string): Promise<string> {
+  if (nonInteractiveMode) {
+    return defaultValue || '';
+  }
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -55,6 +73,9 @@ export async function select(
   message: string,
   options: { label: string; value: string }[]
 ): Promise<string> {
+  if (nonInteractiveMode) {
+    return options[0].value;
+  }
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -122,5 +143,8 @@ export async function editInEditor(initialContent: string): Promise<string> {
  * Check if running in an interactive terminal
  */
 export function isInteractive(): boolean {
+  if (nonInteractiveMode) {
+    return false;
+  }
   return process.stdin.isTTY === true;
 }

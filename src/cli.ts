@@ -16,6 +16,7 @@ type InitOptions = {
   sync?: boolean;
   template?: string;
   includeInstructions?: boolean;
+  nonInteractive?: boolean;
 };
 
 type SyncOptions = {
@@ -59,6 +60,7 @@ program
   .option('--no-sync', 'Skip initial sync after initialization')
   .option('--template <path>', 'Custom template for skill formatting')
   .option('--include-instructions', 'Include full skill instructions')
+  .option('--non-interactive', 'Run in non-interactive mode (auto-confirm all prompts)')
   .action(async (options: InitOptions) => {
     try {
       await initCommand(options);

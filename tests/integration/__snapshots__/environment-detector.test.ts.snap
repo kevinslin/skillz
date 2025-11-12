@@ -1,0 +1,110 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`environment-detector should detect AGENTS.md environment 1`] = `
+"# Existing agents file
+
+## Additional Instructions
+
+You now have access to Skills. Skills are specialized instruction sets stored as markdown files that extend your capabilities. When a task matches a skill's purpose, load and follow that skill's instructions.
+
+### Skill Structure
+
+Each skill contains:
+- **SKILL.md**: Core instructions with YAML frontmatter
+- **scripts/**: Optional executable code for deterministic tasks
+- **references/**: Optional detailed documentation
+- **assets/**: Optional templates, images, or files
+
+### How to Use Skills
+
+1. **Match task to skill**: Check the skill list below for relevant descriptions
+2. **Load the skill**: Read the SKILL.md file when needed
+3. **Follow instructions**: Apply the skill's guidelines exactly
+4. **Use resources**: Reference bundled scripts/docs/assets as directed
+5. **Combine skills**: Use multiple skills together when appropriate
+
+### When to Load a Skill
+
+- Task matches a skill's description
+- User mentions a skill by name
+- Task requires specialized knowledge (file formats, workflows, domain expertise)
+
+### Key Principles
+
+- **Load only when needed** - Don't load skills for simple tasks
+- **Apply naturally** - Don't announce "loading skill X" unless relevant
+- **Use bundled resources** - Scripts and references are there to help
+- **Be precise** - Skills often include exact patterns and code to follow
+
+### Available Skills
+
+Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
+
+- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
+- [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
+
+"
+`;
+
+exports[`environment-detector should detect Cursor environment: skills.mdc 1`] = `
+"## Additional Instructions
+
+You now have access to Skills. Skills are specialized instruction sets stored as markdown files that extend your capabilities. When a task matches a skill's purpose, load and follow that skill's instructions.
+
+### Skill Structure
+
+Each skill contains:
+- **SKILL.md**: Core instructions with YAML frontmatter
+- **scripts/**: Optional executable code for deterministic tasks
+- **references/**: Optional detailed documentation
+- **assets/**: Optional templates, images, or files
+
+### How to Use Skills
+
+1. **Match task to skill**: Check the skill list below for relevant descriptions
+2. **Load the skill**: Read the SKILL.md file when needed
+3. **Follow instructions**: Apply the skill's guidelines exactly
+4. **Use resources**: Reference bundled scripts/docs/assets as directed
+5. **Combine skills**: Use multiple skills together when appropriate
+
+### When to Load a Skill
+
+- Task matches a skill's description
+- User mentions a skill by name
+- Task requires specialized knowledge (file formats, workflows, domain expertise)
+
+### Key Principles
+
+- **Load only when needed** - Don't load skills for simple tasks
+- **Apply naturally** - Don't announce "loading skill X" unless relevant
+- **Use bundled resources** - Scripts and references are there to help
+- **Be precise** - Skills often include exact patterns and code to follow
+
+### Available Skills
+
+Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
+
+- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
+- [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
+
+"
+`;
+
+exports[`environment-detector should detect multiple environments 1`] = `
+"# My Project Agents
+
+This file contains configuration for AI agents working on this project.
+
+## Project Context
+
+This is a Python web application built with FastAPI and React.
+"
+`;
+
+exports[`environment-detector should detect multiple environments 2`] = `"# Cursor"`;
+
+exports[`environment-detector should detect multiple environments 3`] = `"# Claude"`;
+
+exports[`environment-detector should detect multiple environments: AGENTS.md 1`] = `"/var/folders/w1/nfk9yqwj6690wdfyyg6pvv000000gn/T/skillz-test-A1NA6H/AGENTS.md"`;
+
+exports[`environment-detector should detect multiple environments: skills.mdc 1`] = `"/var/folders/w1/nfk9yqwj6690wdfyyg6pvv000000gn/T/skillz-test-A1NA6H/.cursor/rules/skills.mdc"`;

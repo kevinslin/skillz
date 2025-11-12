@@ -6,6 +6,7 @@ import {
   getEnvironmentByPreset,
   ENVIRONMENTS,
 } from '../../src/core/environment-detector.js';
+import { execCli } from '../helpers/cli.js';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -17,28 +18,67 @@ describe('environment-detector', () => {
   });
 
   afterEach(async () => {
-    await workspace.cleanup();
+    // await workspace.cleanup();
   });
 
   it('should detect AGENTS.md environment', async () => {
-    // AGENTS.md already exists in mock workspace
-    const detected = await detectEnvironments(workspace.root);
+    // Create a workspace without AGENTS.md
+    const cleanWorkspace = await createMockWorkspace({ skipAgentsMd: true });
 
+    // Create an AGENTS.md marker file to trigger detection
+    await fs.writeFile(path.join(cleanWorkspace.root, 'AGENTS.md'), '# Existing agents file\n');
+
+    // Run init in non-interactive mode
+    const result = await execCli(['init', '--preset', 'agentsmd', '--non-interactive'], {
+      cwd: cleanWorkspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    // Verify environment detection
+    const detected = await detectEnvironments(cleanWorkspace.root);
     expect(detected.length).toBeGreaterThan(0);
     const codexEnv = detected.find((env) => env.id === 'codex');
     expect(codexEnv).toBeDefined();
     expect(codexEnv?.preset).toBe('agentsmd');
+
+    // Snapshot the synced AGENTS.md file
+    const agentsFile = await fs.readFile(path.join(cleanWorkspace.root, 'AGENTS.md'), 'utf-8');
+    expect(agentsFile).toMatchSnapshot();
+
+    await cleanWorkspace.cleanup();
   });
 
   it('should detect Cursor environment', async () => {
-    await fs.writeFile(path.join(workspace.root, '.cursorrules'), '# Cursor rules');
+    // Create a workspace without AGENTS.md
+    const cleanWorkspace = await createMockWorkspace({ skipAgentsMd: true });
 
-    const detected = await detectEnvironments(workspace.root);
+    // Create .cursor/rules directory to trigger detection
+    await fs.ensureDir(path.join(cleanWorkspace.root, '.cursor/rules'));
+    await fs.writeFile(path.join(cleanWorkspace.root, '.cursorrules'), '# Cursor rules');
 
+    // Run init in non-interactive mode
+    const result = await execCli(['init', '--preset', 'cursor', '--non-interactive'], {
+      cwd: cleanWorkspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    // Verify environment detection
+    const detected = await detectEnvironments(cleanWorkspace.root);
     const cursorEnv = detected.find((env) => env.id === 'cursor');
     expect(cursorEnv).toBeDefined();
     expect(cursorEnv?.preset).toBe('cursor');
     expect(cursorEnv?.targets).toContain('.cursor/rules/skills.mdc');
+
+    // Snapshot the generated skills.mdc file
+    const skillsMdcFile = await fs.readFile(
+      path.join(cleanWorkspace.root, '.cursor/rules/skills.mdc'),
+      'utf-8'
+    );
+    expect(skillsMdcFile).toMatchSnapshot('skills.mdc');
+
+    await cleanWorkspace.cleanup();
   });
 
   it('should detect Claude environment', async () => {
@@ -66,7 +106,8 @@ describe('environment-detector', () => {
 
   it('should detect multiple environments', async () => {
     // Create multiple marker files
-    await fs.writeFile(path.join(workspace.root, '.cursorrules'), '# Cursor');
+    await fs.ensureDir(path.join(workspace.root, '.cursor/rules'));
+    await fs.writeFile(path.join(workspace.root, '.cursor/rules/skills.mdc'), '# Cursor');
     await fs.writeFile(path.join(workspace.root, 'CLAUDE.md'), '# Claude');
 
     const detected = await detectEnvironments(workspace.root);
@@ -75,6 +116,14 @@ describe('environment-detector', () => {
     expect(detected.some((env) => env.id === 'codex')).toBe(true); // AGENTS.md from mock
     expect(detected.some((env) => env.id === 'cursor')).toBe(true);
     expect(detected.some((env) => env.id === 'claude')).toBe(true);
+    // snapshot the detected environments
+    expect(await fs.readFile(path.join(workspace.root, 'AGENTS.md'), 'utf-8')).toMatchSnapshot();
+    expect(
+      await fs.readFile(path.join(workspace.root, '.cursor/rules/skills.mdc'), 'utf-8')
+    ).toMatchSnapshot();
+    expect(await fs.readFile(path.join(workspace.root, 'CLAUDE.md'), 'utf-8')).toMatchSnapshot();
+    // print workspace root
+    console.log(workspace.root);
   });
 
   it('should return primary environment', async () => {
@@ -86,8 +135,7 @@ describe('environment-detector', () => {
 
   it('should return null when no environment detected', async () => {
     // Create a clean workspace without any marker files
-    const cleanWorkspace = await createMockWorkspace();
-    await fs.remove(cleanWorkspace.agentsFile); // Remove AGENTS.md
+    const cleanWorkspace = await createMockWorkspace({ skipAgentsMd: true });
 
     const detected = await detectEnvironments(cleanWorkspace.root);
     const primary = await detectPrimaryEnvironment(cleanWorkspace.root);

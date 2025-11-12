@@ -4,7 +4,13 @@ import { getDefaultConfig, saveConfig, inferConfig } from '../core/config.js';
 import { info, success, warning, error } from '../utils/logger.js';
 import { fileExists, safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
 import { detectEnvironments, type DetectedEnvironment } from '../core/environment-detector.js';
-import { confirm, select, editInEditor, isInteractive } from '../utils/prompts.js';
+import {
+  confirm,
+  select,
+  editInEditor,
+  isInteractive,
+  setNonInteractive,
+} from '../utils/prompts.js';
 
 interface InitOptions {
   preset?: string;
@@ -14,10 +20,16 @@ interface InitOptions {
   sync?: boolean;
   template?: string;
   includeInstructions?: boolean;
+  nonInteractive?: boolean;
 }
 
 export async function initCommand(options: InitOptions): Promise<void> {
   const cwd = process.cwd();
+
+  // Set non-interactive mode if flag is provided
+  if (options.nonInteractive) {
+    setNonInteractive(true);
+  }
 
   // Check if already initialized
   const configPath = path.join(cwd, 'skillz.json');

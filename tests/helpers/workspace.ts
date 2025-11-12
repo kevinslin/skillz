@@ -9,7 +9,13 @@ export interface MockWorkspace {
   cleanup: () => Promise<void>;
 }
 
-export async function createMockWorkspace(): Promise<MockWorkspace> {
+export interface CreateMockWorkspaceOptions {
+  skipAgentsMd?: boolean;
+}
+
+export async function createMockWorkspace(
+  options: CreateMockWorkspaceOptions = {}
+): Promise<MockWorkspace> {
   // Create temporary directory
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'skillz-test-'));
 
@@ -27,9 +33,11 @@ export async function createMockWorkspace(): Promise<MockWorkspace> {
   await fs.ensureDir(reactSkillDir);
   await fs.writeFile(path.join(reactSkillDir, 'SKILL.md'), getReactPatternsSkillContent());
 
-  // Create AGENTS.md
+  // Create AGENTS.md (unless skipAgentsMd is true)
   const agentsFile = path.join(root, 'AGENTS.md');
-  await fs.writeFile(agentsFile, getAgentsMdContent());
+  if (!options.skipAgentsMd) {
+    await fs.writeFile(agentsFile, getAgentsMdContent());
+  }
 
   // Create .gitignore
   await fs.writeFile(path.join(root, '.gitignore'), 'node_modules/\ndist/\n.skillz-cache.json\n');
