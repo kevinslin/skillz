@@ -2,14 +2,14 @@
 
 <img width="400" height="400" alt="ChatGPT Image Nov 9, 2025, 05_20_01 PM" src="https://ik.imagekit.io/fpjzhqpv1/ChatGPT%20Image%20Nov%209,%202025,%2005_20_01%20PM_KQnKRx_Zt.png?updatedAt=1762739794959" />
 
-Skillz is a TypeScript-powered command line tool that lets you manage Claude Agent skills and surface them inside any AI development environment. It scans local and global skill directories, renders them through configurable templates, and keeps downstream instruction files such as `AGENTS.md`, `.cursor/rules/skills.mdc`, or `.github/copilot-instructions.md` in sync.
+Skillz is a CLI that enables [skills](https://www.claude.com/blog/skills) across any LLM powered tool in a matter of seconds.
+It works by injecting skill instructions in the `AGENTS.md` (or tool equivalent) instruction file and surfaces all discoverable skills by appending their frontmatter to the bottom of the file.
 
 ## Key Features
 
-- Discover skills from project-local `.claude/skills/` and user-level `~/.claude/skills/` folders.
-- Normalize skill output across multiple LLM tooling targets with a single managed section format.
-- Apply custom Handlebars templates or embed full instruction bodies on demand.
-- Detect skill changes via hashing and warn about manual edits before overwriting targets.
+- Enable skill usage by automatically detecting tool environment and injecting skill usage instructions
+- Enable skills to be automatically synced from well known paths (eg. `.claude/skills`) as well as the ability to customize additional paths
+- Various methods to manage and edit skills from the CLI
 
 ## Requirements
 
@@ -19,29 +19,19 @@ Skillz is a TypeScript-powered command line tool that lets you manage Claude Age
 ## Installation
 
 ```bash
-git clone https://github.com/your-org/skillz.git
-cd skillz
-npm install
-npm run build
-npm link   # optional: expose the CLI globally during development
-```
-
-Once published to npm you will be able to install it directly:
-
-```bash
 npm install -g skillz
 ```
 
-## Quick Start
+## Quickstart
 
-1. Initialize the project and generate `skillz.json`:
-   ```bash
-   skillz init --preset agentsmd
-   ```
-2. Sync skills into your target file:
-   ```bash
-   skillz sync
-   ```
+```sh
+cd <your-workspace>
+# this automatically detects your environment
+skillz init
+
+# your skills are now automatically synced
+skillz sync
+```
 
 After syncing, the CLI maintains a managed section in your target file(s). For example, in `AGENTS.md`:
 
@@ -57,8 +47,6 @@ You now have access to Skills. Skills are specialized instruction sets...
 - [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns and best practices
 ```
 
-The section starts with a configurable heading (`skillsSectionName` in config) and continues to the end of the file.
-
 ## Configuration
 
 The CLI stores project settings in `skillz.json`. A typical file looks like:
@@ -70,9 +58,9 @@ The CLI stores project settings in `skillz.json`. A typical file looks like:
   "targets": ["AGENTS.md"],
   "skillDirectories": [".claude/skills"],
   "additionalSkills": [],
-  "ignore": ["*.test"],
+  "ignore": [],
   "includeInstructions": false,
-  "defaultEditor": "vi",
+  "defaultEditor": "vim",
   "autoSyncAfterEdit": true
 }
 ```
@@ -85,8 +73,6 @@ Key fields:
 - `includeInstructions`: When `true`, embeds full skill text instead of links.
 - `defaultEditor`: Default editor for the `edit` command (defaults to `$EDITOR` or `vi`).
 - `autoSyncAfterEdit`: Automatically run `sync` after editing a skill (defaults to `true`).
-
-You can edit `skillz.json` manually.
 
 ## Commands
 
@@ -104,6 +90,7 @@ When you run `skillz init` without flags in an interactive terminal, Skillz auto
 - **Aider**: Detects `.aider/conventions.md` files and suggests the `aider` preset
 
 After detection, you can:
+
 - Accept the suggested configuration
 - Edit the configuration in your `$EDITOR` before saving
 - Cancel and configure manually
@@ -141,8 +128,6 @@ Create a new skill with a template `SKILL.md` file in your configured skill dire
 **Interactive Mode (Recommended):**
 
 ```bash
-skillz create --interactive
-# or
 skillz create -i
 ```
 
@@ -232,17 +217,20 @@ skillz edit <skill-name>
 ```
 
 The command will:
+
 1. Find the skill by name (case-insensitive, handles hyphens/underscores interchangeably)
 2. Open it in your configured editor
 3. Automatically run `sync` after you close the editor (unless `autoSyncAfterEdit` is set to `false`)
 
 **Editor Selection Priority:**
+
 1. `--editor` flag (if provided)
 2. `defaultEditor` from `skillz.json`
 3. `$EDITOR` environment variable
 4. `vi` (fallback)
 
 **Special Behavior:**
+
 - For VS Code and Cursor editors, opens the entire skill folder
 - For other editors, opens the `SKILL.md` file directly
 
@@ -258,10 +246,6 @@ skillz edit python-expert
 
 # Edit using specific editor
 skillz edit python-expert --editor code
-
-# Skill names are case-insensitive and flexible
-skillz edit PYTHON-EXPERT    # Same as python-expert
-skillz edit python_expert    # Same as python-expert
 ```
 
 **Configuration:**
@@ -297,4 +281,4 @@ export EDITOR=vim
 
 ## License
 
-Skillz CLI is released under the MIT License. See `LICENSE` for details once the repository is published.
+Skillz CLI is released under the Apache License. See `LICENSE` for details.
