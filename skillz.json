@@ -1,6 +1,8 @@
 {
   "version": "1.0",
-  "targets": [],
+  "targets": [
+    "AGENTS.md"
+  ],
   "skillDirectories": [
     ".claude/skills"
   ],
@@ -9,5 +11,6 @@
   "includeInstructions": false,
   "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "vim",
-  "autoSyncAfterEdit": true
+  "autoSyncAfterEdit": true,
+  "preset": "agentsmd"
 }
