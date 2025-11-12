@@ -2,7 +2,7 @@
 
 <img width="400" height="400" alt="ChatGPT Image Nov 9, 2025, 05_20_01 PM" src="https://ik.imagekit.io/fpjzhqpv1/ChatGPT%20Image%20Nov%209,%202025,%2005_20_01%20PM_KQnKRx_Zt.png?updatedAt=1762739794959" />
 
-Skillz is a CLI that enables [skills](https://www.claude.com/blog/skills) across any LLM powered tool in a matter of seconds.
+Skillz is a CLI that enables [skills](https://open.substack.com/pub/treeandforest/p/skills-as-object-oriented-programming) across any LLM powered tool in a matter of seconds.
 It works by injecting skill instructions in the `AGENTS.md` (or tool equivalent) instruction file and surfaces all discoverable skills by appending their frontmatter to the bottom of the file.
 
 ## Key Features
