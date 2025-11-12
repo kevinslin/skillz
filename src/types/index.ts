@@ -24,6 +24,7 @@ export interface Config {
   skillsSectionName: string;
   defaultEditor?: string;
   autoSyncAfterEdit?: boolean;
+  customTemplate?: string;
 }
 
 /**

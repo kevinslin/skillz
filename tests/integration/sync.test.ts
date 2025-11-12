@@ -128,4 +128,56 @@ description: Skill used to verify *.test ignore patterns
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(agentsContent).not.toContain('sandbox-test');
   });
+
+  it('should sync only specified skills with --only flag', async () => {
+    const result = await execCli(['sync', '--only', 'python-expert'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('Filtering to 1 skill(s): python-expert');
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('## Additional Instructions');
+    expect(agentsContent).toContain('python-expert');
+    // Should NOT contain react-patterns since we filtered to only python-expert
+    expect(agentsContent).not.toContain('react-patterns');
+
+    // Check cache only has python-expert (since we filtered to only sync that one)
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    const cache = (await fs.readJson(cachePath)) as CacheFile;
+    expect(cache.skills['python-expert']).toBeDefined();
+    expect(cache.skills['react-patterns']).toBeUndefined();
+  });
+
+  it('should sync multiple skills with multiple --only flags', async () => {
+    const result = await execCli(
+      ['sync', '--only', 'python-expert', '--only', 'react-patterns', '--verbose'],
+      {
+        cwd: workspace.root,
+      }
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('Filtering to 2 skill(s): python-expert, react-patterns');
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('python-expert');
+    expect(agentsContent).toContain('react-patterns');
+
+    // Check cache has both skills
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    const cache = (await fs.readJson(cachePath)) as CacheFile;
+    expect(cache.skills['python-expert']).toBeDefined();
+    expect(cache.skills['react-patterns']).toBeDefined();
+  });
+
+  it('should error when --only specifies non-existent skill', async () => {
+    const result = await execCli(['sync', '--only', 'non-existent-skill'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('No matching skills found');
+  });
 });

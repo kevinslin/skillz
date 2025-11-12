@@ -152,4 +152,109 @@ describe('init command', () => {
     expect(config.preset).toBe('aider');
     expect(config.targets).toContain('.aider/conventions.md');
   });
+
+  it('should include global skills directory with --global-skills flag', async () => {
+    const result = await execCli(['init', '--preset', 'agentsmd', '--global-skills', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    expect(await fs.pathExists(configPath)).toBe(true);
+
+    const config = (await fs.readJson(configPath)) as SkillsConfig;
+    expect(config.preset).toBe('agentsmd');
+
+    // Should include both default .claude/skills and global ~/.claude/skills
+    expect(config.skillDirectories).toContain('.claude/skills');
+
+    // Check for global skills directory (should be HOME/.claude/skills)
+    const homeDir = process.env.HOME || '~';
+    const globalSkillsPath = path.join(homeDir, '.claude/skills');
+    expect(config.skillDirectories).toContain(globalSkillsPath);
+  });
+
+  it('should combine --global-skills with different presets', async () => {
+    const result = await execCli(['init', '--preset', 'aider', '--global-skills', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig;
+    expect(config.preset).toBe('aider');
+    expect(config.targets).toContain('.aider/conventions.md');
+
+    // Should include global skills directory
+    const homeDir = process.env.HOME || '~';
+    const globalSkillsPath = path.join(homeDir, '.claude/skills');
+    expect(config.skillDirectories).toContain(globalSkillsPath);
+  });
+
+  it('should save custom template path with --template flag', async () => {
+    // Create a custom template file
+    const templatePath = path.join(workspace.root, 'custom-template.hbs');
+    await fs.writeFile(
+      templatePath,
+      `# Custom Skills
+
+{{#each skills}}
+- [{{name}}]({{path}}): {{description}}
+{{/each}}
+`
+    );
+
+    const result = await execCli(
+      ['init', '--preset', 'agentsmd', '--template', './custom-template.hbs', '--no-sync'],
+      {
+        cwd: workspace.root,
+      }
+    );
+
+    expect(result.exitCode).toBe(0);
+
+    const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig & {
+      customTemplate?: string;
+    };
+    expect(config.customTemplate).toBe('./custom-template.hbs');
+  });
+
+  it('should use custom template when syncing', async () => {
+    // Create a custom template file
+    const templatePath = path.join(workspace.root, 'custom-template.hbs');
+    await fs.writeFile(
+      templatePath,
+      `# Custom Skills List
+
+{{#each skills}}
+* **{{name}}** - {{description}}
+{{/each}}
+
+Last synced: {{lastSync}}
+`
+    );
+
+    // Init with custom template
+    await execCli(
+      ['init', '--preset', 'agentsmd', '--template', './custom-template.hbs', '--no-sync'],
+      {
+        cwd: workspace.root,
+      }
+    );
+
+    // Run sync
+    const syncResult = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(syncResult.exitCode).toBe(0);
+
+    // Verify the AGENTS.md file contains the custom template format
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('# Custom Skills List');
+    expect(agentsContent).toContain('* **python-expert**');
+    expect(agentsContent).toContain('* **react-patterns**');
+    expect(agentsContent).toContain('Last synced:');
+  });
 });

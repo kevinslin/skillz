@@ -43,8 +43,16 @@ export async function renderTemplate(templatePath: string, data: TemplateData): 
  * Render skills with config
  */
 export async function renderSkills(skills: Skill[], config: Config, cwd?: string): Promise<string> {
-  const templatePath = getDefaultTemplatePath();
   const basePath = cwd || process.cwd();
+
+  // Use custom template if specified, otherwise use default
+  let templatePath = getDefaultTemplatePath();
+  if (config.customTemplate) {
+    // Resolve custom template path relative to cwd
+    templatePath = path.isAbsolute(config.customTemplate)
+      ? config.customTemplate
+      : path.join(basePath, config.customTemplate);
+  }
 
   const data: TemplateData = {
     skills: skills.map((skill) => ({

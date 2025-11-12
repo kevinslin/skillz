@@ -91,6 +91,10 @@ export async function initCommand(options: InitOptions): Promise<void> {
     }
   }
 
+  if (options.template) {
+    config.customTemplate = options.template;
+  }
+
   // Only infer targets if a preset was specified but no explicit target given
   // This allows users to init without any targets for skill management only
   if (options.preset && !options.target && !config.targets.length) {
