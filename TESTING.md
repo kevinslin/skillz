@@ -459,14 +459,14 @@ describe('init command', () => {
   });
 
   it('should create skillz.json with custom target', async () => {
-    const result = await execCli(['init', '--target', '.cursorrules', '--no-sync'], {
+    const result = await execCli(['init', '--target', '.cursor/rules/skills.mdc', '--no-sync'], {
       cwd: workspace.root,
     });
 
     expect(result.exitCode).toBe(0);
 
     const config = await fs.readJson(path.join(workspace.root, 'skillz.json'));
-    expect(config.targets).toContain('.cursorrules');
+    expect(config.targets).toContain('.cursor/rules/skills.mdc');
   });
 
   it('should add additional skill directories', async () => {

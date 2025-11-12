@@ -120,7 +120,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('cursor');
-    expect(config.targets).toContain('.cursorrules');
+    expect(config.targets).toContain('.cursor/rules/skills.mdc');
   });
 
   it('should create skillz.json with claude preset', async () => {

@@ -75,7 +75,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'cursor',
-      targets: ['.cursorrules'],
+      targets: ['.cursor/rules/skills.mdc'],
     };
   }
 
@@ -124,7 +124,7 @@ export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   const potentialTargets = [
     'AGENTS.md',
     '.cursorrules',
-    '.cursor/rules',
+    '.cursor/rules/skills.mdc',
     'CLAUDE.md',
     '.claude/CLAUDE.md',
     '.aider/conventions.md',

@@ -2,7 +2,7 @@
 
 <img width="400" height="400" alt="ChatGPT Image Nov 9, 2025, 05_20_01 PM" src="https://ik.imagekit.io/fpjzhqpv1/ChatGPT%20Image%20Nov%209,%202025,%2005_20_01%20PM_KQnKRx_Zt.png?updatedAt=1762739794959" />
 
-Skillz is a TypeScript-powered command line tool that lets you manage Claude Agent skills and surface them inside any AI development environment. It scans local and global skill directories, renders them through configurable templates, and keeps downstream instruction files such as `AGENTS.md`, `.cursorrules`, or `.github/copilot-instructions.md` in sync.
+Skillz is a TypeScript-powered command line tool that lets you manage Claude Agent skills and surface them inside any AI development environment. It scans local and global skill directories, renders them through configurable templates, and keeps downstream instruction files such as `AGENTS.md`, `.cursor/rules/skills.mdc`, or `.github/copilot-instructions.md` in sync.
 
 ## Key Features
 
@@ -99,7 +99,7 @@ Initialize Skillz in the current directory, detect existing targets, and create 
 When you run `skillz init` without flags in an interactive terminal, Skillz automatically detects your development environment and recommends the appropriate configuration:
 
 - **Codex/AGENTS.md**: Detects `AGENTS.md` files and suggests the `agentsmd` preset
-- **Cursor**: Detects `.cursorrules` or `.cursor/rules` files and suggests the `cursor` preset
+- **Cursor**: Detects `.cursorrules` or `.cursor/rules` directory and suggests the `cursor` preset (creates `.cursor/rules/skills.mdc`)
 - **Claude Code**: Detects `CLAUDE.md` or `.claude/CLAUDE.md` files and suggests the `claude` preset
 - **Aider**: Detects `.aider/conventions.md` files and suggests the `aider` preset
 
@@ -131,7 +131,7 @@ skillz init --preset cursor
 skillz init --preset aider --global-skills
 
 # Custom target
-skillz init --target .cursorrules --template ./templates/company.hbs
+skillz init --target .cursor/rules/skills.mdc --template ./templates/company.hbs
 ```
 
 ### `skillz create`

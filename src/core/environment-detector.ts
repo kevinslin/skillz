@@ -30,10 +30,10 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
   {
     id: 'cursor',
     name: 'Cursor',
-    description: 'Cursor IDE with .cursorrules',
+    description: 'Cursor IDE with .cursor/rules',
     preset: 'cursor',
     markers: ['.cursorrules', '.cursor/rules'],
-    targets: ['.cursorrules'],
+    targets: ['.cursor/rules/skills.mdc'],
     skillDirectories: ['.claude/skills'],
   },
   {

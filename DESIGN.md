@@ -15,7 +15,7 @@ A TypeScript-based CLI tool that enables any LLM to understand and utilize Claud
 ### Cross-LLM Compatibility
 Different LLM tools use different file paths for their configuration. Skillz uses the same markdown format for all targets:
 - **Claude Code**: `AGENTS.md`
-- **Cursor**: `.cursorrules`
+- **Cursor**: `.cursor/rules/skills.mdc`
 - **Aider**: `.aider/conventions.md`
 - **GitHub Copilot**: `.github/copilot-instructions.md`
 - **Windsurf**: `.windsurfrules`
@@ -34,7 +34,7 @@ All targets use the same managed section format with skill links.
   "preset": "agentsmd", // Optional: agentsmd, aider
   "targets": [
     "AGENTS.md",
-    ".cursorrules"
+    ".cursor/rules/skills.mdc"
   ],
   "skillDirectories": [
     ".claude/skills",
@@ -77,7 +77,7 @@ Users can start with a preset and customize further using `skillz config` or by 
 Initializes skillz in the current directory.
 
 **Behavior:**
-1. Scans current directory and ancestors for target files (AGENTS.md, .cursorrules, etc.)
+1. Scans current directory and ancestors for target files (AGENTS.md, .cursor/rules/skills.mdc, etc.)
 2. Detects existing `.claude/skills/` directories
 3. Prompts user to confirm/customize detected configuration
 4. Creates `skillz.json` with sensible defaults
@@ -85,7 +85,7 @@ Initializes skillz in the current directory.
 
 **Options:**
 - `--preset <name>` - Use a preset configuration (agentsmd, aider)
-- `--target <file>` - Specify custom target file path (e.g., AGENTS.md, .cursorrules)
+- `--target <file>` - Specify custom target file path (e.g., AGENTS.md, .cursor/rules/skills.mdc)
 - `--additional-skills <path>` - Add additional skill directories (repeatable)
 - `--global-skills` - Include global ~/.claude/skills/ directory
 - `--no-sync` - Skip initial sync after initialization
@@ -108,7 +108,7 @@ skillz init --preset agentsmd
 skillz init --preset aider
 
 # Initialize with custom target
-skillz init --target .cursorrules
+skillz init --target .cursor/rules/skills.mdc
 
 # Initialize with multiple skill sources
 skillz init --preset agentsmd --additional-skills /path/to/company/skills --global-skills
@@ -595,7 +595,7 @@ Use `pkg` or `ncc` to create standalone binaries for:
 ## Migration Path
 
 For existing setups:
-1. Detect existing AGENTS.md or .cursorrules
+1. Detect existing AGENTS.md or .cursor/rules/skills.mdc
 2. Parse existing skill sections (if any)
 3. Preserve custom content outside managed sections
 4. Gradually migrate to managed approach

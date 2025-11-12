@@ -38,7 +38,7 @@ describe('environment-detector', () => {
     const cursorEnv = detected.find((env) => env.id === 'cursor');
     expect(cursorEnv).toBeDefined();
     expect(cursorEnv?.preset).toBe('cursor');
-    expect(cursorEnv?.targets).toContain('.cursorrules');
+    expect(cursorEnv?.targets).toContain('.cursor/rules/skills.mdc');
   });
 
   it('should detect Claude environment', async () => {
