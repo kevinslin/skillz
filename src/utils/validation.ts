@@ -10,7 +10,6 @@ export const ConfigSchema = z.object({
   skillDirectories: z.array(z.string()),
   additionalSkills: z.array(z.string()),
   ignore: z.array(z.string()),
-  includeInstructions: z.boolean(),
   skillsSectionName: z.string().default('## Additional Instructions'),
   defaultEditor: z.string().optional(),
   autoSyncAfterEdit: z.boolean().optional(),

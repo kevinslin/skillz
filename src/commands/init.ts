@@ -19,7 +19,6 @@ interface InitOptions {
   globalSkills?: boolean;
   sync?: boolean;
   template?: string;
-  includeInstructions?: boolean;
   nonInteractive?: boolean;
 }
 
@@ -90,10 +89,6 @@ export async function initCommand(options: InitOptions): Promise<void> {
     if (!config.skillDirectories.includes(globalSkillsDir)) {
       config.skillDirectories.push(globalSkillsDir);
     }
-  }
-
-  if (options.includeInstructions !== undefined) {
-    config.includeInstructions = options.includeInstructions;
   }
 
   // Only infer targets if a preset was specified but no explicit target given

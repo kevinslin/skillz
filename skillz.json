@@ -8,7 +8,6 @@
   ],
   "additionalSkills": [],
   "ignore": [],
-  "includeInstructions": false,
   "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "vim",
   "autoSyncAfterEdit": true,

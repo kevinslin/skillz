@@ -104,7 +104,3 @@ This is a Python web application built with FastAPI and React.
 exports[`environment-detector should detect multiple environments 2`] = `"# Cursor"`;
 
 exports[`environment-detector should detect multiple environments 3`] = `"# Claude"`;
-
-exports[`environment-detector should detect multiple environments: AGENTS.md 1`] = `"/var/folders/w1/nfk9yqwj6690wdfyyg6pvv000000gn/T/skillz-test-A1NA6H/AGENTS.md"`;
-
-exports[`environment-detector should detect multiple environments: skills.mdc 1`] = `"/var/folders/w1/nfk9yqwj6690wdfyyg6pvv000000gn/T/skillz-test-A1NA6H/.cursor/rules/skills.mdc"`;

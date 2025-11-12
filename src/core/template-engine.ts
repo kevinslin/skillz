@@ -17,11 +17,10 @@ async function loadTemplate(templatePath: string): Promise<string> {
 }
 
 /**
- * Get default template based on includeInstructions setting
+ * Get default template path
  */
-export function getDefaultTemplatePath(includeInstructions: boolean): string {
-  const templateName = includeInstructions ? 'skills-full.hbs' : 'skills-list.hbs';
-  return path.join(__dirname, '../templates', templateName);
+export function getDefaultTemplatePath(): string {
+  return path.join(__dirname, '../templates', 'skills-list.hbs');
 }
 
 /**
@@ -44,7 +43,7 @@ export async function renderTemplate(templatePath: string, data: TemplateData): 
  * Render skills with config
  */
 export async function renderSkills(skills: Skill[], config: Config, cwd?: string): Promise<string> {
-  const templatePath = getDefaultTemplatePath(config.includeInstructions);
+  const templatePath = getDefaultTemplatePath();
   const basePath = cwd || process.cwd();
 
   const data: TemplateData = {
@@ -52,7 +51,6 @@ export async function renderSkills(skills: Skill[], config: Config, cwd?: string
       name: skill.name,
       description: skill.description,
       path: path.relative(basePath, path.join(skill.path, 'SKILL.md')),
-      content: config.includeInstructions ? skill.content : undefined,
     })),
     lastSync: new Date().toISOString(),
     sources: config.skillDirectories,

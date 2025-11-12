@@ -99,8 +99,7 @@ Quick summary:
 
 - `renderSkills(skills, config, cwd)` - Renders skills via Handlebars templates
 - Default templates in `src/templates/*.hbs`
-- `skills-list.hbs` - Renders skill links (default)
-- `skills-full.hbs` - Embeds full skill content (when includeInstructions: true)
+- `skills-list.hbs` - Renders skill links
 
 **src/core/target-manager.ts**
 
@@ -195,7 +194,6 @@ it('should sync skills', async () => {
   "skillDirectories": [".claude/skills"],
   "additionalSkills": [],
   "ignore": ["*.test", "experimental-*"],
-  "includeInstructions": false,
   "defaultEditor": "vi",
   "autoSyncAfterEdit": true
 }

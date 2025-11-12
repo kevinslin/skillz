@@ -23,7 +23,7 @@ The `init` command orchestrates config creation and optionally performs an initi
 - **Skill Scanner (`src/core/skill-scanner.ts`)**: resolves `~`, lists directories, filters by glob ignore patterns via `minimatch`, checks for `SKILL.md`, and deduplicates skills while logging warnings.
 - **Skill Parser (`src/core/skill-parser.ts`)**: parses frontmatter with `gray-matter`, validates it, extracts content, and computes a reproducible hash (`utils/hash.ts`) to support change tracking.
 - **Target Manager (`src/core/target-manager.ts`)**: reads/writes the managed section, preserves user-authored content, and relies on the template engine to generate section bodies alongside metadata comments.
-- **Template Engine (`src/core/template-engine.ts`)**: caches compiled Handlebars templates, chooses between summary and full-content templates based on `Config.includeInstructions`, and prepares relative paths for rendering.
+- **Template Engine (`src/core/template-engine.ts`)**: caches compiled Handlebars templates, renders skill summaries with links, and prepares relative paths for rendering.
 - **Cache Manager (`src/core/cache-manager.ts`)**: loads, validates, and writes `.skillz-cache.json`, encapsulating the cached representation of synced skills.
 - **Change Detector (`src/core/change-detector.ts`)**: compares skill hashes from the current scan against cached hashes to identify new, modified, removed, and unchanged skills for reporting and conditional syncing.
 

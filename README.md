@@ -59,7 +59,6 @@ The CLI stores project settings in `skillz.json`. A typical file looks like:
   "skillDirectories": [".claude/skills"],
   "additionalSkills": [],
   "ignore": [],
-  "includeInstructions": false,
   "defaultEditor": "vim",
   "autoSyncAfterEdit": true
 }
@@ -70,7 +69,6 @@ Key fields:
 - `targets`: Instruction files that receive the managed section.
 - `skillDirectories` / `additionalSkills`: Folders that will be scanned for `SKILL.md`.
 - `ignore`: Glob patterns to exclude skills.
-- `includeInstructions`: When `true`, embeds full skill text instead of links.
 - `defaultEditor`: Default editor for the `edit` command (defaults to `$EDITOR` or `vi`).
 - `autoSyncAfterEdit`: Automatically run `sync` after editing a skill (defaults to `true`).
 

@@ -43,8 +43,7 @@ All targets use the same managed section format with skill links.
   "additionalSkills": [
     "/custom/path/to/skills"
   ],
-  "ignore": ["*.test", "experimental-*"],
-  "includeInstructions": false // Include full SKILL.md body or just link to skill
+  "ignore": ["*.test", "experimental-*"]
 }
 ```
 
@@ -269,8 +268,6 @@ Below is the list of skills you can access. Load a skill by reading its SKILL.md
 
 The managed section starts at the configurable section heading (default: `## Additional Instructions`) and continues to the end of the file. Any content before this heading is preserved.
 
-**Note:** When `includeInstructions: true` is set in config, the full SKILL.md content will be embedded instead of just links.
-
 #### `skillz list [options]`
 
 Lists all available skills from configured directories.
@@ -348,7 +345,7 @@ skillz config
 skillz config targets
 
 # Set value
-skillz config includeInstructions true
+skillz config defaultEditor vim
 
 # Add to array
 skillz config additionalSkills --add /new/path
@@ -405,25 +402,6 @@ You can use skills. These are custom instructions that help you accomplish speci
 
 {{#each skills}}
 - [{{name}}]({{path}}): {{description}}
-{{/each}}
-```
-
-When `includeInstructions: true`, use an expanded template:
-
-```handlebars
-{{!-- Expanded template: skills-full.hbs --}}
-## Additional Instructions
-You can use skills. These are custom instructions that help you accomplish specific tasks.
-
-{{#each skills}}
-### {{name}}
-**Path:** {{path}}
-**Description:** {{description}}
-
-**Instructions:**
-{{content}}
-
----
 {{/each}}
 ```
 

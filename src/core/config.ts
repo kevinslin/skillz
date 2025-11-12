@@ -49,7 +49,6 @@ export function getDefaultConfig(preset?: string): Config {
     skillDirectories: ['.claude/skills'],
     additionalSkills: [],
     ignore: [],
-    includeInstructions: false,
     skillsSectionName: '## Additional Instructions',
     defaultEditor: process.env.EDITOR || 'vi',
     autoSyncAfterEdit: true,

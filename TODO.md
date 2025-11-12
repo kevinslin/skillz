@@ -81,7 +81,7 @@
 - [x] Custom target files (--target)
 - [x] Additional skill directories (--additional-skills)
 - [x] Global skills support (--global-skills)
-- [x] Template and includeInstructions flags
+- [x] Template flags
 - [x] Auto-sync or --no-sync
 - [x] No-target mode for skill management only
 - [x] Add .skillz-cache.json to .gitignore
