@@ -354,12 +354,41 @@ skillz config additionalSkills --add /new/path
 skillz config additionalSkills --remove /old/path
 ```
 
-## Architecture Recommendations
+## Architecture
 
-### 1. Target File Management
+### Purpose
+Skillz CLI keeps Claude-compatible skills synchronized across target documents such as `AGENTS.md`. It discovers `SKILL.md` files, validates metadata, renders entries through Handlebars templates, and maintains a managed section in each configured target. The implementation is a TypeScript ES-module CLI that leans on async filesystem helpers to respect a user’s workspace.
 
-Simple interface for managing target files:
+### High-Level Flow
+1. **CLI bootstrap** (`src/cli.ts`) wires commands and shared flags through Commander.
+2. **Configuration** (`src/core/config.ts`) loads or creates `skillz.json`, supplying a `Config` object to every command.
+3. **Skill discovery** (`src/core/skill-scanner.ts`) walks configured directories, applies glob-based ignore rules, and yields parsed `Skill` models.
+4. **Change detection & caching** (`src/core/change-detector.ts`, `src/core/cache-manager.ts`) compares current hashes to the last synced state to avoid unnecessary writes.
+5. **Rendering & target updates** (`src/core/template-engine.ts`, `src/core/target-manager.ts`) build Handlebars output and splice the managed section into each target file.
+6. **Persistence & feedback** leverage utilities in `src/utils/` for FS access, hashing, validation, and logging.
 
+### Command Layer
+- `src/cli.ts` registers commands and ensures failures exit with non-zero status.
+- `src/commands/init.ts` detects or constructs configuration, writes `skillz.json`, updates `.gitignore`, and optionally runs `sync`.
+- `src/commands/sync.ts` orchestrates synchronization, honoring `--dry-run`, `--force`, `--only`, and verbose logging before delegating to core services.
+
+### Core Services
+- **Configuration (`src/core/config.ts`)**: default presets, JSON persistence, and zod-backed validation.
+- **Skill Scanner (`src/core/skill-scanner.ts`)**: tilde expansion, directory listing, glob ignores via `minimatch`, and deduplication with warnings.
+- **Skill Parser (`src/core/skill-parser.ts`)**: parses frontmatter through `gray-matter`, validates required fields, and produces deterministic hashes via `src/utils/hash.ts`.
+- **Template Engine (`src/core/template-engine.ts`)**: caches compiled Handlebars templates, prepares relative paths, and renders summaries or full instructions.
+- **Target Manager (`src/core/target-manager.ts`)**: reads/writes managed sections while preserving custom content.
+- **Cache Manager (`src/core/cache-manager.ts`)**: loads/validates `.skillz-cache.json` and persists sync metadata.
+- **Change Detector (`src/core/change-detector.ts`)**: categorizes skills as new/modified/removed/unchanged to drive incremental updates.
+
+### Utilities & Cross-Cutting Concerns
+- **Filesystem helpers (`src/utils/fs-helpers.ts`)** provide resilient reads/writes, directory enumeration, tilde expansion, and atomic updates.
+- **Validation (`src/utils/validation.ts`)** centralizes zod schemas for configs, skills, and cache files.
+- **Logging (`src/utils/logger.ts`)** wraps `chalk`/`ora` for leveled logs and spinner UX.
+- **Hashing (`src/utils/hash.ts`)** normalizes metadata + content into SHA-based hashes relied upon by change detection.
+
+### Key Interfaces
+#### Target File Management
 ```typescript
 interface TargetFileManager {
   read(filePath: string): TargetContent;
@@ -367,22 +396,19 @@ interface TargetFileManager {
   extractManagedSection(content: string): ManagedSection | null;
   replaceManagedSection(content: string, newSection: string): string;
 }
-
-// All target files use the same markdown format with delimited sections
-// No special adapters needed - just different file paths
 ```
+All targets share the same markdown format with delimited sections, so no adapters are needed—only file-path differences.
 
-### 2. Skill Parser
-
+#### Skill Model & Parser
 ```typescript
 interface Skill {
   name: string;
   description: string;
   path: string;
-  content: string; // Full SKILL.md content
+  content: string;
   frontmatter: Record<string, any>;
   lastModified: Date;
-  hash: string; // For change detection
+  hash: string;
 }
 
 class SkillParser {
@@ -391,9 +417,8 @@ class SkillParser {
 }
 ```
 
-### 3. Template Engine
-
-Support custom templates for skill formatting. The default template generates a simple bulleted list with links:
+### Templates
+Handlebars templates in `src/templates/` (e.g., `skills-list.hbs`, `skills-full.hbs`) accept the `TemplateData` shape from `src/types/index.ts`. The default template renders a bulleted list with links:
 
 ```handlebars
 {{!-- Default template: skills-list.hbs --}}
@@ -405,14 +430,25 @@ You can use skills. These are custom instructions that help you accomplish speci
 {{/each}}
 ```
 
-Users can provide custom templates via `--template` option or config.
+Users can provide custom templates via config or `--template`.
 
-### 4. Change Detection
+### Managed Section Structure
+Managed sections start at a configurable heading (default `## Additional Instructions`) and extend to EOF:
+```markdown
+## Additional Instructions
 
-Use content hashing (SHA-256) to efficiently detect changes without comparing full content:
+You now have access to Skills...
 
-**Hash Storage:**
-Hashes are stored in `.skillz-cache.json` in the project root:
+### Available Skills
+
+- [skill-name](path/to/SKILL.md): Description
+```
+`target-manager` locates the heading, replaces the trailing content, and preserves everything before it.
+
+### Change Detection & Cache
+Content hashing (SHA-256) drives incremental updates.
+
+**Hash Storage**
 ```json
 {
   "version": "1.0",
@@ -423,56 +459,58 @@ Hashes are stored in `.skillz-cache.json` in the project root:
       "hash": "a1b2c3d4e5f6",
       "path": ".claude/skills/python-expert/SKILL.md",
       "lastModified": "2025-11-05T09:15:00Z"
-    },
-    "react-patterns": {
-      "hash": "b2c3d4e5f6g7",
-      "path": ".claude/skills/react-patterns/SKILL.md",
-      "lastModified": "2025-11-04T14:22:00Z"
     }
   }
 }
 ```
 
-**Hash Calculation:**
+**Hash Calculation**
 ```typescript
 function calculateSkillHash(skill: Skill): string {
-  // Hash includes: name, description, and full SKILL.md content
   const hashInput = `${skill.name}:${skill.description}:${skill.content}`;
   return crypto.createHash('sha256').update(hashInput).digest('hex').slice(0, 12);
 }
 ```
 
-**Change Detection Flow:**
-1. **Read Phase:** Load `.skillz-cache.json` and extract stored hashes
-2. **Scan Phase:** Scan skill directories and calculate current hash for each skill
-3. **Compare Phase:**
-   - **New skill:** Hash exists in filesystem but not in cache file
-   - **Modified skill:** Hash in cache differs from current filesystem hash
-   - **Removed skill:** Hash exists in cache but skill no longer in filesystem
-   - **Unchanged:** Hashes match - skip update to preserve performance
-4. **Update Phase:**
-   - Only regenerate content for new/modified/removed skills
-   - Update `.skillz-cache.json` with new hashes
+**Flow**
+1. Read cached hashes from `.skillz-cache.json`.
+2. Scan directories and compute current hashes.
+3. Compare to classify skills (new/modified/removed/unchanged).
+4. Regenerate only required content and update the cache file.
 
-**Benefits:**
-- Fast comparison without reading full skill content
-- Detects any changes (name, description, or content)
-- Enables incremental updates
-- Stores additional metadata (timestamps, paths)
-- Can be gitignored or committed based on team preference
+**Benefits**
+- Avoids reading/writing unchanged targets.
+- Captures any metadata or content change.
+- Stores timestamps/paths for diagnostics.
 
-**Cache File Management:**
-- Should be added to `.gitignore` by default (each developer maintains their own)
-- Can be committed if team wants to track sync state
-- Automatically recreated if missing (treats all skills as new)
-- Use `skillz clean` to remove cache along with managed section
+**Cache File Management**
+- Add to `.gitignore` so each developer tracks their own state (optional to commit).
+- Automatically recreated if missing (treats all skills as new).
+- `skillz clean` removes both the managed section and cache.
 
-### 5. Safety Features
+### Safety Features
+- **Manual edit detection** surfaces warnings when the managed section drifts.
+- **Atomic writes** rely on temporary files + rename to prevent corruption.
+- **Validation gates** ensure configs/skills/templates parse cleanly before touching targets.
+- **Dry-run support** exists on destructive commands.
 
-- **Manual Edit Detection**: Warn if managed section was manually edited
-- **Atomic Writes**: Use temp files + rename for atomic updates
-- **Validation**: Always validate before writing
-- **Dry Run**: Support for all destructive operations
+### Dependency Graph Snapshot
+- CLI commands depend on core services.
+- Core services share types/utilities.
+- Templates are consumed only through the template engine.
+- External deps: Commander, Inquirer, Handlebars, Gray-matter, Minimatch, Chalk/Ora, fs-extra (tests).
+
+### Extensibility Notes
+- Adding commands follows the `src/cli.ts` + `src/commands/` pattern while reusing services.
+- Custom templates plug into existing config/CLI flags.
+- Supporting more skill sources only requires updating the config schema and scanner; change detection/cache automatically adjust through shared types.
+- Managed section tweaks live inside `target-manager` + templates to maintain backwards compatibility.
+
+### Build & Runtime Expectations
+- `npm run build` compiles TS to `dist/`, copies template assets, and prepares `dist/cli.js`. `prepublishOnly` runs the same pipeline before publishing.
+- Requires Node.js 18+.
+- Assumes valid `SKILL.md` frontmatter (`name`, `description`) plus readable/writable `skillz.json` and `.skillz-cache.json`.
+- Fails fast on invalid configuration or metadata, surfacing actionable errors through the logger.
 
 ## CLI Framework and Dependencies
 
