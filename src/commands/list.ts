@@ -75,17 +75,14 @@ function outputTable(skills: Skill[]): void {
 }
 
 function outputMarkdown(skills: Skill[]): void {
-  console.log('| Name | Description | Path |');
-  console.log('|------|-------------|------|');
-
   for (const skill of skills) {
-    const name = skill.name.replace(/\|/g, '\\|');
-    const description = skill.description.replace(/\|/g, '\\|');
-    const path = skill.path.replace(/\|/g, '\\|');
-    console.log(`| ${name} | ${description} | ${path} |`);
+    const normalizedDescription = skill.description.replace(/\s+/g, ' ').trim();
+    const descriptionSnippet = normalizedDescription.slice(0, 100);
+    const truncatedDescription =
+      normalizedDescription.length > 100 ? `${descriptionSnippet}…` : descriptionSnippet;
+    const outputDescription = truncatedDescription || 'No description provided';
+    console.log(`- ${skill.name}: ${outputDescription}`);
   }
-
-  info(`Total: ${skills.length} skill(s)`);
 }
 
 function outputJson(skills: Skill[]): void {

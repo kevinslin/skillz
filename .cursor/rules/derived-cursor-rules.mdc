@@ -26,6 +26,7 @@ This document defines the rules, coding standards, workflow guidelines, referenc
 (Describe the project workflow, including branching strategies, code review processes, testing procedures, and release management.)
 
 - After running `npm run build` to create `./dist/cli.js`, execute the CLI using either `node ./dist/cli.js …` directly. Alternatively, after running `npm link` (or installing the package), the CLI can be called directly using `skillz …`.
+- The `skillz list` command should, by default, provide a concise output, displaying each skill as a markdown bullet point with its name and the first 100 characters of its description. The description should have whitespace normalized, be trimmed, and have an ellipsis appended if truncated. If no description is available, the output should display "No description provided".
 
 ## DEBUGGING
 
