@@ -2,6 +2,7 @@ import { loadConfig } from '../core/config.js';
 import { scanAllSkillDirectories } from '../core/skill-scanner.js';
 import { loadCache } from '../core/cache-manager.js';
 import { info, error, createTable } from '../utils/logger.js';
+import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 import type { Skill } from '../types/index.js';
 
 interface ListOptions {
@@ -11,7 +12,7 @@ interface ListOptions {
 }
 
 export async function listCommand(options: ListOptions): Promise<void> {
-  const cwd = process.cwd();
+  const { cwd } = await ensureSkillzProjectCwd();
   const format = options.format || 'table';
 
   // Load configuration

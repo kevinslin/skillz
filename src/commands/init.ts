@@ -11,6 +11,7 @@ import {
   isInteractive,
   setNonInteractive,
 } from '../utils/prompts.js';
+import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 
 interface InitOptions {
   preset?: string;
@@ -23,7 +24,7 @@ interface InitOptions {
 }
 
 export async function initCommand(options: InitOptions): Promise<void> {
-  const cwd = process.cwd();
+  const { cwd } = await ensureSkillzProjectCwd();
 
   // Set non-interactive mode if flag is provided
   if (options.nonInteractive) {

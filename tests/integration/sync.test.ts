@@ -180,4 +180,19 @@ description: Skill used to verify *.test ignore patterns
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('No matching skills found');
   });
+
+  it('should resolve skillz.json from parent directories', async () => {
+    const nestedDir = path.join(workspace.root, 'nested', 'inner');
+    await fs.ensureDir(nestedDir);
+
+    const result = await execCli(['sync'], {
+      cwd: nestedDir,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('python-expert');
+    expect(agentsContent).toContain('react-patterns');
+  });
 });

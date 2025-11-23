@@ -7,6 +7,7 @@ import type { Config } from '../types/index.js';
 import path from 'path';
 import { promisify } from 'util';
 import { exec } from 'child_process';
+import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 
 const execAsync = promisify(exec);
 
@@ -83,7 +84,7 @@ function openEditor(editorCommand: string, filePath: string): Promise<number> {
  * Edit command implementation
  */
 export async function editCommand(skillName: string, options: EditOptions): Promise<void> {
-  const cwd = process.cwd();
+  const { cwd } = await ensureSkillzProjectCwd();
 
   // Load configuration
   const config = await loadConfig(cwd);

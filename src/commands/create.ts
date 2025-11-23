@@ -9,6 +9,7 @@ import {
   generateInteractiveSkillContent,
   type InteractiveAnswers,
 } from '../core/skill-template-generator.js';
+import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 
 interface CreateOptions {
   path?: string;
@@ -310,6 +311,8 @@ export async function createCommand(
   description: string | undefined,
   options: CreateOptions
 ): Promise<void> {
+  const { cwd } = await ensureSkillzProjectCwd();
+
   // Interactive mode
   if (options.interactive || (!name && !description)) {
     await runInteractiveCreate(options);
@@ -322,9 +325,6 @@ export async function createCommand(
     logError('Use --interactive flag for guided skill creation');
     process.exit(1);
   }
-
-  // Original non-interactive implementation
-  const cwd = process.cwd();
 
   // Validate inputs
   validateFrontmatter(name, description);

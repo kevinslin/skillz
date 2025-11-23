@@ -14,6 +14,7 @@ import {
   debug,
   setVerbose,
 } from '../utils/logger.js';
+import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 
 interface SyncOptions {
   dryRun?: boolean;
@@ -23,11 +24,11 @@ interface SyncOptions {
 }
 
 export async function syncCommand(options: SyncOptions): Promise<void> {
-  const cwd = process.cwd();
-
   if (options.verbose) {
     setVerbose(true);
   }
+
+  const { cwd } = await ensureSkillzProjectCwd();
 
   // Load configuration
   const config = await loadConfig(cwd);
