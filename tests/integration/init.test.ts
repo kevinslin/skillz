@@ -257,4 +257,44 @@ Last synced: {{lastSync}}
     expect(agentsContent).toContain('* **react-patterns**');
     expect(agentsContent).toContain('Last synced:');
   });
+
+  it('should allow init in subdirectory even when parent has skillz.json', async () => {
+    // First, create skillz.json in the root
+    await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    // Verify parent config exists
+    const parentConfigPath = path.join(workspace.root, 'skillz.json');
+    expect(await fs.pathExists(parentConfigPath)).toBe(true);
+
+    // Create a subdirectory
+    const subDir = path.join(workspace.root, 'subproject');
+    await fs.ensureDir(subDir);
+
+    // Create a subdirectory skills folder
+    const subSkillsDir = path.join(subDir, '.claude/skills');
+    await fs.ensureDir(subSkillsDir);
+
+    // Init in subdirectory should succeed and create a new config
+    const result = await execCli(['init', '--preset', 'cursor', '--no-sync'], {
+      cwd: subDir,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    // Verify subdirectory has its own config
+    const subConfigPath = path.join(subDir, 'skillz.json');
+    expect(await fs.pathExists(subConfigPath)).toBe(true);
+
+    // Verify subdirectory config is different from parent
+    const subConfig = (await fs.readJson(subConfigPath)) as SkillsConfig;
+    expect(subConfig.preset).toBe('cursor');
+    expect(subConfig.targets).toContain('.cursor/rules/skills.mdc');
+
+    // Verify parent config is unchanged
+    const parentConfig = (await fs.readJson(parentConfigPath)) as SkillsConfig;
+    expect(parentConfig.preset).toBe('agentsmd');
+    expect(parentConfig.targets).toContain('AGENTS.md');
+  });
 });

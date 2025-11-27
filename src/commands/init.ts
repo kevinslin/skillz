@@ -11,7 +11,6 @@ import {
   isInteractive,
   setNonInteractive,
 } from '../utils/prompts.js';
-import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 
 interface InitOptions {
   preset?: string;
@@ -24,7 +23,9 @@ interface InitOptions {
 }
 
 export async function initCommand(options: InitOptions): Promise<void> {
-  const { cwd } = await ensureSkillzProjectCwd();
+  // For init command, NEVER traverse parent directories
+  // Always use current working directory
+  const cwd = process.cwd();
 
   // Set non-interactive mode if flag is provided
   if (options.nonInteractive) {
