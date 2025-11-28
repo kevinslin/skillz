@@ -1,19 +1,20 @@
 import { loadConfig } from '../core/config.js';
 import { scanAllSkillDirectories } from '../core/skill-scanner.js';
 import { loadCache } from '../core/cache-manager.js';
-import { info, error, createTable } from '../utils/logger.js';
+import { info, error } from '../utils/logger.js';
 import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 import type { Skill } from '../types/index.js';
 
 interface ListOptions {
-  format?: 'table' | 'json' | 'markdown';
+  format?: 'json' | 'markdown';
+  style?: 'long';
   syncedOnly?: boolean;
   unsyncedOnly?: boolean;
 }
 
 export async function listCommand(options: ListOptions): Promise<void> {
   const { cwd } = await ensureSkillzProjectCwd();
-  const format = options.format || 'table';
+  const format = options.format || 'markdown';
 
   // Load configuration
   const config = await loadConfig(cwd);
@@ -49,48 +50,46 @@ export async function listCommand(options: ListOptions): Promise<void> {
   }
 
   // Output in requested format
+  const isLong = options.style === 'long';
   switch (format) {
     case 'json':
-      outputJson(filteredSkills);
+      outputJson(filteredSkills, isLong);
       break;
     case 'markdown':
-      outputMarkdown(filteredSkills);
-      break;
-    case 'table':
     default:
-      outputTable(filteredSkills);
+      outputMarkdown(filteredSkills, isLong);
       break;
   }
 }
 
-function outputTable(skills: Skill[]): void {
-  const table = createTable(['Name', 'Description', 'Path']);
-
-  for (const skill of skills) {
-    table.push([skill.name, skill.description, skill.path]);
-  }
-
-  console.log(table.toString());
-  info(`Total: ${skills.length} skill(s)`);
-}
-
-function outputMarkdown(skills: Skill[]): void {
+function outputMarkdown(skills: Skill[], isLong: boolean): void {
   for (const skill of skills) {
     const normalizedDescription = skill.description.replace(/\s+/g, ' ').trim();
     const descriptionSnippet = normalizedDescription.slice(0, 100);
     const truncatedDescription =
       normalizedDescription.length > 100 ? `${descriptionSnippet}…` : descriptionSnippet;
     const outputDescription = truncatedDescription || 'No description provided';
-    console.log(`- ${skill.name}: ${outputDescription}`);
+
+    if (isLong) {
+      console.log(`- ${skill.name} (${skill.path}): ${outputDescription}`);
+    } else {
+      console.log(`- ${skill.name}: ${outputDescription}`);
+    }
   }
+  info(`Total: ${skills.length} skill(s)`);
 }
 
-function outputJson(skills: Skill[]): void {
-  const output = skills.map((skill) => ({
-    name: skill.name,
-    description: skill.description,
-    path: skill.path,
-  }));
+function outputJson(skills: Skill[], isLong: boolean): void {
+  const output = skills.map((skill) => {
+    const base = {
+      name: skill.name,
+      description: skill.description,
+    };
+    if (isLong) {
+      return { ...base, path: skill.path };
+    }
+    return base;
+  });
 
   console.log(JSON.stringify(output, null, 2));
 }

@@ -15,7 +15,7 @@ describe('list command', () => {
     await workspace.cleanup();
   });
 
-  it('should list skills in table format by default', async () => {
+  it('should list skills in markdown format by default', async () => {
     // Initialize first
     await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
       cwd: workspace.root,
@@ -26,9 +26,8 @@ describe('list command', () => {
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('python-expert');
-    expect(result.stdout).toContain('react-patterns');
-    expect(result.stdout).toContain('Total: 2 skill(s)');
+    expect(result.stdout).toContain('- python-expert:');
+    expect(result.stdout).toContain('- react-patterns:');
   });
 
   it('should list skills in JSON format', async () => {
@@ -45,7 +44,7 @@ describe('list command', () => {
     const output = JSON.parse(result.stdout) as Array<{
       name: string;
       description: string;
-      path: string;
+      path?: string;
     }>;
     expect(Array.isArray(output)).toBe(true);
     expect(output.length).toBe(2);
@@ -54,10 +53,10 @@ describe('list command', () => {
     expect(names).toContain('python-expert');
     expect(names).toContain('react-patterns');
 
-    // Check structure
+    // Check structure (path should be omitted in regular style)
     expect(output[0]).toHaveProperty('name');
     expect(output[0]).toHaveProperty('description');
-    expect(output[0]).toHaveProperty('path');
+    expect(output[0]).not.toHaveProperty('path');
   });
 
   it('should list skills in markdown format', async () => {
@@ -70,10 +69,78 @@ describe('list command', () => {
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('| Name | Description | Path |');
-    expect(result.stdout).toContain('|------|-------------|------|');
-    expect(result.stdout).toContain('python-expert');
-    expect(result.stdout).toContain('react-patterns');
+    expect(result.stdout).toContain('- python-expert:');
+    expect(result.stdout).toContain('- react-patterns:');
+  });
+
+  it('should list skills in long style with JSON format', async () => {
+    await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    const result = await execCli(['list', '--style', 'long', '--format', 'json'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const output = JSON.parse(result.stdout) as Array<{
+      name: string;
+      description: string;
+      path?: string;
+    }>;
+    expect(Array.isArray(output)).toBe(true);
+    expect(output.length).toBe(2);
+
+    // Verify all entries have path field in long style
+    for (const skill of output) {
+      expect(skill).toHaveProperty('name');
+      expect(skill).toHaveProperty('description');
+      expect(skill).toHaveProperty('path');
+    }
+  });
+
+  it('should list skills in long style with markdown format', async () => {
+    await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    const result = await execCli(['list', '--style', 'long', '--format', 'markdown'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+    // Verify format: - {skill_name} ({skill_path}): {description}
+    expect(result.stdout).toContain('- python-expert (');
+    expect(result.stdout).toContain('- react-patterns (');
+    expect(result.stdout).toContain('):');
+  });
+
+  it('should omit path in regular style JSON format', async () => {
+    await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    const result = await execCli(['list', '--format', 'json'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const output = JSON.parse(result.stdout) as Array<{
+      name: string;
+      description: string;
+      path?: string;
+    }>;
+    expect(Array.isArray(output)).toBe(true);
+    expect(output.length).toBe(2);
+
+    // Verify entries don't have path field in regular style
+    for (const skill of output) {
+      expect(skill).toHaveProperty('name');
+      expect(skill).toHaveProperty('description');
+      expect(skill).not.toHaveProperty('path');
+    }
   });
 
   it('should show only synced skills with --synced-only', async () => {

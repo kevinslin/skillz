@@ -26,7 +26,8 @@ type SyncOptions = {
 };
 
 type ListOptions = {
-  format?: 'table' | 'json' | 'markdown';
+  format?: 'json' | 'markdown';
+  style?: 'long';
   syncedOnly?: boolean;
   unsyncedOnly?: boolean;
 };
@@ -89,7 +90,8 @@ program
 program
   .command('list')
   .description('Display available skills')
-  .option('--format <type>', 'Output format: table, json, or markdown', 'table')
+  .option('--format <type>', 'Output format: json or markdown', 'markdown')
+  .option('--style <type>', 'Output style: long for extended format')
   .option('--synced-only', 'Show only skills that have been synced')
   .option('--unsynced-only', 'Show only skills that have not been synced')
   .action(async (options: ListOptions) => {
