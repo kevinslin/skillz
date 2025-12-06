@@ -9,7 +9,7 @@ import { debug, warning } from '../utils/logger.js';
  * Scan a directory for skills
  */
 export async function scanDirectory(directory: string, ignore: string[] = []): Promise<string[]> {
-  const resolvedDir = resolveHome(directory);
+  const resolvedDir = path.resolve(resolveHome(directory));
 
   if (!(await fileExists(resolvedDir))) {
     debug(`Directory not found: ${resolvedDir}`);

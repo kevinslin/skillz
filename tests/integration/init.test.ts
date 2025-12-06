@@ -66,10 +66,12 @@ describe('init command', () => {
 
     // Check AGENTS.md was updated with managed section
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('## Additional Instructions');
-    expect(agentsContent).toContain('python-expert');
-    expect(agentsContent).toContain('react-patterns');
-    expect(agentsContent).toMatchSnapshot();
+    const normalizedContent = agentsContent.replaceAll(workspace.root, '<workspace>');
+
+    expect(normalizedContent).toContain('## Additional Instructions');
+    expect(normalizedContent).toContain('python-expert');
+    expect(normalizedContent).toContain('react-patterns');
+    expect(normalizedContent).toMatchSnapshot();
   });
 
   it('should create skillz.json with no targets when no preset or target specified', async () => {

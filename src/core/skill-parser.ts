@@ -9,7 +9,8 @@ import { calculateSkillHash } from '../utils/hash.js';
  * Parse a skill from its SKILL.md file
  */
 export async function parseSkill(skillPath: string): Promise<Skill> {
-  const skillFile = path.join(skillPath, 'SKILL.md');
+  const resolvedSkillPath = path.resolve(skillPath);
+  const skillFile = path.join(resolvedSkillPath, 'SKILL.md');
   const content = await safeReadFile(skillFile);
 
   if (!content) {
@@ -35,7 +36,7 @@ export async function parseSkill(skillPath: string): Promise<Skill> {
   const skill: Skill = {
     name: frontmatter.name as string,
     description: frontmatter.description as string,
-    path: skillPath,
+    path: resolvedSkillPath,
     content: body.trim(),
     frontmatter: frontmatter as Record<string, unknown>,
     lastModified,

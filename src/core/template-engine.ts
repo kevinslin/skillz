@@ -58,7 +58,7 @@ export async function renderSkills(skills: Skill[], config: Config, cwd?: string
     skills: skills.map((skill) => ({
       name: skill.name,
       description: skill.description,
-      path: path.relative(basePath, path.join(skill.path, 'SKILL.md')),
+      path: path.resolve(skill.path, 'SKILL.md'),
     })),
     lastSync: new Date().toISOString(),
     sources: config.skillDirectories,

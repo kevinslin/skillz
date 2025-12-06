@@ -44,7 +44,8 @@ describe('environment-detector', () => {
 
     // Snapshot the synced AGENTS.md file
     const agentsFile = await fs.readFile(path.join(cleanWorkspace.root, 'AGENTS.md'), 'utf-8');
-    expect(agentsFile).toMatchSnapshot();
+    const normalizedAgents = agentsFile.replaceAll(cleanWorkspace.root, '<workspace>');
+    expect(normalizedAgents).toMatchSnapshot();
 
     await cleanWorkspace.cleanup();
   });
@@ -76,7 +77,8 @@ describe('environment-detector', () => {
       path.join(cleanWorkspace.root, '.cursor/rules/skills.mdc'),
       'utf-8'
     );
-    expect(skillsMdcFile).toMatchSnapshot('skills.mdc');
+    const normalizedSkills = skillsMdcFile.replaceAll(cleanWorkspace.root, '<workspace>');
+    expect(normalizedSkills).toMatchSnapshot('skills.mdc');
 
     await cleanWorkspace.cleanup();
   });
