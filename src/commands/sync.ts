@@ -38,7 +38,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   }
 
   // Scan skills
-  const spin = spinner('Scanning skill directories...').start();
+  const spin = spinner('Scanning skill directories...\n').start();
   const skills = await scanAllSkillDirectories(config);
   spin.succeed(`Found ${skills.length} skill(s)`);
 
@@ -60,6 +60,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   }
 
   // Load cache
+  debug(`loading cache from ${cwd}`);
   const cache = await loadCache(cwd);
 
   // Detect changes if not forcing and cache exists
@@ -101,7 +102,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   }
 
   // Sync to all targets
-  const syncSpin = spinner('Syncing skills to targets...').start();
+  const syncSpin = spinner('Syncing skills to targets...\n').start();
 
   try {
     for (const target of config.targets) {

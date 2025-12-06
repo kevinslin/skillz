@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileExists } from './fs-helpers.js';
+import { debug } from './logger.js';
 
 const CONFIG_FILE = 'skillz.json';
 
@@ -36,6 +37,7 @@ interface EnsureCwdResult {
  */
 export async function ensureSkillzProjectCwd(startDir = process.cwd()): Promise<EnsureCwdResult> {
   const root = await findSkillzProjectRoot(startDir);
+  debug(`found root ${root}`);
 
   if (root) {
     const changed = root !== path.resolve(startDir);

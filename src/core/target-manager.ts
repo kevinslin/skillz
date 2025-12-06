@@ -1,5 +1,6 @@
 import type { Skill, Config, ManagedSection, TargetContent } from '../types/index.js';
 import { safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
+import { debug } from '../utils/logger.js';
 import { renderSkills } from './template-engine.js';
 
 /**
@@ -77,7 +78,6 @@ export function replaceManagedSection(
   sectionName: string
 ): string {
   const managedSection = extractManagedSection(content, sectionName);
-
   if (!managedSection) {
     // No existing section, append to end
     const trimmedContent = content.trim();
@@ -130,7 +130,7 @@ export async function writeTargetFile(
   cwd: string
 ): Promise<void> {
   const targetContent = await readTargetFile(filePath, config.skillsSectionName);
-
+  debug(`reading target file from ${filePath}`);
   // Validate no duplicate sections before writing
   validateNoDuplicateSections(targetContent.fullContent, config.skillsSectionName);
 

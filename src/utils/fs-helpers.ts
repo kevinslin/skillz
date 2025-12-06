@@ -7,14 +7,15 @@ import os from 'os';
  * Safely read a file, returning empty string if it doesn't exist
  */
 export async function safeReadFile(filePath: string): Promise<string> {
+  const resolvedFilePath = resolveHome(filePath);
   try {
-    return await fs.readFile(filePath, 'utf-8');
+    return await fs.readFile(resolvedFilePath, 'utf-8');
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return '';
     }
     if ((error as NodeJS.ErrnoException).code === 'EACCES') {
-      throw new Error(`Permission denied reading file: ${filePath}`);
+      throw new Error(`Permission denied reading file: ${resolvedFilePath}`);
     }
     throw error;
   }
@@ -24,20 +25,21 @@ export async function safeReadFile(filePath: string): Promise<string> {
  * Safely write a file with atomic operation
  */
 export async function safeWriteFile(filePath: string, content: string): Promise<void> {
+  const resolvedFilePath = resolveHome(filePath);
   try {
     // Ensure parent directory exists
-    const dir = path.dirname(filePath);
+    const dir = path.dirname(resolvedFilePath);
     await ensureDir(dir);
 
     // Write to temp file first
-    const tempPath = `${filePath}.tmp`;
+    const tempPath = `${resolvedFilePath}.tmp`;
     await fs.writeFile(tempPath, content, 'utf-8');
 
     // Atomic rename
-    await fs.rename(tempPath, filePath);
+    await fs.rename(tempPath, resolvedFilePath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'EACCES') {
-      throw new Error(`Permission denied writing file: ${filePath}`);
+      throw new Error(`Permission denied writing file: ${resolvedFilePath}`);
     }
     throw error;
   }
@@ -47,8 +49,9 @@ export async function safeWriteFile(filePath: string, content: string): Promise<
  * Check if a file exists
  */
 export async function fileExists(filePath: string): Promise<boolean> {
+  const resolvedFilePath = resolveHome(filePath);
   try {
-    await fs.access(filePath, constants.F_OK);
+    await fs.access(resolvedFilePath, constants.F_OK);
     return true;
   } catch {
     return false;
@@ -60,7 +63,8 @@ export async function fileExists(filePath: string): Promise<boolean> {
  */
 export async function ensureDir(dirPath: string): Promise<void> {
   try {
-    await fs.mkdir(dirPath, { recursive: true });
+    const resolvedDirPath = resolveHome(dirPath);
+    await fs.mkdir(resolvedDirPath, { recursive: true });
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
       throw error;
@@ -82,7 +86,8 @@ export function resolveHome(filePath: string): string {
  * Check if a directory contains a SKILL.md file
  */
 export async function isSkillDirectory(dirPath: string): Promise<boolean> {
-  const skillFile = path.join(dirPath, 'SKILL.md');
+  const resolvedDirPath = resolveHome(dirPath);
+  const skillFile = path.join(resolvedDirPath, 'SKILL.md');
   return fileExists(skillFile);
 }
 
