@@ -6,6 +6,7 @@ import { syncCommand } from './commands/sync.js';
 import { listCommand } from './commands/list.js';
 import { createCommand } from './commands/create.js';
 import { editCommand } from './commands/edit.js';
+import { infoCommand } from './commands/info.js';
 
 // Types for command options
 type InitOptions = {
@@ -129,6 +130,19 @@ program
   .action(async (skillName: string, options: EditOptions) => {
     try {
       await editCommand(skillName, options);
+    } catch (error) {
+      console.error('Error:', (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+// Info command
+program
+  .command('info')
+  .description('Display project information and statistics')
+  .action(async () => {
+    try {
+      await infoCommand();
     } catch (error) {
       console.error('Error:', (error as Error).message);
       process.exit(1);
