@@ -23,6 +23,7 @@ interface SyncOptions {
   verbose?: boolean;
   only?: string[];
   pathStyle?: string;
+  template?: string;
 }
 
 export async function syncCommand(options: SyncOptions): Promise<void> {
@@ -60,6 +61,16 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     debug(`Using path style from config: ${config.pathStyle}`);
   } else {
     debug('Using default path style: relative');
+  }
+
+  // Handle --template option
+  if (options.template) {
+    config.template = options.template;
+    debug(`Using template from CLI: ${config.template}`);
+  } else if (config.template) {
+    debug(`Using template from config: ${config.template}`);
+  } else {
+    debug('Using default template');
   }
 
   // Scan skills

@@ -13,6 +13,7 @@ export const ConfigSchema = z.object({
   skillsSectionName: z.string().default('## Additional Instructions'),
   defaultEditor: z.string().optional(),
   autoSyncAfterEdit: z.boolean().optional(),
+  template: z.string().optional(),
   pathStyle: z.enum(['relative', 'absolute']).optional().default('relative'),
 });
 

@@ -44,6 +44,7 @@ All targets use the same managed section format with skill links.
     "/custom/path/to/skills"
   ],
   "ignore": ["*.test", "experimental-*"],
+  "template": "default", // Optional: default, readme, or path to .hbs file
   "pathStyle": "relative" // Optional: relative (default) or absolute
 }
 ```
@@ -232,10 +233,11 @@ Synchronizes skills from source directories to target files.
 - `--verbose` - Show detailed operation logs
 - `--only <skill-name>` - Sync only specific skill(s)
 - `--path-style <style>` - Path style for skill links: relative, absolute (or shorthand: rel, abs)
+- `--template <name>` - Template: default, readme, or path to .hbs file
 
 **Examples:**
 ```bash
-# Standard sync (uses relative paths by default)
+# Standard sync (uses default template with LLM instructions)
 skillz sync
 
 # Preview changes without applying
@@ -244,11 +246,14 @@ skillz sync --dry-run
 # Sync specific skills only
 skillz sync --only python-expert --only react-patterns
 
+# Use minimal README template (no instructions, just links)
+skillz sync --template readme
+
+# Use custom template
+skillz sync --template ./my-template.hbs
+
 # Use absolute paths instead of relative
 skillz sync --path-style absolute
-
-# Use shorthand for relative paths
-skillz sync --path-style rel
 ```
 
 **Target File Format:**

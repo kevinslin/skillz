@@ -198,6 +198,7 @@ it('should sync skills', async () => {
   "ignore": ["*.test", "experimental-*"],
   "defaultEditor": "vi",
   "autoSyncAfterEdit": true,
+  "template": "default",
   "pathStyle": "relative"
 }
 ```
@@ -205,6 +206,10 @@ it('should sync skills', async () => {
 **New in v0.2.0:**
 - `defaultEditor`: Default editor for `skillz edit` command (falls back to `$EDITOR` env var or `vi`)
 - `autoSyncAfterEdit`: Automatically run `skillz sync` after editing a skill (default: `true`)
+- `template`: Template to use when syncing: `"default"` (with LLM instructions), `"readme"` (minimal, human-readable), or path to custom `.hbs` file
+  - Built-in templates: `default` (full skill instructions for LLMs), `readme` (just skill links for humans)
+  - Custom templates: provide relative path like `"./my-template.hbs"` or absolute path
+  - Can be overridden per-sync with `--template` flag
 - `pathStyle`: Path style for skill links in synced files: `"relative"` (default) or `"absolute"`
   - Relative paths are portable across machines and produce cleaner markdown
   - Absolute paths may be needed for certain tools or cross-workspace references

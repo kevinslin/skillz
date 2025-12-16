@@ -217,9 +217,9 @@ describe('init command', () => {
     expect(result.exitCode).toBe(0);
 
     const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig & {
-      customTemplate?: string;
+      template?: string;
     };
-    expect(config.customTemplate).toBe('./custom-template.hbs');
+    expect(config.template).toBe('./custom-template.hbs');
   });
 
   it('should use custom template when syncing', async () => {

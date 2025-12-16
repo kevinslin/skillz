@@ -25,6 +25,7 @@ type SyncOptions = {
   verbose?: boolean;
   only?: string[];
   pathStyle?: string;
+  template?: string;
 };
 
 type ListOptions = {
@@ -83,6 +84,7 @@ program
     '--path-style <style>',
     'Path style for skill links: relative, absolute (or shorthand: rel, abs)'
   )
+  .option('--template <name>', 'Template: default, readme, or path to .hbs file')
   .action(async (options: SyncOptions) => {
     try {
       await syncCommand(options);

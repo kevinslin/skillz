@@ -20,7 +20,37 @@ async function loadTemplate(templatePath: string): Promise<string> {
  * Get default template path
  */
 export function getDefaultTemplatePath(): string {
-  return path.join(__dirname, '../templates', 'skills-list.hbs');
+  return path.join(__dirname, '../templates', 'default.hbs');
+}
+
+/**
+ * Resolve template path from config value
+ * Supports built-in templates ('default', 'readme') and custom paths
+ */
+export function resolveTemplatePath(
+  template: string | undefined,
+  cwd: string
+): string {
+  // Default case
+  if (!template) {
+    return getDefaultTemplatePath();
+  }
+
+  // Built-in templates
+  if (template === 'default' || template === 'readme') {
+    return path.join(__dirname, '../templates', `${template}.hbs`);
+  }
+
+  // Custom file paths (contains .hbs or path separator)
+  if (template.includes('.hbs') || template.includes('/') || template.includes('\\')) {
+    return path.isAbsolute(template) ? template : path.join(cwd, template);
+  }
+
+  // Invalid template name
+  throw new Error(
+    `Invalid template: "${template}". ` +
+      `Expected 'default', 'readme', or a file path ending in .hbs`
+  );
 }
 
 /**
@@ -89,14 +119,8 @@ export async function renderSkills(
   const basePath = cwd || process.cwd();
   const pathStyle = config.pathStyle || 'relative';
 
-  // Use custom template if specified, otherwise use default
-  let templatePath = getDefaultTemplatePath();
-  if (config.customTemplate) {
-    // Resolve custom template path relative to cwd
-    templatePath = path.isAbsolute(config.customTemplate)
-      ? config.customTemplate
-      : path.join(basePath, config.customTemplate);
-  }
+  // Resolve template path
+  const templatePath = resolveTemplatePath(config.template, basePath);
 
   const data: TemplateData = {
     skills: skills.map((skill) => {

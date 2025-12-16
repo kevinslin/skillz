@@ -439,4 +439,95 @@ description: Skill used to verify *.test ignore patterns
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('configuration changed');
   });
+
+  describe('template option', () => {
+    it('should use readme template from CLI', async () => {
+      const result = await execCli(['sync', '--template', 'readme'], {
+        cwd: workspace.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+
+      const content = await fs.readFile(workspace.agentsFile, 'utf-8');
+      // README template should not have instructional text
+      expect(content).not.toContain('You now have access to Skills');
+      expect(content).toContain('Available Skills');
+      expect(content).toContain('python-expert');
+      expect(content).toContain('react-patterns');
+    });
+
+    it('should use default template (with instructions)', async () => {
+      const result = await execCli(['sync', '--template', 'default'], {
+        cwd: workspace.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+
+      const content = await fs.readFile(workspace.agentsFile, 'utf-8');
+      // Default template should have full instructions
+      expect(content).toContain('You now have access to Skills');
+      expect(content).toContain('How to Use Skills');
+      expect(content).toContain('Available Skills');
+    });
+
+    it('should use custom template file', async () => {
+      const templatePath = path.join(workspace.root, 'custom.hbs');
+      await fs.writeFile(
+        templatePath,
+        '{{sectionName}}\n\nCustom template: {{skills.length}} skills found'
+      );
+
+      const result = await execCli(['sync', '--template', './custom.hbs'], {
+        cwd: workspace.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+
+      const content = await fs.readFile(workspace.agentsFile, 'utf-8');
+      expect(content).toContain('Custom template: 2 skills found');
+    });
+
+    it('should error on invalid template name', async () => {
+      const result = await execCli(['sync', '--template', 'invalid'], {
+        cwd: workspace.root,
+      });
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Invalid template');
+      expect(result.stderr).toContain('invalid');
+    });
+
+    it('should support template in config file', async () => {
+      const configPath = path.join(workspace.root, 'skillz.json');
+      const config = (await fs.readJson(configPath)) as Config;
+      config.template = 'readme';
+      await fs.writeJson(configPath, config, { spaces: 2 });
+
+      const result = await execCli(['sync'], {
+        cwd: workspace.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+
+      const content = await fs.readFile(workspace.agentsFile, 'utf-8');
+      expect(content).not.toContain('You now have access to Skills');
+    });
+
+    it('should allow CLI to override config template', async () => {
+      const configPath = path.join(workspace.root, 'skillz.json');
+      const config = (await fs.readJson(configPath)) as Config;
+      config.template = 'readme';
+      await fs.writeJson(configPath, config, { spaces: 2 });
+
+      const result = await execCli(['sync', '--template', 'default'], {
+        cwd: workspace.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+
+      const content = await fs.readFile(workspace.agentsFile, 'utf-8');
+      // Should use default template (CLI override)
+      expect(content).toContain('You now have access to Skills');
+    });
+  });
 });

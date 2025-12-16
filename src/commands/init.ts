@@ -94,7 +94,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
   }
 
   if (options.template) {
-    config.customTemplate = options.template;
+    config.template = options.template;
   }
 
   // Only infer targets if a preset was specified but no explicit target given
