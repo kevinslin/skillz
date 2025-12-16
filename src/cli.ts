@@ -24,6 +24,7 @@ type SyncOptions = {
   force?: boolean;
   verbose?: boolean;
   only?: string[];
+  pathStyle?: string;
 };
 
 type ListOptions = {
@@ -78,6 +79,10 @@ program
   .option('--force', 'Overwrite target even if no changes detected')
   .option('--verbose', 'Show detailed operation logs')
   .option('--only <skill-name>', 'Sync only specific skill(s)', collect, [])
+  .option(
+    '--path-style <style>',
+    'Path style for skill links: relative, absolute (or shorthand: rel, abs)'
+  )
   .action(async (options: SyncOptions) => {
     try {
       await syncCommand(options);

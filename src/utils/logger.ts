@@ -9,6 +9,7 @@ let quietMode = false;
  * Set verbose mode
  */
 export function setVerbose(enabled: boolean): void {
+  console.log('setting verbose mode to', enabled);
   verboseMode = enabled;
 }
 

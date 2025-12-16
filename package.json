@@ -12,8 +12,7 @@
   },
   "scripts": {
     "build": "tsc && mkdir -p dist/templates && cp src/templates/*.hbs dist/templates/",
-    "dev": "tsx watch src/cli.ts",
-    "tsc:watch": "tsc --watch",
+    "dev": "tsc --watch",
     "test": "npm run build && jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

@@ -43,7 +43,8 @@ All targets use the same managed section format with skill links.
   "additionalSkills": [
     "/custom/path/to/skills"
   ],
-  "ignore": ["*.test", "experimental-*"]
+  "ignore": ["*.test", "experimental-*"],
+  "pathStyle": "relative" // Optional: relative (default) or absolute
 }
 ```
 
@@ -230,10 +231,11 @@ Synchronizes skills from source directories to target files.
 - `--force` - Overwrite target even if manual edits detected
 - `--verbose` - Show detailed operation logs
 - `--only <skill-name>` - Sync only specific skill(s)
+- `--path-style <style>` - Path style for skill links: relative, absolute (or shorthand: rel, abs)
 
 **Examples:**
 ```bash
-# Standard sync
+# Standard sync (uses relative paths by default)
 skillz sync
 
 # Preview changes without applying
@@ -241,6 +243,12 @@ skillz sync --dry-run
 
 # Sync specific skills only
 skillz sync --only python-expert --only react-patterns
+
+# Use absolute paths instead of relative
+skillz sync --path-style absolute
+
+# Use shorthand for relative paths
+skillz sync --path-style rel
 ```
 
 **Target File Format:**
@@ -454,6 +462,7 @@ Content hashing (SHA-256) drives incremental updates.
   "version": "1.0",
   "lastSync": "2025-11-05T10:30:00Z",
   "targetFile": "AGENTS.md",
+  "configHash": "9f8e7d6c5b4a",
   "skills": {
     "python-expert": {
       "hash": "a1b2c3d4e5f6",
@@ -474,13 +483,16 @@ function calculateSkillHash(skill: Skill): string {
 
 **Flow**
 1. Read cached hashes from `.skillz-cache.json`.
-2. Scan directories and compute current hashes.
-3. Compare to classify skills (new/modified/removed/unchanged).
-4. Regenerate only required content and update the cache file.
+2. Calculate hash of current configuration (`skillz.json`).
+3. Compare config hash to detect configuration changes.
+4. Scan directories and compute current skill hashes.
+5. Compare to classify skills (new/modified/removed/unchanged).
+6. Regenerate content if either config or skills changed and update the cache file.
 
 **Benefits**
 - Avoids reading/writing unchanged targets.
 - Captures any metadata or content change.
+- Detects configuration changes (templates, targets, section names, etc.).
 - Stores timestamps/paths for diagnostics.
 
 **Cache File Management**

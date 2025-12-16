@@ -13,6 +13,7 @@ export const ConfigSchema = z.object({
   skillsSectionName: z.string().default('## Additional Instructions'),
   defaultEditor: z.string().optional(),
   autoSyncAfterEdit: z.boolean().optional(),
+  pathStyle: z.enum(['relative', 'absolute']).optional().default('relative'),
 });
 
 /**
@@ -40,6 +41,7 @@ export const CacheFileSchema = z.object({
   version: z.string(),
   lastSync: z.string(),
   targetFile: z.string(),
+  configHash: z.string(),
   skills: z.record(
     z.object({
       hash: z.string(),

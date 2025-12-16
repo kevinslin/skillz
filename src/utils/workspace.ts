@@ -10,6 +10,7 @@ const CONFIG_FILE = 'skillz.json';
 export async function findSkillzProjectRoot(startDir: string): Promise<string | null> {
   let currentDir = path.resolve(startDir);
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const configPath = path.join(currentDir, CONFIG_FILE);
     if (await fileExists(configPath)) {

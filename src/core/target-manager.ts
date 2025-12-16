@@ -98,9 +98,10 @@ export function replaceManagedSection(
 export async function createManagedSection(
   skills: Skill[],
   config: Config,
-  cwd: string
+  cwd: string,
+  targetPath: string
 ): Promise<string> {
-  return await renderSkills(skills, config, cwd);
+  return await renderSkills(skills, config, cwd, targetPath);
 }
 
 /**
@@ -134,7 +135,7 @@ export async function writeTargetFile(
   // Validate no duplicate sections before writing
   validateNoDuplicateSections(targetContent.fullContent, config.skillsSectionName);
 
-  const newSection = await createManagedSection(skills, config, cwd);
+  const newSection = await createManagedSection(skills, config, cwd, filePath);
   const updatedContent = replaceManagedSection(
     targetContent.fullContent,
     newSection,

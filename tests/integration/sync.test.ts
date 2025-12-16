@@ -195,4 +195,248 @@ description: Skill used to verify *.test ignore patterns
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
   });
+
+  it('should detect config changes and trigger sync', async () => {
+    // First sync
+    await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    // Verify initial sync with "All skills are up to date"
+    const noChangeResult = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+    expect(noChangeResult.exitCode).toBe(0);
+    expect(noChangeResult.stdout).toContain('All skills are up to date');
+
+    // Modify config (change section name)
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.skillsSectionName = '## Custom Skills Section';
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    // Sync again - should detect config change
+    const configChangeResult = await execCli(['sync', '--verbose'], {
+      cwd: workspace.root,
+    });
+
+    expect(configChangeResult.exitCode).toBe(0);
+    expect(configChangeResult.stdout).toContain('configuration changed');
+    expect(configChangeResult.stdout).toContain(
+      'Configuration file (skillz.json) has been modified'
+    );
+
+    // Verify cache was updated with new configHash
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    const cache = (await fs.readJson(cachePath)) as CacheFile;
+    expect(cache.configHash).toBeDefined();
+    expect(typeof cache.configHash).toBe('string');
+  });
+
+  it('should cache config hash and detect subsequent config changes', async () => {
+    // First sync
+    await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    // Read cache to verify configHash is stored
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    const cache1 = (await fs.readJson(cachePath)) as CacheFile;
+    const originalConfigHash = cache1.configHash;
+    expect(originalConfigHash).toBeDefined();
+
+    // Modify config - add an ignore pattern
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.ignore = ['*.experimental'];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    // Sync - should detect change
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('configuration changed');
+
+    // Verify configHash changed in cache
+    const cache2 = (await fs.readJson(cachePath)) as CacheFile;
+    expect(cache2.configHash).toBeDefined();
+    expect(cache2.configHash).not.toBe(originalConfigHash);
+  });
+
+  it('should sync when both config and skills change', async () => {
+    // First sync
+    await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    // Modify both config and a skill
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.skillsSectionName = '## Available Skills';
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const pythonSkillPath = path.join(workspace.skillsDir, 'python-expert', 'SKILL.md');
+    let skillContent = await fs.readFile(pythonSkillPath, 'utf-8');
+    skillContent += '\n\n## Additional Content\n\nNew content added.';
+    await fs.writeFile(pythonSkillPath, skillContent);
+
+    // Sync with verbose - should report both changes
+    const result = await execCli(['sync', '--verbose'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('configuration changed');
+    expect(result.stdout).toContain('modified');
+  });
+
+  it('should respect --force flag and bypass config change detection', async () => {
+    // First sync
+    await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    // Second sync with no changes - should exit early
+    const noChangeResult = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+    expect(noChangeResult.stdout).toContain('All skills are up to date');
+
+    // Force sync - should bypass all checks
+    const forceResult = await execCli(['sync', '--force'], {
+      cwd: workspace.root,
+    });
+    expect(forceResult.exitCode).toBe(0);
+    expect(forceResult.stdout).toContain('Force mode');
+    expect(forceResult.stdout).not.toContain('All skills are up to date');
+  });
+
+  it('should use relative paths by default', async () => {
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    // Relative paths should not start with /
+    expect(agentsContent).toContain('.claude/skills/python-expert/SKILL.md');
+    expect(agentsContent).toContain('.claude/skills/react-patterns/SKILL.md');
+    expect(agentsContent).not.toContain(workspace.root);
+  });
+
+  it('should use absolute paths with --path-style absolute', async () => {
+    const result = await execCli(['sync', '--path-style', 'absolute'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    // Absolute paths should contain the full path
+    expect(agentsContent).toContain(
+      path.join(workspace.root, '.claude/skills/python-expert/SKILL.md')
+    );
+    expect(agentsContent).toContain(
+      path.join(workspace.root, '.claude/skills/react-patterns/SKILL.md')
+    );
+  });
+
+  it('should use absolute paths with pathStyle in config', async () => {
+    // Update config to use absolute paths
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.pathStyle = 'absolute';
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    // Absolute paths should contain the full path
+    expect(agentsContent).toContain(
+      path.join(workspace.root, '.claude/skills/python-expert/SKILL.md')
+    );
+  });
+
+  it('should allow CLI flag to override config pathStyle', async () => {
+    // Set config to absolute
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.pathStyle = 'absolute';
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    // But use relative via CLI flag
+    const result = await execCli(['sync', '--path-style', 'relative'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    // Should use relative paths (CLI override)
+    expect(agentsContent).toContain('.claude/skills/python-expert/SKILL.md');
+    expect(agentsContent).not.toContain(workspace.root);
+  });
+
+  it('should accept shorthand path style values', async () => {
+    // Test 'rel' shorthand
+    const relResult = await execCli(['sync', '--path-style', 'rel'], {
+      cwd: workspace.root,
+    });
+    expect(relResult.exitCode).toBe(0);
+    let agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('.claude/skills/python-expert/SKILL.md');
+
+    // Test 'abs' shorthand
+    const absResult = await execCli(['sync', '--path-style', 'abs'], {
+      cwd: workspace.root,
+    });
+    expect(absResult.exitCode).toBe(0);
+    agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain(
+      path.join(workspace.root, '.claude/skills/python-expert/SKILL.md')
+    );
+  });
+
+  it('should error with invalid path style value', async () => {
+    const result = await execCli(['sync', '--path-style', 'invalid'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('Invalid path style');
+    expect(result.stderr).toContain('invalid');
+  });
+
+  it('should trigger sync when pathStyle config changes', async () => {
+    // First sync with default (relative)
+    await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    // Verify no changes detected
+    const noChangeResult = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+    expect(noChangeResult.stdout).toContain('All skills are up to date');
+
+    // Change pathStyle in config
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.pathStyle = 'absolute';
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    // Sync again - should detect config change
+    const result = await execCli(['sync', '--verbose'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('configuration changed');
+  });
 });

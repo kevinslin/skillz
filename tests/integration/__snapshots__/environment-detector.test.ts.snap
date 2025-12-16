@@ -40,8 +40,8 @@ Each skill contains:
 
 Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
 
-- [python-expert](/private<workspace>/.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
-- [react-patterns](/private<workspace>/.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
+- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
+- [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
 
 "
 `;
@@ -84,8 +84,8 @@ Each skill contains:
 
 Below is the list of skills you can access. Load a skill by reading its SKILL.md file when the task matches:
 
-- [python-expert](/private<workspace>/.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
-- [react-patterns](/private<workspace>/.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
+- [python-expert](../../.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices, testing, and modern Python features
+- [react-patterns](../../.claude/skills/react-patterns/SKILL.md): Modern React patterns including hooks, composition, performance optimization, and TypeScript integration
 
 "
 `;

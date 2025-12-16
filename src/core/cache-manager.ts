@@ -1,7 +1,8 @@
 import path from 'path';
-import type { CacheFile, Skill } from '../types/index.js';
+import type { CacheFile, Skill, Config } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateCacheFile } from '../utils/validation.js';
+import { calculateConfigHash } from '../utils/hash.js';
 
 const CACHE_FILE = '.skillz-cache.json';
 
@@ -51,13 +52,14 @@ export async function saveCache(cache: CacheFile, cwd: string): Promise<void> {
 }
 
 /**
- * Update cache with skills
+ * Update cache with skills and config hash
  */
-export function updateCache(skills: Skill[], targetFile: string): CacheFile {
+export function updateCache(skills: Skill[], targetFile: string, config: Config): CacheFile {
   const cache: CacheFile = {
     version: '1.0',
     lastSync: new Date().toISOString(),
     targetFile,
+    configHash: calculateConfigHash(config),
     skills: {},
   };
 
@@ -75,11 +77,12 @@ export function updateCache(skills: Skill[], targetFile: string): CacheFile {
 /**
  * Get empty cache
  */
-export function getEmptyCache(targetFile: string): CacheFile {
+export function getEmptyCache(targetFile: string, config: Config): CacheFile {
   return {
     version: '1.0',
     lastSync: new Date().toISOString(),
     targetFile,
+    configHash: calculateConfigHash(config),
     skills: {},
   };
 }

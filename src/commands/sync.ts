@@ -15,12 +15,14 @@ import {
   setVerbose,
 } from '../utils/logger.js';
 import { ensureSkillzProjectCwd } from '../utils/workspace.js';
+import { calculateConfigHash, hashesMatch } from '../utils/hash.js';
 
 interface SyncOptions {
   dryRun?: boolean;
   force?: boolean;
   verbose?: boolean;
   only?: string[];
+  pathStyle?: string;
 }
 
 export async function syncCommand(options: SyncOptions): Promise<void> {
@@ -35,6 +37,29 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   if (!config) {
     error('No configuration file found. Run `skillz init` first.');
     process.exit(1);
+  }
+
+  // Handle --path-style option
+  if (options.pathStyle) {
+    // Normalize shorthand values
+    const normalizedStyle = options.pathStyle.toLowerCase();
+    if (normalizedStyle === 'rel') {
+      config.pathStyle = 'relative';
+    } else if (normalizedStyle === 'abs') {
+      config.pathStyle = 'absolute';
+    } else if (normalizedStyle === 'relative' || normalizedStyle === 'absolute') {
+      config.pathStyle = normalizedStyle as 'relative' | 'absolute';
+    } else {
+      error(
+        `Invalid path style: "${options.pathStyle}". Must be one of: relative, absolute, rel, abs`
+      );
+      process.exit(1);
+    }
+    debug(`Using path style from CLI: ${config.pathStyle}`);
+  } else if (config.pathStyle) {
+    debug(`Using path style from config: ${config.pathStyle}`);
+  } else {
+    debug('Using default path style: relative');
   }
 
   // Scan skills
@@ -64,30 +89,48 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   const cache = await loadCache(cwd);
 
   // Detect changes if not forcing and cache exists
-  if (!options.force && cache) {
-    const changes = detectChanges(filteredSkills, cache);
+  if (!options.force && cache && cache !== null) {
+    // Check if config has changed
+    const currentConfigHash = calculateConfigHash(config);
+    const configChanged = !hashesMatch(currentConfigHash, cache.configHash);
 
-    if (!hasChanges(changes)) {
+    // Check if skills have changed
+    const changes = detectChanges(filteredSkills, cache);
+    const skillsChanged = hasChanges(changes);
+
+    // Exit early only if neither config nor skills changed
+    if (!configChanged && !skillsChanged) {
       success('All skills are up to date');
       return;
     }
 
-    const summary = summarizeChanges(changes);
+    // Report what changed
+    const changeReasons: string[] = [];
+    if (configChanged) {
+      changeReasons.push('configuration changed');
+      if (options.verbose) {
+        debug('  Configuration file (skillz.json) has been modified');
+      }
+    }
 
-    info('Changes detected:');
-    if (summary.new > 0) info(`  ${summary.new} new skill(s)`);
-    if (summary.modified > 0) info(`  ${summary.modified} modified skill(s)`);
-    if (summary.removed > 0) info(`  ${summary.removed} removed skill(s)`);
+    if (skillsChanged) {
+      const summary = summarizeChanges(changes);
+      if (summary.new > 0) changeReasons.push(`${summary.new} new skill(s)`);
+      if (summary.modified > 0) changeReasons.push(`${summary.modified} modified skill(s)`);
+      if (summary.removed > 0) changeReasons.push(`${summary.removed} removed skill(s)`);
 
-    if (options.verbose) {
-      for (const change of changes) {
-        if (change.type !== 'unchanged') {
-          debug(
-            `  ${formatChangeType(change.type)} ${formatSkillName(change.skill?.name || 'unknown')}`
-          );
+      if (options.verbose) {
+        for (const change of changes) {
+          if (change.type !== 'unchanged') {
+            debug(
+              `  ${formatChangeType(change.type)} ${formatSkillName(change.skill?.name || 'unknown')}`
+            );
+          }
         }
       }
     }
+
+    info(`Changes detected: ${changeReasons.join(', ')}`);
   } else if (!cache) {
     info('No cache found, syncing all skills');
   } else {
@@ -118,7 +161,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   // Update cache only if we have targets
   if (config.targets.length > 0) {
-    const newCache = updateCache(filteredSkills, config.targets[0]);
+    const newCache = updateCache(filteredSkills, config.targets[0], config);
     await saveCache(newCache, cwd);
     debug('Updated cache');
   } else {

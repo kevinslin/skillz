@@ -25,6 +25,7 @@ export interface Config {
   defaultEditor?: string;
   autoSyncAfterEdit?: boolean;
   customTemplate?: string;
+  pathStyle?: 'relative' | 'absolute';
 }
 
 /**
@@ -34,6 +35,7 @@ export interface CacheFile {
   version: string;
   lastSync: string;
   targetFile: string;
+  configHash: string;
   skills: Record<string, SkillCacheEntry>;
 }
 
