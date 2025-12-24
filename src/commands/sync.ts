@@ -1,4 +1,4 @@
-import { loadConfig } from '../core/config.js';
+import { loadConfig, needsMigration, migrateConfig, saveConfig } from '../core/config.js';
 import { scanAllSkillDirectories } from '../core/skill-scanner.js';
 import { loadCache, saveCache, updateCache } from '../core/cache-manager.js';
 import { detectChanges, hasChanges, summarizeChanges } from '../core/change-detector.js';
@@ -34,10 +34,18 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   const { cwd } = await ensureSkillzProjectCwd();
 
   // Load configuration
-  const config = await loadConfig(cwd);
+  let config = await loadConfig(cwd);
   if (!config) {
     error('No configuration file found. Run `skillz init` first.');
     process.exit(1);
+  }
+
+  // Auto-migrate old string[] format to Target[] format
+  if (needsMigration(config)) {
+    info('Migrating skillz.json to new target format...');
+    config = migrateConfig(config);
+    await saveConfig(config, cwd);
+    success('Configuration migrated successfully');
   }
 
   // Handle --path-style option
@@ -161,7 +169,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   try {
     for (const target of config.targets) {
       await writeTargetFile(target, filteredSkills, config, cwd);
-      debug(`Updated ${target}`);
+      debug(`Updated ${target.name}`);
     }
 
     syncSpin.succeed(`Synced to ${config.targets.length} target file(s)`);
@@ -172,7 +180,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   // Update cache only if we have targets
   if (config.targets.length > 0) {
-    const newCache = updateCache(filteredSkills, config.targets[0], config);
+    const newCache = updateCache(filteredSkills, config.targets[0].name, config);
     await saveCache(newCache, cwd);
     debug('Updated cache');
   } else {

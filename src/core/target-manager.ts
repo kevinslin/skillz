@@ -1,4 +1,4 @@
-import type { Skill, Config, ManagedSection, TargetContent } from '../types/index.js';
+import type { Skill, Config, ManagedSection, TargetContent, Target } from '../types/index.js';
 import { safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
 import { debug } from '../utils/logger.js';
 import { renderSkills } from './template-engine.js';
@@ -97,11 +97,11 @@ export function replaceManagedSection(
  */
 export async function createManagedSection(
   skills: Skill[],
+  target: Target,
   config: Config,
-  cwd: string,
-  targetPath: string
+  cwd: string
 ): Promise<string> {
-  return await renderSkills(skills, config, cwd, targetPath);
+  return await renderSkills(skills, target, config, cwd);
 }
 
 /**
@@ -125,22 +125,22 @@ export async function readTargetFile(
  * Write target file
  */
 export async function writeTargetFile(
-  filePath: string,
+  target: Target,
   skills: Skill[],
   config: Config,
   cwd: string
 ): Promise<void> {
-  const targetContent = await readTargetFile(filePath, config.skillsSectionName);
-  debug(`reading target file from ${filePath}`);
+  const targetContent = await readTargetFile(target.name, config.skillsSectionName);
+  debug(`reading target file from ${target.name}`);
   // Validate no duplicate sections before writing
   validateNoDuplicateSections(targetContent.fullContent, config.skillsSectionName);
 
-  const newSection = await createManagedSection(skills, config, cwd, filePath);
+  const newSection = await createManagedSection(skills, target, config, cwd);
   const updatedContent = replaceManagedSection(
     targetContent.fullContent,
     newSection,
     config.skillsSectionName
   );
 
-  await safeWriteFile(filePath, updatedContent);
+  await safeWriteFile(target.name, updatedContent);
 }

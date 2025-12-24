@@ -1,5 +1,5 @@
 import path from 'path';
-import type { Config, DetectedConfig } from '../types/index.js';
+import type { Config, DetectedConfig, Target } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateConfig } from '../utils/validation.js';
 
@@ -60,7 +60,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'agentsmd',
-      targets: ['AGENTS.md'],
+      targets: [{ name: 'AGENTS.md' }],
     };
   }
 
@@ -68,7 +68,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'aider',
-      targets: ['.aider/conventions.md'],
+      targets: [{ name: '.aider/conventions.md' }],
     };
   }
 
@@ -76,7 +76,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'cursor',
-      targets: ['.cursor/rules/skills.mdc'],
+      targets: [{ name: '.cursor/rules/skills.mdc' }],
     };
   }
 
@@ -84,7 +84,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'claude',
-      targets: ['CLAUDE.md'],
+      targets: [{ name: 'CLAUDE.md' }],
     };
   }
 
@@ -119,7 +119,7 @@ export async function detectExistingConfig(cwd: string): Promise<Config | null> 
  * Infer configuration details from existing files and directories
  */
 export async function inferConfig(cwd: string): Promise<DetectedConfig> {
-  const targets: string[] = [];
+  const targets: Target[] = [];
   const skillDirectories: string[] = [];
 
   const potentialTargets = [
@@ -134,7 +134,7 @@ export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   for (const target of potentialTargets) {
     const targetPath = path.join(cwd, target);
     if (await fileExists(targetPath)) {
-      targets.push(target);
+      targets.push({ name: target });
     }
   }
 
@@ -170,4 +170,72 @@ export async function updateConfig(cwd: string, key: string, value: unknown): Pr
   (config as unknown as Record<string, unknown>)[key] = value;
 
   await saveConfig(config, cwd);
+}
+
+/**
+ * Check if config needs migration from string[] to Target[]
+ */
+export function needsMigration(config: unknown): boolean {
+  if (!config || typeof config !== 'object') {
+    return false;
+  }
+
+  const parsed = config as Record<string, unknown>;
+
+  // Check if targets is an array
+  if (!Array.isArray(parsed.targets)) {
+    return false;
+  }
+
+  // If empty array, no migration needed
+  if (parsed.targets.length === 0) {
+    return false;
+  }
+
+  // Check if first element is a string (old format)
+  return typeof parsed.targets[0] === 'string';
+}
+
+/**
+ * Migrate config from string[] targets to Target[] targets
+ */
+export function migrateConfig(config: Config): Config {
+  const targets = config.targets.map((target) => {
+    // If already a Target object, return as-is
+    if (typeof target === 'object' && target !== null && 'name' in target) {
+      return target;
+    }
+
+    // Convert string to Target object
+    return { name: target as unknown as string };
+  });
+
+  return {
+    ...config,
+    targets,
+  };
+}
+
+/**
+ * Resolve template for a target (target-specific > global > default)
+ */
+export function resolveTargetTemplate(target: Target, config: Config): string {
+  return target.template ?? config.template ?? 'default';
+}
+
+/**
+ * Resolve pathStyle for a target (target-specific > global > default)
+ */
+export function resolveTargetPathStyle(target: Target, config: Config): 'relative' | 'absolute' {
+  return target.pathStyle ?? config.pathStyle ?? 'relative';
+}
+
+/**
+ * Resolve preset for a target (target-specific > global)
+ */
+export function resolveTargetPreset(
+  target: Target,
+  config: Config
+): 'agentsmd' | 'aider' | 'cursor' | 'claude' | undefined {
+  return target.preset ?? config.preset;
 }

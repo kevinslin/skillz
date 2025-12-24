@@ -70,7 +70,7 @@ describe('environment-detector', () => {
     const cursorEnv = detected.find((env) => env.id === 'cursor');
     expect(cursorEnv).toBeDefined();
     expect(cursorEnv?.preset).toBe('cursor');
-    expect(cursorEnv?.targets).toContain('.cursor/rules/skills.mdc');
+    expect(cursorEnv?.targets.map((t) => t.name)).toContain('.cursor/rules/skills.mdc');
 
     // Snapshot the generated skills.mdc file
     const skillsMdcFile = await fs.readFile(
@@ -91,7 +91,7 @@ describe('environment-detector', () => {
     const claudeEnv = detected.find((env) => env.id === 'claude');
     expect(claudeEnv).toBeDefined();
     expect(claudeEnv?.preset).toBe('claude');
-    expect(claudeEnv?.targets).toContain('CLAUDE.md');
+    expect(claudeEnv?.targets.map((t) => t.name)).toContain('CLAUDE.md');
   });
 
   it('should detect Aider environment', async () => {
@@ -103,7 +103,7 @@ describe('environment-detector', () => {
     const aiderEnv = detected.find((env) => env.id === 'aider');
     expect(aiderEnv).toBeDefined();
     expect(aiderEnv?.preset).toBe('aider');
-    expect(aiderEnv?.targets).toContain('.aider/conventions.md');
+    expect(aiderEnv?.targets.map((t) => t.name)).toContain('.aider/conventions.md');
   });
 
   it('should detect multiple environments', async () => {

@@ -50,7 +50,7 @@ describe('info command', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const config = await fs.readJson(configPath);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    config.targets.push('CLAUDE.md');
+    config.targets.push({ name: 'CLAUDE.md' });
     await fs.writeJson(configPath, config, { spaces: 2 });
 
     const result = await execCli(['info'], {

@@ -1,8 +1,12 @@
 import Handlebars from 'handlebars';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { Skill, Config, TemplateData } from '../types/index.js';
+import type { Skill, Config, TemplateData, Target } from '../types/index.js';
 import { safeReadFile } from '../utils/fs-helpers.js';
+import {
+  resolveTargetTemplate,
+  resolveTargetPathStyle,
+} from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,27 +112,26 @@ function computeSkillPath(
 }
 
 /**
- * Render skills with config
+ * Render skills with config (with per-target overrides)
  */
 export async function renderSkills(
   skills: Skill[],
+  target: Target,
   config: Config,
-  cwd?: string,
-  targetPath?: string
+  cwd?: string
 ): Promise<string> {
   const basePath = cwd || process.cwd();
-  const pathStyle = config.pathStyle || 'relative';
+
+  // Resolve per-target config values
+  const template = resolveTargetTemplate(target, config);
+  const pathStyle = resolveTargetPathStyle(target, config);
 
   // Resolve template path
-  const templatePath = resolveTemplatePath(config.template, basePath);
+  const templatePath = resolveTemplatePath(template, basePath);
 
   const data: TemplateData = {
     skills: skills.map((skill) => {
-      // If targetPath is provided, compute relative/absolute path
-      // Otherwise fall back to absolute (for backward compatibility)
-      const skillPath = targetPath
-        ? computeSkillPath(skill.path, targetPath, pathStyle, basePath)
-        : path.resolve(skill.path, 'SKILL.md');
+      const skillPath = computeSkillPath(skill.path, target.name, pathStyle, basePath);
 
       return {
         name: skill.name,

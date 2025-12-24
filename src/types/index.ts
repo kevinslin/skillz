@@ -12,12 +12,22 @@ export interface Skill {
 }
 
 /**
+ * Target file configuration with optional per-target overrides
+ */
+export interface Target {
+  name: string;
+  template?: string;
+  preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
+  pathStyle?: 'relative' | 'absolute';
+}
+
+/**
  * Configuration for skillz CLI
  */
 export interface Config {
   version: string;
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
-  targets: string[];
+  targets: Target[];
   skillDirectories: string[];
   additionalSkills: string[];
   ignore: string[];
@@ -118,7 +128,7 @@ export interface ValidationWarning {
  * Detected configuration during init
  */
 export interface DetectedConfig {
-  targets: string[];
+  targets: Target[];
   skillDirectories: string[];
 }
 

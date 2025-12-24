@@ -29,7 +29,7 @@ export async function infoCommand(): Promise<void> {
   } else {
     info(`Targets (${config.targets.length}):`);
     for (const target of config.targets) {
-      console.log(`  - ${target}`);
+      console.log(`  - ${target.name}`);
     }
   }
 

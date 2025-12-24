@@ -1,12 +1,22 @@
 import { z } from 'zod';
 
 /**
+ * Schema for Target
+ */
+export const TargetSchema = z.object({
+  name: z.string().min(1, 'Target name is required'),
+  template: z.string().optional(),
+  preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
+  pathStyle: z.enum(['relative', 'absolute']).optional(),
+});
+
+/**
  * Schema for Config
  */
 export const ConfigSchema = z.object({
   version: z.string(),
   preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
-  targets: z.array(z.string()), // Allow empty array for skill management only
+  targets: z.array(TargetSchema), // Allow empty array for skill management only
   skillDirectories: z.array(z.string()),
   additionalSkills: z.array(z.string()),
   ignore: z.array(z.string()),
