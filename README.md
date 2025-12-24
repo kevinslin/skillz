@@ -49,7 +49,7 @@ You now have access to Skills. Skills are specialized instruction sets...
 
 ## Configuration
 
-The CLI stores project settings in `skillz.json`. A typical file looks like:
+The CLI stores project settings in `skillz.json`. Here's a complete reference showing all possible configuration fields:
 
 ```json
 {
@@ -57,20 +57,63 @@ The CLI stores project settings in `skillz.json`. A typical file looks like:
   "preset": "agentsmd",
   "targets": ["AGENTS.md"],
   "skillDirectories": [".claude/skills"],
-  "additionalSkills": [],
-  "ignore": [],
-  "defaultEditor": "vim",
-  "autoSyncAfterEdit": true
+  "additionalSkills": ["~/my-custom-skills"],
+  "ignore": ["*.test", "experimental-*"],
+  "skillsSectionName": "## Additional Instructions",
+  "defaultEditor": "code",
+  "autoSyncAfterEdit": true,
+  "template": "default",
+  "pathStyle": "relative"
 }
 ```
 
-Key fields:
+### Configuration Fields
 
-- `targets`: Instruction files that receive the managed section.
-- `skillDirectories` / `additionalSkills`: Folders that will be scanned for `SKILL.md`.
-- `ignore`: Glob patterns to exclude skills.
-- `defaultEditor`: Default editor for the `edit` command (defaults to `$EDITOR` or `vi`).
-- `autoSyncAfterEdit`: Automatically run `sync` after editing a skill (defaults to `true`).
+**Required Fields:**
+
+- `version` (string): Configuration schema version. Currently `"1.0"`.
+- `targets` (string[]): Instruction files that receive the managed section. Can be an empty array `[]` if only managing skills without syncing.
+- `skillDirectories` (string[]): Directories to scan for `SKILL.md` files.
+- `additionalSkills` (string[]): Additional skill directories beyond `skillDirectories`. Can be empty `[]`.
+- `ignore` (string[]): Glob patterns to exclude skill directories (e.g., `["*.test", "experimental-*"]`). Can be empty `[]`.
+
+**Optional Fields:**
+
+- `preset` (string): Preset configuration name. Possible values:
+  - `"agentsmd"` - For Codex/AGENTS.md environments
+  - `"aider"` - For Aider `.aider/conventions.md`
+  - `"cursor"` - For Cursor `.cursor/rules/skills.mdc`
+  - `"claude"` - For Claude Code `CLAUDE.md`
+  - Can be omitted for custom configurations.
+
+- `skillsSectionName` (string): Heading name for the managed section in target files. Default: `"## Additional Instructions"`.
+
+- `defaultEditor` (string): Default editor for `skillz edit` command. Falls back to `$EDITOR` environment variable or `vi`. Examples: `"code"`, `"vim"`, `"nano"`, `"cursor"`.
+
+- `autoSyncAfterEdit` (boolean): Automatically run `sync` after editing a skill. Default: `true`.
+
+- `template` (string): Template to use when syncing. Possible values:
+  - `"default"` - Full skill instructions for LLMs (default)
+  - `"readme"` - Minimal, human-readable skill links
+  - Custom template path (e.g., `"./templates/custom.hbs"` or absolute path)
+
+- `pathStyle` (string): Path style for skill links in synced files. Possible values:
+  - `"relative"` - Relative paths (default, more portable)
+  - `"absolute"` - Absolute paths
+
+### Minimal Configuration Example
+
+For skill management without syncing to targets:
+
+```json
+{
+  "version": "1.0",
+  "targets": [],
+  "skillDirectories": [".claude/skills"],
+  "additionalSkills": [],
+  "ignore": []
+}
+```
 
 ## Commands
 
