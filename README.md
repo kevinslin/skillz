@@ -53,7 +53,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "preset": "agentsmd",
   "targets": [
     {
@@ -80,7 +80,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 
 **Required Fields:**
 
-- `version` (string): Configuration schema version. Currently `"1.0"`.
+- `version` (string): Configuration schema version. Currently `"2.0"`.
 - `targets` (Target[]): Array of target objects. Each target has:
   - `destination` (string): File path for prompt mode or directory path for native mode
   - `syncMode` (string, optional): `"prompt"` or `"native"`. Defaults to global `syncMode` or `"prompt"`.
@@ -130,7 +130,7 @@ The default `syncMode: "prompt"` writes skill instructions directly into your ta
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "targets": [
     {
       "destination": "AGENTS.md",
@@ -159,7 +159,7 @@ For tools that can directly read skill directories (e.g., file-based IDEs), use 
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "targets": [
     {
       "destination": ".skills",
@@ -193,7 +193,7 @@ You can combine both sync modes in one project:
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "targets": [
     {
       "destination": "AGENTS.md",
@@ -217,7 +217,7 @@ For skill management without syncing to targets:
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "targets": [],
   "skillDirectories": [".claude/skills"],
   "additionalSkills": [],

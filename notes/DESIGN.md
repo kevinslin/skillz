@@ -30,7 +30,7 @@ All targets use the same managed section format with skill links.
 ```typescript
 // skillz.json
 {
-  "version": "1.0",
+  "version": "2.0",
   "preset": "agentsmd", // Optional: agentsmd, aider
   "targets": [
     { "destination": "AGENTS.md" },

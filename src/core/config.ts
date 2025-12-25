@@ -16,7 +16,7 @@ export async function loadConfig(cwd: string): Promise<Config | null> {
     return null;
   }
 
-  // Auto-migrate old target formats to Target[] format
+  // Auto-migrate legacy target formats and version 1.0 configs
   if (needsMigration(config)) {
     info('Migrating skillz.json to new target format...');
     config = migrateConfig(config);
@@ -53,7 +53,7 @@ export async function saveConfig(config: Config, cwd: string): Promise<void> {
  */
 export function getDefaultConfig(preset?: string): Config {
   const baseConfig: Config = {
-    version: '1.0',
+    version: '2.0',
     targets: [],
     skillDirectories: ['.claude/skills'],
     additionalSkills: [],
@@ -197,9 +197,8 @@ export function needsMigration(config: unknown): boolean {
     return false;
   }
 
-  // If empty array, no migration needed
-  if (parsed.targets.length === 0) {
-    return false;
+  if (parsed.version === '1.0') {
+    return true;
   }
 
   return parsed.targets.some((target) => {
@@ -229,12 +228,9 @@ export function migrateConfig(
       return { destination: target };
     }
 
-    if ('destination' in target) {
-      return target;
-    }
-
+    const destination = 'destination' in target ? target.destination : target.name;
     return {
-      destination: target.name,
+      destination,
       template: target.template,
       preset: target.preset,
       pathStyle: target.pathStyle,
@@ -244,6 +240,7 @@ export function migrateConfig(
 
   return {
     ...config,
+    version: config.version === '1.0' ? '2.0' : config.version,
     targets,
   };
 }

@@ -26,7 +26,7 @@ describe('native sync mode', () => {
 
   it('should copy skills to target directory', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -62,7 +62,7 @@ describe('native sync mode', () => {
 
   it('should abort with error when conflicts exist', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -89,7 +89,7 @@ describe('native sync mode', () => {
 
   it('should list all conflicts in error message', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -112,7 +112,7 @@ describe('native sync mode', () => {
 
   it('should create cache for native targets', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -130,7 +130,7 @@ describe('native sync mode', () => {
 
   it('should detect changes and re-copy when upstream skill changes', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -161,7 +161,7 @@ describe('native sync mode', () => {
 
   it('should not re-copy when skills have not changed', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -182,7 +182,7 @@ describe('native sync mode', () => {
 
   it('should support mixed targets (some prompt, some native)', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [
         { destination: 'AGENTS.md', syncMode: 'prompt' },
         { destination: '.skills', syncMode: 'native' },
@@ -219,7 +219,7 @@ describe('native sync mode', () => {
 
   it('should respect --dry-run for native mode', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -242,7 +242,7 @@ describe('native sync mode', () => {
 
   it('should create target directory if it does not exist', async () => {
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: 'some/nested/skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -280,7 +280,7 @@ Web development best practices.`
     );
 
     const config: SkillsConfig = {
-      version: '1.0',
+      version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills', '.claude/more-skills'],
       additionalSkills: [],
