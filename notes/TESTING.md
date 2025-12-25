@@ -455,7 +455,7 @@ describe('init command', () => {
 
     const config = await fs.readJson(configPath);
     expect(config.preset).toBe('agentsmd');
-    expect(config.targets).toContain('AGENTS.md');
+    expect(config.targets.map((target) => target.destination)).toContain('AGENTS.md');
   });
 
   it('should create skillz.json with custom target', async () => {
@@ -466,7 +466,7 @@ describe('init command', () => {
     expect(result.exitCode).toBe(0);
 
     const config = await fs.readJson(path.join(workspace.root, 'skillz.json'));
-    expect(config.targets).toContain('.cursor/rules/skills.mdc');
+    expect(config.targets.map((target) => target.destination)).toContain('.cursor/rules/skills.mdc');
   });
 
   it('should add additional skill directories', async () => {

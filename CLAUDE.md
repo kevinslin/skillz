@@ -202,7 +202,7 @@ it('should sync skills', async () => {
   "version": "1.0",
   "preset": "agentsmd",
   "targets": [
-    { "name": "AGENTS.md" }
+    { "destination": "AGENTS.md" }
   ],
   "skillDirectories": [".claude/skills"],
   "additionalSkills": [],
@@ -223,12 +223,12 @@ Each target can override global settings:
   "version": "1.0",
   "targets": [
     {
-      "name": "AGENTS.md",
+      "destination": "AGENTS.md",
       "template": "default",
       "pathStyle": "relative"
     },
     {
-      "name": ".cursor/rules/skills.mdc",
+      "destination": ".cursor/rules/skills.mdc",
       "template": "readme",
       "pathStyle": "absolute"
     }
@@ -252,7 +252,7 @@ Example configuration with native mode:
   "version": "1.0",
   "targets": [
     {
-      "name": ".skills",
+      "destination": ".skills",
       "syncMode": "native"
     }
   ],
@@ -274,12 +274,12 @@ This creates flattened copies:
   "version": "1.0",
   "targets": [
     {
-      "name": "AGENTS.md",
+      "destination": "AGENTS.md",
       "syncMode": "prompt",
       "template": "default"
     },
     {
-      "name": ".cursor/.skills",
+      "destination": ".cursor/.skills",
       "syncMode": "native"
     }
   ],
@@ -288,7 +288,7 @@ This creates flattened copies:
 ```
 
 **Target Fields:**
-- `name` (required): Path to target file
+- `destination` (required): Path to target file or directory
 - `template` (optional): Override global template for this target
 - `preset` (optional): Override global preset for this target
 - `pathStyle` (optional): Override global pathStyle for this target

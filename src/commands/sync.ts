@@ -174,7 +174,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
         `Would copy ${filteredSkills.length} skill(s) to ${nativeTargets.length} directory target(s):`
       );
       for (const target of nativeTargets) {
-        info(`  → ${target.name}/`);
+        info(`  → ${target.destination}/`);
         for (const skill of filteredSkills) {
           info(`    - ${skill.name}`);
         }
@@ -185,9 +185,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   }
 
   // Validate native targets upfront (abort early if conflicts)
-  const nativeTargets = config.targets.filter(
-    (t) => resolveTargetSyncMode(t, config) === 'native'
-  );
+  const nativeTargets = config.targets.filter((t) => resolveTargetSyncMode(t, config) === 'native');
 
   if (nativeTargets.length > 0) {
     const validationSpin = spinner('Validating native targets...\n').start();
@@ -213,10 +211,10 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
       if (syncMode === 'native') {
         await copySkillsToTarget(target, filteredSkills, cwd);
-        debug(`Copied ${filteredSkills.length} skills to ${target.name}`);
+        debug(`Copied ${filteredSkills.length} skills to ${target.destination}`);
       } else {
         await writeTargetFile(target, filteredSkills, config, cwd);
-        debug(`Updated ${target.name}`);
+        debug(`Updated ${target.destination}`);
       }
     }
 
@@ -228,7 +226,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   // Update cache for both prompt and native mode targets
   if (config.targets.length > 0) {
-    const newCache = updateCache(filteredSkills, config.targets[0].name, config);
+    const newCache = updateCache(filteredSkills, config.targets[0].destination, config);
     await saveCache(newCache, cwd);
     debug('Updated cache');
   } else {

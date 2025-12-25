@@ -34,7 +34,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('agentsmd');
-    expect(config.targets.map((t) => t.name)).toContain('AGENTS.md');
+    expect(config.targets.map((t) => t.destination)).toContain('AGENTS.md');
   });
 
   it('should create skillz.json with custom target', async () => {
@@ -45,7 +45,7 @@ describe('init command', () => {
     expect(result.exitCode).toBe(0);
 
     const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig;
-    expect(config.targets.map((t) => t.name)).toContain('.cursorrules');
+    expect(config.targets.map((t) => t.destination)).toContain('.cursorrules');
   });
 
   it('should add .skillz-cache.json to .gitignore', async () => {
@@ -123,7 +123,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('cursor');
-    expect(config.targets.map((t) => t.name)).toContain('.cursor/rules/skills.mdc');
+    expect(config.targets.map((t) => t.destination)).toContain('.cursor/rules/skills.mdc');
   });
 
   it('should create skillz.json with claude preset', async () => {
@@ -138,7 +138,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('claude');
-    expect(config.targets.map((t) => t.name)).toContain('CLAUDE.md');
+    expect(config.targets.map((t) => t.destination)).toContain('CLAUDE.md');
   });
 
   it('should create skillz.json with aider preset', async () => {
@@ -153,7 +153,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('aider');
-    expect(config.targets.map((t) => t.name)).toContain('.aider/conventions.md');
+    expect(config.targets.map((t) => t.destination)).toContain('.aider/conventions.md');
   });
 
   it('should include global skills directory with --global-skills flag', async () => {
@@ -187,7 +187,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig;
     expect(config.preset).toBe('aider');
-    expect(config.targets.map((t) => t.name)).toContain('.aider/conventions.md');
+    expect(config.targets.map((t) => t.destination)).toContain('.aider/conventions.md');
 
     // Should include global skills directory
     const homeDir = process.env.HOME || '~';
@@ -293,11 +293,11 @@ Last synced: {{lastSync}}
     // Verify subdirectory config is different from parent
     const subConfig = (await fs.readJson(subConfigPath)) as SkillsConfig;
     expect(subConfig.preset).toBe('cursor');
-    expect(subConfig.targets.map((t) => t.name)).toContain('.cursor/rules/skills.mdc');
+    expect(subConfig.targets.map((t) => t.destination)).toContain('.cursor/rules/skills.mdc');
 
     // Verify parent config is unchanged
     const parentConfig = (await fs.readJson(parentConfigPath)) as SkillsConfig;
     expect(parentConfig.preset).toBe('agentsmd');
-    expect(parentConfig.targets.map((t) => t.name)).toContain('AGENTS.md');
+    expect(parentConfig.targets.map((t) => t.destination)).toContain('AGENTS.md');
   });
 });

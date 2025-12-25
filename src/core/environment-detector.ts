@@ -25,7 +25,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Codex-style AGENTS.md workspace',
     preset: 'agentsmd',
     markers: ['AGENTS.md'],
-    targets: [{ name: 'AGENTS.md' }],
+    targets: [{ destination: 'AGENTS.md' }],
     skillDirectories: ['.claude/skills'],
   },
   {
@@ -34,7 +34,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Cursor IDE with .cursor/rules',
     preset: 'cursor',
     markers: ['.cursor/rules'],
-    targets: [{ name: '.cursor/rules/skills.mdc' }],
+    targets: [{ destination: '.cursor/rules/skills.mdc' }],
     skillDirectories: ['.claude/skills'],
   },
   {
@@ -43,7 +43,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Claude Code with CLAUDE.md',
     preset: 'claude',
     markers: ['CLAUDE.md', '.claude/CLAUDE.md'],
-    targets: [{ name: 'CLAUDE.md' }],
+    targets: [{ destination: 'CLAUDE.md' }],
     skillDirectories: ['.claude/skills'],
   },
   {
@@ -52,7 +52,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Aider conventions file',
     preset: 'aider',
     markers: ['.aider/conventions.md'],
-    targets: [{ name: '.aider/conventions.md' }],
+    targets: [{ destination: '.aider/conventions.md' }],
     skillDirectories: ['.claude/skills'],
   },
 ];

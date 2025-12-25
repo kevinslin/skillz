@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Schema for Target
  */
 export const TargetSchema = z.object({
-  name: z.string().min(1, 'Target name is required'),
+  destination: z.string().min(1, 'Target destination is required'),
   template: z.string().optional(),
   preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
   pathStyle: z.enum(['relative', 'absolute']).optional(),

@@ -3,10 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import type { Skill, Config, TemplateData, Target } from '../types/index.js';
 import { safeReadFile } from '../utils/fs-helpers.js';
-import {
-  resolveTargetTemplate,
-  resolveTargetPathStyle,
-} from './config.js';
+import { resolveTargetTemplate, resolveTargetPathStyle } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,10 +28,7 @@ export function getDefaultTemplatePath(): string {
  * Resolve template path from config value
  * Supports built-in templates ('default', 'readme') and custom paths
  */
-export function resolveTemplatePath(
-  template: string | undefined,
-  cwd: string
-): string {
+export function resolveTemplatePath(template: string | undefined, cwd: string): string {
   // Default case
   if (!template) {
     return getDefaultTemplatePath();
@@ -131,7 +125,7 @@ export async function renderSkills(
 
   const data: TemplateData = {
     skills: skills.map((skill) => {
-      const skillPath = computeSkillPath(skill.path, target.name, pathStyle, basePath);
+      const skillPath = computeSkillPath(skill.path, target.destination, pathStyle, basePath);
 
       return {
         name: skill.name,

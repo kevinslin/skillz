@@ -75,16 +75,13 @@ export async function pathExists(filePath: string): Promise<boolean> {
 /**
  * Recursively copy a directory and all its contents
  */
-export async function copyDirectory(
-  source: string,
-  destination: string
-): Promise<void> {
+export async function copyDirectory(source: string, destination: string): Promise<void> {
   try {
     await fs.cp(source, destination, { recursive: true });
   } catch (error) {
     throw new Error(
       `Failed to copy directory: ${source} → ${destination}\n` +
-      `Error: ${(error as Error).message}`
+        `Error: ${(error as Error).message}`
     );
   }
 }

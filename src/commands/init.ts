@@ -79,7 +79,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   // Override with command line options
   if (options.target) {
-    config.targets = [{ name: options.target }];
+    config.targets = [{ destination: options.target }];
   }
 
   if (options.additionalSkills) {
@@ -103,7 +103,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
     const detected: DetectedConfig = await inferConfig(cwd);
     if (detected.targets.length > 0) {
       info(
-        `Detected existing target files: ${detected.targets.map((t) => t.name).join(', ')}`
+        `Detected existing target files: ${detected.targets.map((t) => t.destination).join(', ')}`
       );
       config.targets = detected.targets;
     }
@@ -163,7 +163,7 @@ async function handleEnvironmentDetection(
     const env = environments[0];
     info(`Detected ${env.name} environment (${env.description})`);
     info(`Preset: ${env.preset}`);
-    info(`Targets: ${env.targets.map((t) => t.name).join(', ')}`);
+    info(`Targets: ${env.targets.map((t) => t.destination).join(', ')}`);
 
     const shouldUse = await confirm('Use this environment configuration?', true);
     return shouldUse ? env : null;

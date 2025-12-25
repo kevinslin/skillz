@@ -2,7 +2,7 @@
   "version": "1.0",
   "targets": [
     {
-      "name": "AGENTS.md"
+      "destination": "AGENTS.md"
     }
   ],
   "skillDirectories": [

@@ -6,7 +6,7 @@ import path from 'path';
 
 type SkillsConfig = {
   version: string;
-  targets: Array<{ name: string; syncMode?: string }>;
+  targets: Array<{ destination: string; syncMode?: string }>;
   skillDirectories: string[];
   additionalSkills: string[];
   ignore: string[];
@@ -27,7 +27,7 @@ describe('native sync mode', () => {
   it('should copy skills to target directory', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -63,7 +63,7 @@ describe('native sync mode', () => {
   it('should abort with error when conflicts exist', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -90,7 +90,7 @@ describe('native sync mode', () => {
   it('should list all conflicts in error message', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -113,7 +113,7 @@ describe('native sync mode', () => {
   it('should create cache for native targets', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -131,7 +131,7 @@ describe('native sync mode', () => {
   it('should detect changes and re-copy when upstream skill changes', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -162,7 +162,7 @@ describe('native sync mode', () => {
   it('should not re-copy when skills have not changed', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -184,8 +184,8 @@ describe('native sync mode', () => {
     const config: SkillsConfig = {
       version: '1.0',
       targets: [
-        { name: 'AGENTS.md', syncMode: 'prompt' },
-        { name: '.skills', syncMode: 'native' },
+        { destination: 'AGENTS.md', syncMode: 'prompt' },
+        { destination: '.skills', syncMode: 'native' },
       ],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
@@ -220,7 +220,7 @@ describe('native sync mode', () => {
   it('should respect --dry-run for native mode', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -243,7 +243,7 @@ describe('native sync mode', () => {
   it('should create target directory if it does not exist', async () => {
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: 'some/nested/skills', syncMode: 'native' }],
+      targets: [{ destination: 'some/nested/skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills'],
       additionalSkills: [],
       ignore: [],
@@ -281,7 +281,7 @@ Web development best practices.`
 
     const config: SkillsConfig = {
       version: '1.0',
-      targets: [{ name: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills', syncMode: 'native' }],
       skillDirectories: ['.claude/skills', '.claude/more-skills'],
       additionalSkills: [],
       ignore: [],

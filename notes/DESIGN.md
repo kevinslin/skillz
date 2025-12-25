@@ -33,8 +33,8 @@ All targets use the same managed section format with skill links.
   "version": "1.0",
   "preset": "agentsmd", // Optional: agentsmd, aider
   "targets": [
-    "AGENTS.md",
-    ".cursor/rules/skills.mdc"
+    { "destination": "AGENTS.md" },
+    { "destination": ".cursor/rules/skills.mdc" }
   ],
   "skillDirectories": [
     ".claude/skills",
@@ -57,7 +57,7 @@ Presets provide quick setup for common LLM tools:
 ```json
 {
   "preset": "agentsmd",
-  "targets": ["AGENTS.md"]
+  "targets": [{ "destination": "AGENTS.md" }]
 }
 ```
 
@@ -65,7 +65,7 @@ Presets provide quick setup for common LLM tools:
 ```json
 {
   "preset": "aider",
-  "targets": [".aider/conventions.md"]
+  "targets": [{ "destination": ".aider/conventions.md" }]
 }
 ```
 

@@ -137,8 +137,8 @@ export async function writeTargetFile(
   config: Config,
   cwd: string
 ): Promise<void> {
-  const targetContent = await readTargetFile(target.name, config.skillsSectionName);
-  debug(`reading target file from ${target.name}`);
+  const targetContent = await readTargetFile(target.destination, config.skillsSectionName);
+  debug(`reading target file from ${target.destination}`);
   // Validate no duplicate sections before writing
   validateNoDuplicateSections(targetContent.fullContent, config.skillsSectionName);
 
@@ -149,7 +149,7 @@ export async function writeTargetFile(
     config.skillsSectionName
   );
 
-  await safeWriteFile(target.name, updatedContent);
+  await safeWriteFile(target.destination, updatedContent);
 }
 
 /**
@@ -188,7 +188,7 @@ export async function validateNativeTargets(
   const conflicts: Array<{ target: string; skill: string; path: string }> = [];
 
   for (const target of targets) {
-    const targetDir = path.resolve(cwd, target.name);
+    const targetDir = path.resolve(cwd, target.destination);
 
     for (const skill of skills) {
       const destPath = path.join(targetDir, skill.name);
@@ -201,7 +201,7 @@ export async function validateNativeTargets(
       // Check if path exists (file, directory, or symlink)
       if (await pathExists(destPath)) {
         conflicts.push({
-          target: target.name,
+          target: target.destination,
           skill: skill.name,
           path: destPath,
         });
@@ -223,7 +223,7 @@ export async function copySkillsToTarget(
   skills: Skill[],
   cwd: string
 ): Promise<void> {
-  const targetDir = path.resolve(cwd, target.name);
+  const targetDir = path.resolve(cwd, target.destination);
 
   // Ensure target directory exists
   await ensureDir(targetDir);

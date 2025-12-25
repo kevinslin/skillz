@@ -15,7 +15,7 @@ export interface Skill {
  * Target file configuration with optional per-target overrides
  */
 export interface Target {
-  name: string;
+  destination: string;
   template?: string;
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   pathStyle?: 'relative' | 'absolute';

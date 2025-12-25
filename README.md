@@ -57,7 +57,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   "preset": "agentsmd",
   "targets": [
     {
-      "name": "AGENTS.md",
+      "destination": "AGENTS.md",
       "syncMode": "prompt",
       "template": "default",
       "pathStyle": "relative",
@@ -82,7 +82,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 
 - `version` (string): Configuration schema version. Currently `"1.0"`.
 - `targets` (Target[]): Array of target objects. Each target has:
-  - `name` (string): File path for prompt mode or directory path for native mode
+  - `destination` (string): File path for prompt mode or directory path for native mode
   - `syncMode` (string, optional): `"prompt"` or `"native"`. Defaults to global `syncMode` or `"prompt"`.
   - `template` (string, optional): Template override for this target. Defaults to global `template`.
   - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
@@ -133,7 +133,7 @@ The default `syncMode: "prompt"` writes skill instructions directly into your ta
   "version": "1.0",
   "targets": [
     {
-      "name": "AGENTS.md",
+      "destination": "AGENTS.md",
       "syncMode": "prompt"
     }
   ],
@@ -162,7 +162,7 @@ For tools that can directly read skill directories (e.g., file-based IDEs), use 
   "version": "1.0",
   "targets": [
     {
-      "name": ".skills",
+      "destination": ".skills",
       "syncMode": "native"
     }
   ],
@@ -181,8 +181,8 @@ This creates a flattened structure of copied skill directories:
 
 **Key differences:**
 
-- **Prompt mode**: Target `name` is a file path (e.g., `AGENTS.md`)
-- **Native mode**: Target `name` is a directory path (e.g., `.skills`)
+- **Prompt mode**: Target `destination` is a file path (e.g., `AGENTS.md`)
+- **Native mode**: Target `destination` is a directory path (e.g., `.skills`)
 - Native mode validates for conflicts before copying any skills (aborts on conflicts)
 - Native mode uses cache to detect changes (only re-copies when skills change)
 - Native structure is flattened (skill name only, not full path)
@@ -196,12 +196,12 @@ You can combine both sync modes in one project:
   "version": "1.0",
   "targets": [
     {
-      "name": "AGENTS.md",
+      "destination": "AGENTS.md",
       "syncMode": "prompt",
       "template": "default"
     },
     {
-      "name": ".cursor/.skills",
+      "destination": ".cursor/.skills",
       "syncMode": "native"
     }
   ],

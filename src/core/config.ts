@@ -16,7 +16,7 @@ export async function loadConfig(cwd: string): Promise<Config | null> {
     return null;
   }
 
-  // Auto-migrate old string[] format to Target[] format
+  // Auto-migrate old target formats to Target[] format
   if (needsMigration(config)) {
     info('Migrating skillz.json to new target format...');
     config = migrateConfig(config);
@@ -69,7 +69,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'agentsmd',
-      targets: [{ name: 'AGENTS.md' }],
+      targets: [{ destination: 'AGENTS.md' }],
     };
   }
 
@@ -77,7 +77,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'aider',
-      targets: [{ name: '.aider/conventions.md' }],
+      targets: [{ destination: '.aider/conventions.md' }],
     };
   }
 
@@ -85,7 +85,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'cursor',
-      targets: [{ name: '.cursor/rules/skills.mdc' }],
+      targets: [{ destination: '.cursor/rules/skills.mdc' }],
     };
   }
 
@@ -93,7 +93,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'claude',
-      targets: [{ name: 'CLAUDE.md' }],
+      targets: [{ destination: 'CLAUDE.md' }],
     };
   }
 
@@ -144,7 +144,7 @@ export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   for (const target of potentialTargets) {
     const targetPath = path.join(cwd, target);
     if (await fileExists(targetPath)) {
-      targets.push({ name: target });
+      targets.push({ destination: target });
     }
   }
 
@@ -183,7 +183,7 @@ export async function updateConfig(cwd: string, key: string, value: unknown): Pr
 }
 
 /**
- * Check if config needs migration from string[] to Target[]
+ * Check if config needs migration from legacy targets
  */
 export function needsMigration(config: unknown): boolean {
   if (!config || typeof config !== 'object') {
@@ -202,22 +202,44 @@ export function needsMigration(config: unknown): boolean {
     return false;
   }
 
-  // Check if first element is a string (old format)
-  return typeof parsed.targets[0] === 'string';
+  return parsed.targets.some((target) => {
+    if (typeof target === 'string') {
+      return true;
+    }
+
+    if (typeof target === 'object' && target !== null) {
+      return !('destination' in target) && 'name' in target;
+    }
+
+    return false;
+  });
 }
 
+type LegacyNameTarget = Omit<Target, 'destination'> & { name: string };
+type LegacyTarget = Target | LegacyNameTarget | string;
+
 /**
- * Migrate config from string[] targets to Target[] targets
+ * Migrate config from legacy targets to Target[] targets
  */
-export function migrateConfig(config: Config): Config {
+export function migrateConfig(
+  config: Omit<Config, 'targets'> & { targets: LegacyTarget[] }
+): Config {
   const targets = config.targets.map((target) => {
-    // If already a Target object, return as-is
-    if (typeof target === 'object' && target !== null && 'name' in target) {
+    if (typeof target === 'string') {
+      return { destination: target };
+    }
+
+    if ('destination' in target) {
       return target;
     }
 
-    // Convert string to Target object
-    return { name: target as unknown as string };
+    return {
+      destination: target.name,
+      template: target.template,
+      preset: target.preset,
+      pathStyle: target.pathStyle,
+      syncMode: target.syncMode,
+    };
   });
 
   return {
