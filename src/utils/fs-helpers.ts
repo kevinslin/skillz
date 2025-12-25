@@ -73,18 +73,17 @@ export async function pathExists(filePath: string): Promise<boolean> {
 }
 
 /**
- * Create a symbolic link from source directory to destination
- * Uses fs.symlink with 'dir' type
+ * Recursively copy a directory and all its contents
  */
-export async function symlinkDirectory(
+export async function copyDirectory(
   source: string,
   destination: string
 ): Promise<void> {
   try {
-    await fs.symlink(source, destination, 'dir');
+    await fs.cp(source, destination, { recursive: true });
   } catch (error) {
     throw new Error(
-      `Failed to create symlink: ${source} → ${destination}\n` +
+      `Failed to copy directory: ${source} → ${destination}\n` +
       `Error: ${(error as Error).message}`
     );
   }

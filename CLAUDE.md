@@ -108,25 +108,26 @@ Quick summary:
 - `writeTargetFile(target, skills, config, cwd)` - Injects managed section (prompt mode)
 - `extractManagedSection()` - Finds section by heading name
 - `replaceManagedSection()` - Replaces content from section heading to EOF
-- `validateSymlinkTargets(targets, skills, cwd)` - Pre-flight validation for symlink conflicts
-- `symlinkSkillsToTarget(target, skills, cwd)` - Creates symlinks for one target (symlink mode)
+- `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts
+- `copySkillsToTarget(target, skills, cwd)` - Copies skills to target directory (native mode)
 - Managed section format (prompt mode):
   - Starts with configurable heading (e.g., `## Additional Instructions`)
   - Contains rendered skill content from templates
   - Extends to end of file
   - Content before the section heading is preserved
-- Symlink mode:
+- Native mode:
   - Creates flattened directory structure (skill name only)
-  - Validates all targets before creating any symlinks (abort on conflicts)
-  - Uses absolute paths for symlink sources
+  - Validates all targets before copying any skills (abort on conflicts)
+  - Uses cache to detect changes (only re-copies when skills change)
+  - Removes existing copied directories before re-copying on updates
 
 **src/utils/fs-helpers.ts**
 
 - `safeReadFile()` / `safeWriteFile()` - Atomic file operations (temp file + rename)
 - `isSkillDirectory()` - Checks if directory contains SKILL.md
 - `readDirectories()` - Lists subdirectories
-- `pathExists()` - Checks if path exists (file, directory, or symlink) using lstat (detects broken symlinks)
-- `symlinkDirectory()` - Creates directory symbolic links with error handling
+- `pathExists()` - Checks if path exists (file, directory, or symlink) using lstat
+- `copyDirectory()` - Recursively copies a directory and all its contents
 
 **src/utils/hash.ts**
 
@@ -237,14 +238,14 @@ Each target can override global settings:
 }
 ```
 
-**Symlink Sync Mode:**
+**Native Sync Mode:**
 
 The `syncMode` property enables two different sync strategies:
 
 - **`prompt` (default)**: Writes skill instructions into the target file (file path)
-- **`symlink`**: Creates symbolic links to skill directories in the target directory (directory path)
+- **`native`**: Copies skill directories to the target directory (directory path)
 
-Example configuration with symlink mode:
+Example configuration with native mode:
 
 ```json
 {
@@ -252,18 +253,18 @@ Example configuration with symlink mode:
   "targets": [
     {
       "name": ".skills",
-      "syncMode": "symlink"
+      "syncMode": "native"
     }
   ],
   "skillDirectories": [".claude/skills"]
 }
 ```
 
-This creates flattened symlinks:
+This creates flattened copies:
 ```
 .skills/
-├── python-expert → .claude/skills/python-expert
-├── react-patterns → .claude/skills/react-patterns
+├── python-expert/
+├── react-patterns/
 ```
 
 **Mixed Mode Example:**
@@ -279,7 +280,7 @@ This creates flattened symlinks:
     },
     {
       "name": ".cursor/.skills",
-      "syncMode": "symlink"
+      "syncMode": "native"
     }
   ],
   "skillDirectories": [".claude/skills"]

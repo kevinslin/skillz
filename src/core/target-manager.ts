@@ -3,7 +3,7 @@ import {
   safeReadFile,
   safeWriteFile,
   pathExists,
-  symlinkDirectory,
+  copyDirectory,
   ensureDir,
 } from '../utils/fs-helpers.js';
 import { debug } from '../utils/logger.js';
@@ -153,7 +153,7 @@ export async function writeTargetFile(
 }
 
 /**
- * Format error message for symlink conflicts
+ * Format error message for native mode conflicts
  */
 function formatConflictsError(
   conflicts: Array<{ target: string; skill: string; path: string }>
@@ -161,7 +161,7 @@ function formatConflictsError(
   const lines = [
     'Cannot sync: destination conflicts detected',
     '',
-    'The following skill symlinks cannot be created because paths already exist:',
+    'The following skill directories cannot be copied because paths already exist:',
     '',
   ];
 
@@ -176,12 +176,14 @@ function formatConflictsError(
 }
 
 /**
- * Validate symlink targets for conflicts before creating any symlinks
+ * Validate native targets for conflicts before copying any skills
+ * Skips validation for skills that are already in cache (managed by us)
  */
-export async function validateSymlinkTargets(
+export async function validateNativeTargets(
   targets: Target[],
   skills: Skill[],
-  cwd: string
+  cwd: string,
+  cachedSkills: Set<string> = new Set()
 ): Promise<void> {
   const conflicts: Array<{ target: string; skill: string; path: string }> = [];
 
@@ -190,6 +192,11 @@ export async function validateSymlinkTargets(
 
     for (const skill of skills) {
       const destPath = path.join(targetDir, skill.name);
+
+      // Skip if this skill is in cache (managed by us, safe to overwrite)
+      if (cachedSkills.has(skill.name)) {
+        continue;
+      }
 
       // Check if path exists (file, directory, or symlink)
       if (await pathExists(destPath)) {
@@ -209,9 +216,9 @@ export async function validateSymlinkTargets(
 }
 
 /**
- * Create symlinks for skills to target directory
+ * Copy skills to target directory (native mode)
  */
-export async function symlinkSkillsToTarget(
+export async function copySkillsToTarget(
   target: Target,
   skills: Skill[],
   cwd: string
@@ -221,11 +228,16 @@ export async function symlinkSkillsToTarget(
   // Ensure target directory exists
   await ensureDir(targetDir);
 
-  // Create symlink for each skill
+  // Copy each skill directory
   for (const skill of skills) {
     const sourcePath = path.resolve(cwd, skill.path);
     const destPath = path.join(targetDir, skill.name); // Flattened
 
-    await symlinkDirectory(sourcePath, destPath);
+    // Remove existing directory if it exists (for updates)
+    if (await pathExists(destPath)) {
+      await import('fs/promises').then((fs) => fs.rm(destPath, { recursive: true }));
+    }
+
+    await copyDirectory(sourcePath, destPath);
   }
 }

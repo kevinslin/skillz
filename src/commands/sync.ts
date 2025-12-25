@@ -1,17 +1,11 @@
-import {
-  loadConfig,
-  needsMigration,
-  migrateConfig,
-  saveConfig,
-  resolveTargetSyncMode,
-} from '../core/config.js';
+import { loadConfig, resolveTargetSyncMode } from '../core/config.js';
 import { scanAllSkillDirectories } from '../core/skill-scanner.js';
 import { loadCache, saveCache, updateCache } from '../core/cache-manager.js';
 import { detectChanges, hasChanges, summarizeChanges } from '../core/change-detector.js';
 import {
   writeTargetFile,
-  validateSymlinkTargets,
-  symlinkSkillsToTarget,
+  validateNativeTargets,
+  copySkillsToTarget,
 } from '../core/target-manager.js';
 import {
   info,
@@ -44,18 +38,10 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   const { cwd } = await ensureSkillzProjectCwd();
 
   // Load configuration
-  let config = await loadConfig(cwd);
+  const config = await loadConfig(cwd);
   if (!config) {
     error('No configuration file found. Run `skillz init` first.');
     process.exit(1);
-  }
-
-  // Auto-migrate old string[] format to Target[] format
-  if (needsMigration(config)) {
-    info('Migrating skillz.json to new target format...');
-    config = migrateConfig(config);
-    await saveConfig(config, cwd);
-    success('Configuration migrated successfully');
   }
 
   // Handle --path-style option
@@ -170,9 +156,11 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   if (options.dryRun) {
     info('Dry run mode: no files will be modified');
 
-    const promptTargets = config.targets.filter((t) => resolveTargetSyncMode(t, config) === 'prompt');
-    const symlinkTargets = config.targets.filter(
-      (t) => resolveTargetSyncMode(t, config) === 'symlink'
+    const promptTargets = config.targets.filter(
+      (t) => resolveTargetSyncMode(t, config) === 'prompt'
+    );
+    const nativeTargets = config.targets.filter(
+      (t) => resolveTargetSyncMode(t, config) === 'native'
     );
 
     if (promptTargets.length > 0) {
@@ -181,11 +169,11 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
       );
     }
 
-    if (symlinkTargets.length > 0) {
+    if (nativeTargets.length > 0) {
       info(
-        `Would symlink ${filteredSkills.length} skill(s) to ${symlinkTargets.length} directory target(s):`
+        `Would copy ${filteredSkills.length} skill(s) to ${nativeTargets.length} directory target(s):`
       );
-      for (const target of symlinkTargets) {
+      for (const target of nativeTargets) {
         info(`  → ${target.name}/`);
         for (const skill of filteredSkills) {
           info(`    - ${skill.name}`);
@@ -196,16 +184,18 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     return;
   }
 
-  // Validate symlink targets upfront (abort early if conflicts)
-  const symlinkTargets = config.targets.filter(
-    (t) => resolveTargetSyncMode(t, config) === 'symlink'
+  // Validate native targets upfront (abort early if conflicts)
+  const nativeTargets = config.targets.filter(
+    (t) => resolveTargetSyncMode(t, config) === 'native'
   );
 
-  if (symlinkTargets.length > 0) {
-    const validationSpin = spinner('Validating symlink targets...\n').start();
+  if (nativeTargets.length > 0) {
+    const validationSpin = spinner('Validating native targets...\n').start();
 
     try {
-      await validateSymlinkTargets(symlinkTargets, filteredSkills, cwd);
+      // Get cached skill names to skip validation for managed copies
+      const cachedSkillNames = cache ? new Set(Object.keys(cache.skills)) : new Set<string>();
+      await validateNativeTargets(nativeTargets, filteredSkills, cwd, cachedSkillNames);
       validationSpin.succeed('No conflicts detected');
     } catch (err) {
       validationSpin.fail('Validation failed');
@@ -221,9 +211,9 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     for (const target of config.targets) {
       const syncMode = resolveTargetSyncMode(target, config);
 
-      if (syncMode === 'symlink') {
-        await symlinkSkillsToTarget(target, filteredSkills, cwd);
-        debug(`Symlinked ${filteredSkills.length} skills to ${target.name}`);
+      if (syncMode === 'native') {
+        await copySkillsToTarget(target, filteredSkills, cwd);
+        debug(`Copied ${filteredSkills.length} skills to ${target.name}`);
       } else {
         await writeTargetFile(target, filteredSkills, config, cwd);
         debug(`Updated ${target.name}`);
@@ -236,17 +226,13 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     throw err;
   }
 
-  // Update cache only for prompt mode targets
-  const promptTargets = config.targets.filter(
-    (t) => resolveTargetSyncMode(t, config) === 'prompt'
-  );
-
-  if (promptTargets.length > 0) {
-    const newCache = updateCache(filteredSkills, promptTargets[0].name, config);
+  // Update cache for both prompt and native mode targets
+  if (config.targets.length > 0) {
+    const newCache = updateCache(filteredSkills, config.targets[0].name, config);
     await saveCache(newCache, cwd);
     debug('Updated cache');
   } else {
-    debug('No prompt mode targets, skipping cache update');
+    debug('No targets configured, skipping cache update');
   }
 
   success(`Successfully synced ${filteredSkills.length} skill(s)`);

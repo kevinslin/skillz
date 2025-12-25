@@ -82,8 +82,8 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 
 - `version` (string): Configuration schema version. Currently `"1.0"`.
 - `targets` (Target[]): Array of target objects. Each target has:
-  - `name` (string): File path for prompt mode or directory path for symlink mode
-  - `syncMode` (string, optional): `"prompt"` or `"symlink"`. Defaults to global `syncMode` or `"prompt"`.
+  - `name` (string): File path for prompt mode or directory path for native mode
+  - `syncMode` (string, optional): `"prompt"` or `"native"`. Defaults to global `syncMode` or `"prompt"`.
   - `template` (string, optional): Template override for this target. Defaults to global `template`.
   - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
   - `preset` (string, optional): Preset override for this target. Defaults to global `preset`.
@@ -118,7 +118,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 
 - `syncMode` (string): Sync mode for targets. Possible values:
   - `"prompt"` - Inject skill instructions into target file (default)
-  - `"symlink"` - Create symlinks to skill directories in target directory
+  - `"native"` - Copy skill directories to target directory
 
 ### Sync Modes
 
@@ -153,9 +153,9 @@ When synced, skills appear in your target file like this:
 - [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development
 ```
 
-#### Symlink Mode
+#### Native Mode
 
-For tools that can directly read skill directories (e.g., file-based IDEs), use `syncMode: "symlink"` to create symbolic links instead of embedding content:
+For tools that can directly read skill directories (e.g., file-based IDEs), use `syncMode: "native"` to copy skill directories instead of embedding content:
 
 ```json
 {
@@ -163,29 +163,29 @@ For tools that can directly read skill directories (e.g., file-based IDEs), use 
   "targets": [
     {
       "name": ".skills",
-      "syncMode": "symlink"
+      "syncMode": "native"
     }
   ],
   "skillDirectories": [".claude/skills"]
 }
 ```
 
-This creates a flattened structure of symlinks in the target directory:
+This creates a flattened structure of copied skill directories:
 
 ```
 .skills/
-├── python-expert → .claude/skills/python-expert
-├── react-patterns → .claude/skills/react-patterns
-└── web-expert → .claude/skills/web-expert
+├── python-expert/
+├── react-patterns/
+└── web-expert/
 ```
 
 **Key differences:**
 
 - **Prompt mode**: Target `name` is a file path (e.g., `AGENTS.md`)
-- **Symlink mode**: Target `name` is a directory path (e.g., `.skills`)
-- Symlink mode validates for conflicts before creating any symlinks (aborts on conflicts)
-- Symlink mode does not use cache (always syncs)
-- Symlink structure is flattened (skill name only, not full path)
+- **Native mode**: Target `name` is a directory path (e.g., `.skills`)
+- Native mode validates for conflicts before copying any skills (aborts on conflicts)
+- Native mode uses cache to detect changes (only re-copies when skills change)
+- Native structure is flattened (skill name only, not full path)
 
 #### Mixed Mode
 
@@ -202,7 +202,7 @@ You can combine both sync modes in one project:
     },
     {
       "name": ".cursor/.skills",
-      "syncMode": "symlink"
+      "syncMode": "native"
     }
   ],
   "skillDirectories": [".claude/skills"]

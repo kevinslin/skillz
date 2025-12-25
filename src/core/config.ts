@@ -2,8 +2,7 @@ import path from 'path';
 import type { Config, DetectedConfig, Target } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateConfig } from '../utils/validation.js';
-import { info } from 'console';
-import { success } from '../utils/logger.js';
+import { debug, info, success } from '../utils/logger.js';
 
 const CONFIG_FILE = 'skillz.json';
 
@@ -114,6 +113,7 @@ export async function detectExistingConfig(cwd: string): Promise<Config | null> 
   }
 
   const content = await safeReadFile(configPath);
+  debug(`loading config from file: ${configPath}`);
   if (!content) {
     return null;
   }
@@ -253,6 +253,6 @@ export function resolveTargetPreset(
 /**
  * Resolve syncMode for a target (target-specific > global > default)
  */
-export function resolveTargetSyncMode(target: Target, config: Config): 'prompt' | 'symlink' {
+export function resolveTargetSyncMode(target: Target, config: Config): 'prompt' | 'native' {
   return target.syncMode ?? config.syncMode ?? 'prompt';
 }
