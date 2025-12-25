@@ -43,7 +43,6 @@ You now have access to Skills. Skills are specialized instruction sets stored as
 ### Skill Structure
 
 Each skill contains:
-
 - **SKILL.md**: Core instructions with YAML frontmatter
 - **scripts/**: Optional executable code for deterministic tasks
 - **references/**: Optional detailed documentation
@@ -76,3 +75,4 @@ Below is the list of skills you can access. Load a skill by reading its SKILL.md
 
 - [lint](.claude/skills/lint/SKILL.md): lint project (project, gitignored)
 - [testing](.claude/skills/testing/SKILL.md): Guidelines for writing integration and unit tests for the skillz CLI
+

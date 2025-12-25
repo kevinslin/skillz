@@ -2,6 +2,8 @@ import path from 'path';
 import type { Config, DetectedConfig, Target } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateConfig } from '../utils/validation.js';
+import { info } from 'console';
+import { success } from '../utils/logger.js';
 
 const CONFIG_FILE = 'skillz.json';
 
@@ -9,10 +11,18 @@ const CONFIG_FILE = 'skillz.json';
  * Load configuration from file
  */
 export async function loadConfig(cwd: string): Promise<Config | null> {
-  const config = await detectExistingConfig(cwd);
+  let config = await detectExistingConfig(cwd);
 
   if (!config) {
     return null;
+  }
+
+  // Auto-migrate old string[] format to Target[] format
+  if (needsMigration(config)) {
+    info('Migrating skillz.json to new target format...');
+    config = migrateConfig(config);
+    await saveConfig(config, cwd);
+    success('Configuration migrated successfully');
   }
 
   const validation = validateConfig(config);
@@ -243,9 +253,6 @@ export function resolveTargetPreset(
 /**
  * Resolve syncMode for a target (target-specific > global > default)
  */
-export function resolveTargetSyncMode(
-  target: Target,
-  config: Config
-): 'prompt' | 'symlink' {
+export function resolveTargetSyncMode(target: Target, config: Config): 'prompt' | 'symlink' {
   return target.syncMode ?? config.syncMode ?? 'prompt';
 }

@@ -1,7 +1,9 @@
 {
   "version": "1.0",
   "targets": [
-    "AGENTS.md"
+    {
+      "name": "AGENTS.md"
+    }
   ],
   "skillDirectories": [
     ".claude/skills"
