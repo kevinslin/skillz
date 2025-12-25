@@ -239,3 +239,13 @@ export function resolveTargetPreset(
 ): 'agentsmd' | 'aider' | 'cursor' | 'claude' | undefined {
   return target.preset ?? config.preset;
 }
+
+/**
+ * Resolve syncMode for a target (target-specific > global > default)
+ */
+export function resolveTargetSyncMode(
+  target: Target,
+  config: Config
+): 'prompt' | 'symlink' {
+  return target.syncMode ?? config.syncMode ?? 'prompt';
+}

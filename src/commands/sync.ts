@@ -1,8 +1,18 @@
-import { loadConfig, needsMigration, migrateConfig, saveConfig } from '../core/config.js';
+import {
+  loadConfig,
+  needsMigration,
+  migrateConfig,
+  saveConfig,
+  resolveTargetSyncMode,
+} from '../core/config.js';
 import { scanAllSkillDirectories } from '../core/skill-scanner.js';
 import { loadCache, saveCache, updateCache } from '../core/cache-manager.js';
 import { detectChanges, hasChanges, summarizeChanges } from '../core/change-detector.js';
-import { writeTargetFile } from '../core/target-manager.js';
+import {
+  writeTargetFile,
+  validateSymlinkTargets,
+  symlinkSkillsToTarget,
+} from '../core/target-manager.js';
 import {
   info,
   success,
@@ -159,8 +169,49 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   // Dry run mode
   if (options.dryRun) {
     info('Dry run mode: no files will be modified');
-    info(`Would sync ${filteredSkills.length} skill(s) to ${config.targets.length} target(s)`);
+
+    const promptTargets = config.targets.filter((t) => resolveTargetSyncMode(t, config) === 'prompt');
+    const symlinkTargets = config.targets.filter(
+      (t) => resolveTargetSyncMode(t, config) === 'symlink'
+    );
+
+    if (promptTargets.length > 0) {
+      info(
+        `Would sync ${filteredSkills.length} skill(s) to ${promptTargets.length} file target(s)`
+      );
+    }
+
+    if (symlinkTargets.length > 0) {
+      info(
+        `Would symlink ${filteredSkills.length} skill(s) to ${symlinkTargets.length} directory target(s):`
+      );
+      for (const target of symlinkTargets) {
+        info(`  → ${target.name}/`);
+        for (const skill of filteredSkills) {
+          info(`    - ${skill.name}`);
+        }
+      }
+    }
+
     return;
+  }
+
+  // Validate symlink targets upfront (abort early if conflicts)
+  const symlinkTargets = config.targets.filter(
+    (t) => resolveTargetSyncMode(t, config) === 'symlink'
+  );
+
+  if (symlinkTargets.length > 0) {
+    const validationSpin = spinner('Validating symlink targets...\n').start();
+
+    try {
+      await validateSymlinkTargets(symlinkTargets, filteredSkills, cwd);
+      validationSpin.succeed('No conflicts detected');
+    } catch (err) {
+      validationSpin.fail('Validation failed');
+      error((err as Error).message);
+      process.exit(1);
+    }
   }
 
   // Sync to all targets
@@ -168,23 +219,34 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   try {
     for (const target of config.targets) {
-      await writeTargetFile(target, filteredSkills, config, cwd);
-      debug(`Updated ${target.name}`);
+      const syncMode = resolveTargetSyncMode(target, config);
+
+      if (syncMode === 'symlink') {
+        await symlinkSkillsToTarget(target, filteredSkills, cwd);
+        debug(`Symlinked ${filteredSkills.length} skills to ${target.name}`);
+      } else {
+        await writeTargetFile(target, filteredSkills, config, cwd);
+        debug(`Updated ${target.name}`);
+      }
     }
 
-    syncSpin.succeed(`Synced to ${config.targets.length} target file(s)`);
+    syncSpin.succeed(`Synced to ${config.targets.length} target(s)`);
   } catch (err) {
     syncSpin.fail('Failed to sync');
     throw err;
   }
 
-  // Update cache only if we have targets
-  if (config.targets.length > 0) {
-    const newCache = updateCache(filteredSkills, config.targets[0].name, config);
+  // Update cache only for prompt mode targets
+  const promptTargets = config.targets.filter(
+    (t) => resolveTargetSyncMode(t, config) === 'prompt'
+  );
+
+  if (promptTargets.length > 0) {
+    const newCache = updateCache(filteredSkills, promptTargets[0].name, config);
     await saveCache(newCache, cwd);
     debug('Updated cache');
   } else {
-    debug('No targets configured, skipping cache update');
+    debug('No prompt mode targets, skipping cache update');
   }
 
   success(`Successfully synced ${filteredSkills.length} skill(s)`);

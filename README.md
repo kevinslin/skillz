@@ -55,7 +55,15 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 {
   "version": "1.0",
   "preset": "agentsmd",
-  "targets": ["AGENTS.md"],
+  "targets": [
+    {
+      "name": "AGENTS.md",
+      "syncMode": "prompt",
+      "template": "default",
+      "pathStyle": "relative",
+      "preset": "agentsmd"
+    }
+  ],
   "skillDirectories": [".claude/skills"],
   "additionalSkills": ["~/my-custom-skills"],
   "ignore": ["*.test", "experimental-*"],
@@ -63,7 +71,8 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   "defaultEditor": "code",
   "autoSyncAfterEdit": true,
   "template": "default",
-  "pathStyle": "relative"
+  "pathStyle": "relative",
+  "syncMode": "prompt"
 }
 ```
 
@@ -72,7 +81,13 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 **Required Fields:**
 
 - `version` (string): Configuration schema version. Currently `"1.0"`.
-- `targets` (string[]): Instruction files that receive the managed section. Can be an empty array `[]` if only managing skills without syncing.
+- `targets` (Target[]): Array of target objects. Each target has:
+  - `name` (string): File path for prompt mode or directory path for symlink mode
+  - `syncMode` (string, optional): `"prompt"` or `"symlink"`. Defaults to global `syncMode` or `"prompt"`.
+  - `template` (string, optional): Template override for this target. Defaults to global `template`.
+  - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
+  - `preset` (string, optional): Preset override for this target. Defaults to global `preset`.
+  - Can be an empty array `[]` if only managing skills without syncing.
 - `skillDirectories` (string[]): Directories to scan for `SKILL.md` files.
 - `additionalSkills` (string[]): Additional skill directories beyond `skillDirectories`. Can be empty `[]`.
 - `ignore` (string[]): Glob patterns to exclude skill directories (e.g., `["*.test", "experimental-*"]`). Can be empty `[]`.
@@ -100,6 +115,101 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 - `pathStyle` (string): Path style for skill links in synced files. Possible values:
   - `"relative"` - Relative paths (default, more portable)
   - `"absolute"` - Absolute paths
+
+- `syncMode` (string): Sync mode for targets. Possible values:
+  - `"prompt"` - Inject skill instructions into target file (default)
+  - `"symlink"` - Create symlinks to skill directories in target directory
+
+### Sync Modes
+
+Skillz supports two ways to sync skills to your development environment:
+
+#### Prompt Mode (Default)
+
+The default `syncMode: "prompt"` writes skill instructions directly into your target file. This is ideal for LLM-powered tools that read from instruction files like `AGENTS.md` or `CLAUDE.md`.
+
+```json
+{
+  "version": "1.0",
+  "targets": [
+    {
+      "name": "AGENTS.md",
+      "syncMode": "prompt"
+    }
+  ],
+  "skillDirectories": [".claude/skills"]
+}
+```
+
+When synced, skills appear in your target file like this:
+
+```markdown
+## Additional Instructions
+
+[Skill usage instructions...]
+
+### Available Skills
+
+- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development
+```
+
+#### Symlink Mode
+
+For tools that can directly read skill directories (e.g., file-based IDEs), use `syncMode: "symlink"` to create symbolic links instead of embedding content:
+
+```json
+{
+  "version": "1.0",
+  "targets": [
+    {
+      "name": ".skills",
+      "syncMode": "symlink"
+    }
+  ],
+  "skillDirectories": [".claude/skills"]
+}
+```
+
+This creates a flattened structure of symlinks in the target directory:
+
+```
+.skills/
+├── python-expert → .claude/skills/python-expert
+├── react-patterns → .claude/skills/react-patterns
+└── web-expert → .claude/skills/web-expert
+```
+
+**Key differences:**
+
+- **Prompt mode**: Target `name` is a file path (e.g., `AGENTS.md`)
+- **Symlink mode**: Target `name` is a directory path (e.g., `.skills`)
+- Symlink mode validates for conflicts before creating any symlinks (aborts on conflicts)
+- Symlink mode does not use cache (always syncs)
+- Symlink structure is flattened (skill name only, not full path)
+
+#### Mixed Mode
+
+You can combine both sync modes in one project:
+
+```json
+{
+  "version": "1.0",
+  "targets": [
+    {
+      "name": "AGENTS.md",
+      "syncMode": "prompt",
+      "template": "default"
+    },
+    {
+      "name": ".cursor/.skills",
+      "syncMode": "symlink"
+    }
+  ],
+  "skillDirectories": [".claude/skills"]
+}
+```
+
+This syncs skills to both a file (for LLMs) and a directory (for direct access).
 
 ### Minimal Configuration Example
 

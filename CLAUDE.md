@@ -105,20 +105,28 @@ Quick summary:
 
 **src/core/target-manager.ts**
 
-- `writeTargetFile(target, skills, config, cwd)` - Injects managed section
+- `writeTargetFile(target, skills, config, cwd)` - Injects managed section (prompt mode)
 - `extractManagedSection()` - Finds section by heading name
 - `replaceManagedSection()` - Replaces content from section heading to EOF
-- Managed section format:
+- `validateSymlinkTargets(targets, skills, cwd)` - Pre-flight validation for symlink conflicts
+- `symlinkSkillsToTarget(target, skills, cwd)` - Creates symlinks for one target (symlink mode)
+- Managed section format (prompt mode):
   - Starts with configurable heading (e.g., `## Additional Instructions`)
   - Contains rendered skill content from templates
   - Extends to end of file
   - Content before the section heading is preserved
+- Symlink mode:
+  - Creates flattened directory structure (skill name only)
+  - Validates all targets before creating any symlinks (abort on conflicts)
+  - Uses absolute paths for symlink sources
 
 **src/utils/fs-helpers.ts**
 
 - `safeReadFile()` / `safeWriteFile()` - Atomic file operations (temp file + rename)
 - `isSkillDirectory()` - Checks if directory contains SKILL.md
 - `readDirectories()` - Lists subdirectories
+- `pathExists()` - Checks if path exists (file, directory, or symlink) using lstat (detects broken symlinks)
+- `symlinkDirectory()` - Creates directory symbolic links with error handling
 
 **src/utils/hash.ts**
 
@@ -205,7 +213,7 @@ it('should sync skills', async () => {
 }
 ```
 
-**Per-Target Configuration (New):**
+**Per-Target Configuration:**
 
 Each target can override global settings:
 
@@ -226,6 +234,55 @@ Each target can override global settings:
   ],
   "template": "default",
   "pathStyle": "relative"
+}
+```
+
+**Symlink Sync Mode:**
+
+The `syncMode` property enables two different sync strategies:
+
+- **`prompt` (default)**: Writes skill instructions into the target file (file path)
+- **`symlink`**: Creates symbolic links to skill directories in the target directory (directory path)
+
+Example configuration with symlink mode:
+
+```json
+{
+  "version": "1.0",
+  "targets": [
+    {
+      "name": ".skills",
+      "syncMode": "symlink"
+    }
+  ],
+  "skillDirectories": [".claude/skills"]
+}
+```
+
+This creates flattened symlinks:
+```
+.skills/
+├── python-expert → .claude/skills/python-expert
+├── react-patterns → .claude/skills/react-patterns
+```
+
+**Mixed Mode Example:**
+
+```json
+{
+  "version": "1.0",
+  "targets": [
+    {
+      "name": "AGENTS.md",
+      "syncMode": "prompt",
+      "template": "default"
+    },
+    {
+      "name": ".cursor/.skills",
+      "syncMode": "symlink"
+    }
+  ],
+  "skillDirectories": [".claude/skills"]
 }
 ```
 

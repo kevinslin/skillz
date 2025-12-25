@@ -1,7 +1,14 @@
 import type { Skill, Config, ManagedSection, TargetContent, Target } from '../types/index.js';
-import { safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
+import {
+  safeReadFile,
+  safeWriteFile,
+  pathExists,
+  symlinkDirectory,
+  ensureDir,
+} from '../utils/fs-helpers.js';
 import { debug } from '../utils/logger.js';
 import { renderSkills } from './template-engine.js';
+import path from 'path';
 
 /**
  * Find all occurrences of a section name in content
@@ -143,4 +150,82 @@ export async function writeTargetFile(
   );
 
   await safeWriteFile(target.name, updatedContent);
+}
+
+/**
+ * Format error message for symlink conflicts
+ */
+function formatConflictsError(
+  conflicts: Array<{ target: string; skill: string; path: string }>
+): string {
+  const lines = [
+    'Cannot sync: destination conflicts detected',
+    '',
+    'The following skill symlinks cannot be created because paths already exist:',
+    '',
+  ];
+
+  for (const c of conflicts) {
+    lines.push(`  • ${c.skill} → ${c.path} (target: ${c.target})`);
+  }
+
+  lines.push('');
+  lines.push('Please remove or rename conflicting files/directories and try again.');
+
+  return lines.join('\n');
+}
+
+/**
+ * Validate symlink targets for conflicts before creating any symlinks
+ */
+export async function validateSymlinkTargets(
+  targets: Target[],
+  skills: Skill[],
+  cwd: string
+): Promise<void> {
+  const conflicts: Array<{ target: string; skill: string; path: string }> = [];
+
+  for (const target of targets) {
+    const targetDir = path.resolve(cwd, target.name);
+
+    for (const skill of skills) {
+      const destPath = path.join(targetDir, skill.name);
+
+      // Check if path exists (file, directory, or symlink)
+      if (await pathExists(destPath)) {
+        conflicts.push({
+          target: target.name,
+          skill: skill.name,
+          path: destPath,
+        });
+      }
+    }
+  }
+
+  if (conflicts.length > 0) {
+    const errorMsg = formatConflictsError(conflicts);
+    throw new Error(errorMsg);
+  }
+}
+
+/**
+ * Create symlinks for skills to target directory
+ */
+export async function symlinkSkillsToTarget(
+  target: Target,
+  skills: Skill[],
+  cwd: string
+): Promise<void> {
+  const targetDir = path.resolve(cwd, target.name);
+
+  // Ensure target directory exists
+  await ensureDir(targetDir);
+
+  // Create symlink for each skill
+  for (const skill of skills) {
+    const sourcePath = path.resolve(cwd, skill.path);
+    const destPath = path.join(targetDir, skill.name); // Flattened
+
+    await symlinkDirectory(sourcePath, destPath);
+  }
 }

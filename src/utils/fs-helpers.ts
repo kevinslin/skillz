@@ -59,6 +59,38 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 
 /**
+ * Check if a path exists (file, directory, or symlink)
+ * Unlike fileExists(), this does not resolve home directory
+ * Uses lstat to detect broken symlinks
+ */
+export async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.lstat(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Create a symbolic link from source directory to destination
+ * Uses fs.symlink with 'dir' type
+ */
+export async function symlinkDirectory(
+  source: string,
+  destination: string
+): Promise<void> {
+  try {
+    await fs.symlink(source, destination, 'dir');
+  } catch (error) {
+    throw new Error(
+      `Failed to create symlink: ${source} → ${destination}\n` +
+      `Error: ${(error as Error).message}`
+    );
+  }
+}
+
+/**
  * Ensure a directory exists, creating it if necessary
  */
 export async function ensureDir(dirPath: string): Promise<void> {

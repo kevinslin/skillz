@@ -19,6 +19,7 @@ export interface Target {
   template?: string;
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   pathStyle?: 'relative' | 'absolute';
+  syncMode?: 'prompt' | 'symlink';
 }
 
 /**
@@ -36,6 +37,7 @@ export interface Config {
   autoSyncAfterEdit?: boolean;
   template?: string;
   pathStyle?: 'relative' | 'absolute';
+  syncMode?: 'prompt' | 'symlink';
 }
 
 /**
