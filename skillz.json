@@ -2,16 +2,14 @@
   "version": "2.0",
   "targets": [
     {
-      "destination": "AGENTS.md"
+      "destination": ".codex/skills",
+      "syncMode": "native"
     }
   ],
-  "skillDirectories": [
-    ".claude/skills"
-  ],
+  "skillDirectories": ["~/.claude/skills"],
   "additionalSkills": [],
   "ignore": [],
   "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "vim",
-  "autoSyncAfterEdit": true,
-  "preset": "agentsmd"
+  "autoSyncAfterEdit": true
 }
