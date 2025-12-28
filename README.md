@@ -59,6 +59,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
     {
       "destination": "AGENTS.md",
       "syncMode": "prompt",
+      "deleteExistingFromTarget": false,
       "template": "default",
       "pathStyle": "relative",
       "preset": "agentsmd"
@@ -84,6 +85,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 - `targets` (Target[]): Array of target objects. Each target has:
   - `destination` (string): File path for prompt mode or directory path for native mode
   - `syncMode` (string, optional): `"prompt"` or `"native"`. Defaults to global `syncMode` or `"prompt"`.
+  - `deleteExistingFromTarget` (boolean, optional): When true, removes existing skill directories in the target before copying. Only applies to `"native"` sync. Target destination must be listed in `skillDirectories`. Default: `false`.
   - `template` (string, optional): Template override for this target. Defaults to global `template`.
   - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
   - `preset` (string, optional): Preset override for this target. Defaults to global `preset`.

@@ -20,6 +20,7 @@ export interface Target {
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   pathStyle?: 'relative' | 'absolute';
   syncMode?: 'prompt' | 'native';
+  deleteExistingFromTarget?: boolean;
 }
 
 /**

@@ -5,7 +5,6 @@ import type { Config } from '../../src/types/index.js';
 import fs from 'fs-extra';
 import path from 'path';
 import matter from 'gray-matter';
-import os from 'os';
 
 describe('create command', () => {
   let workspace: MockWorkspace;
@@ -306,6 +305,9 @@ describe('create command', () => {
       cwd: workspace.root,
     });
 
+    const testHome = path.join(workspace.root, '.home');
+    await fs.ensureDir(testHome);
+
     // Manually edit config to use ~ path
     const configPath = path.join(workspace.root, 'skillz.json');
     const config = (await fs.readJson(configPath)) as Config;
@@ -314,20 +316,20 @@ describe('create command', () => {
 
     const result = await execCli(['create', 'tilde-test', 'Testing tilde expansion'], {
       cwd: workspace.root,
+      env: { HOME: testHome },
     });
 
     expect(result.exitCode).toBe(0);
 
     // Should expand ~ to home directory
-    const homeDir = os.homedir();
-    const skillPath = path.join(homeDir, '.test-skills/tilde-test');
+    const skillPath = path.join(testHome, '.test-skills/tilde-test');
     expect(await fs.pathExists(skillPath)).toBe(true);
 
     const skillFilePath = path.join(skillPath, 'SKILL.md');
     expect(await fs.pathExists(skillFilePath)).toBe(true);
 
     // Clean up
-    await fs.remove(path.join(homeDir, '.test-skills'));
+    await fs.remove(path.join(testHome, '.test-skills'));
   });
 
   it('should handle tilde (~) in --path option', async () => {
@@ -335,24 +337,27 @@ describe('create command', () => {
       cwd: workspace.root,
     });
 
+    const testHome = path.join(workspace.root, '.home');
+    await fs.ensureDir(testHome);
+
     const result = await execCli(
       ['create', 'tilde-path', 'Testing tilde in path', '--path', '~/.test-skills-path'],
       {
         cwd: workspace.root,
+        env: { HOME: testHome },
       }
     );
 
     expect(result.exitCode).toBe(0);
 
     // Should expand ~ to home directory
-    const homeDir = os.homedir();
-    const skillPath = path.join(homeDir, '.test-skills-path/tilde-path');
+    const skillPath = path.join(testHome, '.test-skills-path/tilde-path');
     expect(await fs.pathExists(skillPath)).toBe(true);
 
     const skillFilePath = path.join(skillPath, 'SKILL.md');
     expect(await fs.pathExists(skillFilePath)).toBe(true);
 
     // Clean up
-    await fs.remove(path.join(homeDir, '.test-skills-path'));
+    await fs.remove(path.join(testHome, '.test-skills-path'));
   });
 });

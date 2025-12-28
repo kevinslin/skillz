@@ -4,9 +4,24 @@ import { execCli } from '../helpers/cli.js';
 import fs from 'fs-extra';
 import path from 'path';
 
+/**
+ * Expected CLI exit code for successful runs.
+ */
+const EXIT_CODE_SUCCESS = 0;
+
+/**
+ * Expected CLI exit code for failing runs.
+ */
+const EXIT_CODE_FAILURE = 1;
+
+/**
+ * JSON indentation width for test config files.
+ */
+const JSON_INDENTATION_SPACES = 2;
+
 type SkillsConfig = {
   version: string;
-  targets: Array<{ destination: string; syncMode?: string }>;
+  targets: Array<{ destination: string; syncMode?: string; deleteExistingFromTarget?: boolean }>;
   skillDirectories: string[];
   additionalSkills: string[];
   ignore: string[];
@@ -33,11 +48,11 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
     // Verify copied directories exist
     const pythonDir = path.join(workspace.root, '.skills/python-expert');
@@ -69,7 +84,7 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     // Create conflicting directory
     const conflictDir = path.join(workspace.root, '.skills/python-expert');
@@ -78,7 +93,7 @@ describe('native sync mode', () => {
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
     expect(result.stderr).toContain('destination conflicts detected');
     expect(result.stderr).toContain('python-expert');
 
@@ -96,7 +111,7 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     // Create multiple conflicts
     await fs.ensureDir(path.join(workspace.root, '.skills/python-expert'));
@@ -104,10 +119,58 @@ describe('native sync mode', () => {
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
     expect(result.stderr).toContain('python-expert');
     expect(result.stderr).toContain('react-patterns');
     expect(result.stderr).toContain('destination conflicts detected');
+  });
+
+  it('should remove pre-existing skills when deleteExistingFromTarget is set', async () => {
+    const config: SkillsConfig = {
+      version: '2.0',
+      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
+      skillDirectories: ['.claude/skills', '.skills'],
+      additionalSkills: [],
+      ignore: ['obsolete-*'],
+    };
+
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+
+    const obsoleteDir = path.join(workspace.root, '.skills/obsolete-skill');
+    await fs.ensureDir(obsoleteDir);
+    await fs.writeFile(
+      path.join(obsoleteDir, 'SKILL.md'),
+      `---
+name: obsolete-skill
+description: Old skill that should be removed
+---
+`
+    );
+
+    const result = await execCli(['sync'], { cwd: workspace.root });
+
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
+    expect(await fs.pathExists(obsoleteDir)).toBe(false);
+
+    const pythonDir = path.join(workspace.root, '.skills/python-expert');
+    expect(await fs.pathExists(pythonDir)).toBe(true);
+  });
+
+  it('should error when deleteExistingFromTarget is not in skillDirectories', async () => {
+    const config: SkillsConfig = {
+      version: '2.0',
+      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
+      skillDirectories: ['.claude/skills'],
+      additionalSkills: [],
+      ignore: [],
+    };
+
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+
+    const result = await execCli(['sync'], { cwd: workspace.root });
+
+    expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
+    expect(result.stderr).toContain('deleteExistingFromTarget requires target destination');
   });
 
   it('should create cache for native targets', async () => {
@@ -119,7 +182,7 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     await execCli(['sync'], { cwd: workspace.root });
 
@@ -137,7 +200,7 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     // First sync
     await execCli(['sync'], { cwd: workspace.root });
@@ -152,7 +215,7 @@ describe('native sync mode', () => {
     // Second sync should detect change and re-copy
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
     // Verify the copied skill was updated
     const updatedContent = await fs.readFile(copiedSkillPath, 'utf-8');
@@ -168,7 +231,7 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     // First sync
     await execCli(['sync'], { cwd: workspace.root });
@@ -176,7 +239,7 @@ describe('native sync mode', () => {
     // Second sync without changes
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
     expect(result.stdout).toContain('All skills are up to date');
   });
 
@@ -193,11 +256,11 @@ describe('native sync mode', () => {
       skillsSectionName: '## Additional Instructions',
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
     // Verify prompt target was written
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
@@ -226,11 +289,11 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     const result = await execCli(['sync', '--dry-run'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
     expect(result.stdout).toContain('Dry run mode');
     expect(result.stdout).toContain('Would copy');
     expect(result.stdout).toContain('.skills/');
@@ -249,11 +312,11 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
     // Verify directory was created
     const targetDir = path.join(workspace.root, 'some/nested/skills');
@@ -287,11 +350,11 @@ Web development best practices.`
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: 2 });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
     // Verify all three skills are copied
     const pythonDir = path.join(workspace.root, '.skills/python-expert');

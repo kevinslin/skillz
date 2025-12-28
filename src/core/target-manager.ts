@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import path from 'path';
 import type { Skill, Config, ManagedSection, TargetContent, Target } from '../types/index.js';
 import {
   safeReadFile,
@@ -5,10 +7,40 @@ import {
   pathExists,
   copyDirectory,
   ensureDir,
+  readDirectories,
+  isSkillDirectory,
+  resolveHome,
 } from '../utils/fs-helpers.js';
 import { debug } from '../utils/logger.js';
 import { renderSkills } from './template-engine.js';
-import path from 'path';
+
+/**
+ * Resolve a directory path relative to cwd, expanding home when needed.
+ */
+function resolveDirectoryPath(directory: string, cwd: string): string {
+  return path.resolve(cwd, resolveHome(directory));
+}
+
+/**
+ * Remove skill directories in a target that are not part of the current skill set.
+ */
+async function removeStaleSkillsFromTarget(targetDir: string, skills: Skill[]): Promise<void> {
+  const activeSkillNames = new Set(skills.map((skill) => skill.name));
+  const entries = await readDirectories(targetDir);
+
+  for (const entry of entries) {
+    if (!(await isSkillDirectory(entry))) {
+      continue;
+    }
+
+    const dirName = path.basename(entry);
+    if (activeSkillNames.has(dirName)) {
+      continue;
+    }
+
+    await fs.rm(entry, { recursive: true, force: true });
+  }
+}
 
 /**
  * Find all occurrences of a section name in content
@@ -182,13 +214,22 @@ function formatConflictsError(
 export async function validateNativeTargets(
   targets: Target[],
   skills: Skill[],
+  config: Config,
   cwd: string,
   cachedSkills: Set<string> = new Set()
 ): Promise<void> {
   const conflicts: Array<{ target: string; skill: string; path: string }> = [];
+  const resolvedSkillDirectories = new Set(
+    config.skillDirectories.map((dir) => resolveDirectoryPath(dir, cwd))
+  );
 
   for (const target of targets) {
-    const targetDir = path.resolve(cwd, target.destination);
+    const targetDir = resolveDirectoryPath(target.destination, cwd);
+    if (target.deleteExistingFromTarget && !resolvedSkillDirectories.has(targetDir)) {
+      throw new Error(
+        `deleteExistingFromTarget requires target destination to be listed in skillDirectories: ${target.destination}`
+      );
+    }
 
     for (const skill of skills) {
       const destPath = path.join(targetDir, skill.name);
@@ -200,6 +241,9 @@ export async function validateNativeTargets(
 
       // Check if path exists (file, directory, or symlink)
       if (await pathExists(destPath)) {
+        if (target.deleteExistingFromTarget && (await isSkillDirectory(destPath))) {
+          continue;
+        }
         conflicts.push({
           target: target.destination,
           skill: skill.name,
@@ -221,21 +265,30 @@ export async function validateNativeTargets(
 export async function copySkillsToTarget(
   target: Target,
   skills: Skill[],
-  cwd: string
+  cwd: string,
+  cleanupSkills: Skill[] = skills
 ): Promise<void> {
-  const targetDir = path.resolve(cwd, target.destination);
+  const targetDir = resolveDirectoryPath(target.destination, cwd);
 
   // Ensure target directory exists
   await ensureDir(targetDir);
+
+  if (target.deleteExistingFromTarget) {
+    await removeStaleSkillsFromTarget(targetDir, cleanupSkills);
+  }
 
   // Copy each skill directory
   for (const skill of skills) {
     const sourcePath = path.resolve(cwd, skill.path);
     const destPath = path.join(targetDir, skill.name); // Flattened
 
+    if (path.resolve(sourcePath) === path.resolve(destPath)) {
+      continue;
+    }
+
     // Remove existing directory if it exists (for updates)
     if (await pathExists(destPath)) {
-      await import('fs/promises').then((fs) => fs.rm(destPath, { recursive: true }));
+      await fs.rm(destPath, { recursive: true, force: true });
     }
 
     await copyDirectory(sourcePath, destPath);

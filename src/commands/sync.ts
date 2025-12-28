@@ -77,6 +77,15 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     debug('Using default template');
   }
 
+  for (const target of config.targets) {
+    if (target.deleteExistingFromTarget && resolveTargetSyncMode(target, config) !== 'native') {
+      error(
+        `deleteExistingFromTarget can only be used with native sync targets: ${target.destination}`
+      );
+      process.exit(1);
+    }
+  }
+
   // Scan skills
   const spin = spinner('Scanning skill directories...\n').start();
   const skills = await scanAllSkillDirectories(config);
@@ -193,7 +202,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     try {
       // Get cached skill names to skip validation for managed copies
       const cachedSkillNames = cache ? new Set(Object.keys(cache.skills)) : new Set<string>();
-      await validateNativeTargets(nativeTargets, filteredSkills, cwd, cachedSkillNames);
+      await validateNativeTargets(nativeTargets, filteredSkills, config, cwd, cachedSkillNames);
       validationSpin.succeed('No conflicts detected');
     } catch (err) {
       validationSpin.fail('Validation failed');
@@ -208,9 +217,10 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   try {
     for (const target of config.targets) {
       const syncMode = resolveTargetSyncMode(target, config);
+      info(`Syncing ${filteredSkills.length} skills to ${target.destination} in ${syncMode} mode`);
 
       if (syncMode === 'native') {
-        await copySkillsToTarget(target, filteredSkills, cwd);
+        await copySkillsToTarget(target, filteredSkills, cwd, skills);
         debug(`Copied ${filteredSkills.length} skills to ${target.destination}`);
       } else {
         await writeTargetFile(target, filteredSkills, config, cwd);

@@ -50,3 +50,7 @@ parserOptions: {
 
 - When reading JSON configuration files in tests, explicitly type the result using generics (e.g., `fs.readJson<SkillsConfig>(configPath)`) to avoid `any` types and improve type safety.
 - After making changes to ESLint configurations or test files, run ESLint directly on the test files (e.g., `npx eslint tests/integration/init.test.ts`) to verify the fixes.
+
+## TARGET HANDLING
+
+- When `target.deleteExistingFromTarget` is enabled, the `stageSkillsFromTarget` function is called to protect skills whose source path already lives inside the destination directory. This function copies those directories into a temporary staging area, and returns the location where they were staged. This allows for safe removal of everything under the target directory, followed by copying the staged (or original) skills back in. The copy loop will then pull from the staged version.

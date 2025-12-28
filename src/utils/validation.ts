@@ -9,6 +9,7 @@ export const TargetSchema = z.object({
   preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
   pathStyle: z.enum(['relative', 'absolute']).optional(),
   syncMode: z.enum(['prompt', 'native']).optional(),
+  deleteExistingFromTarget: z.boolean().optional(),
 });
 
 /**
@@ -38,7 +39,7 @@ export const SkillFrontmatterSchema = z.object({
     .min(1, 'Skill name is required')
     .max(64, 'Skill name must be 64 characters or less')
     .regex(
-      /^[A-Za-z0-9-_\s]+$/,
+      /^[A-Za-z0-9-_\s.]+$/,
       'Skill name must contain only letters, numbers, hyphens, underscores, and spaces'
     ),
   description: z

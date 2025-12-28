@@ -235,6 +235,7 @@ export function migrateConfig(
       preset: target.preset,
       pathStyle: target.pathStyle,
       syncMode: target.syncMode,
+      deleteExistingFromTarget: target.deleteExistingFromTarget,
     };
   });
 

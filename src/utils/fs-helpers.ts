@@ -104,8 +104,14 @@ export async function ensureDir(dirPath: string): Promise<void> {
  * Resolve home directory (~) in path
  */
 export function resolveHome(filePath: string): string {
-  if (filePath.startsWith('~/') || filePath === '~') {
-    return path.join(os.homedir(), filePath.slice(1));
+  const homePrefix = '~/';
+
+  if (filePath === '~') {
+    return os.homedir();
+  }
+
+  if (filePath.startsWith(homePrefix)) {
+    return path.join(os.homedir(), filePath.slice(homePrefix.length));
   }
   return filePath;
 }
