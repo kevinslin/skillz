@@ -202,7 +202,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     try {
       // Get cached skill names to skip validation for managed copies
       const cachedSkillNames = cache ? new Set(Object.keys(cache.skills)) : new Set<string>();
-      await validateNativeTargets(nativeTargets, filteredSkills, config, cwd, cachedSkillNames);
+      await validateNativeTargets(nativeTargets, filteredSkills, cwd, cachedSkillNames);
       validationSpin.succeed('No conflicts detected');
     } catch (err) {
       validationSpin.fail('Validation failed');

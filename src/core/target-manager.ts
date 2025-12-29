@@ -214,22 +214,13 @@ function formatConflictsError(
 export async function validateNativeTargets(
   targets: Target[],
   skills: Skill[],
-  config: Config,
   cwd: string,
   cachedSkills: Set<string> = new Set()
 ): Promise<void> {
   const conflicts: Array<{ target: string; skill: string; path: string }> = [];
-  const resolvedSkillDirectories = new Set(
-    config.skillDirectories.map((dir) => resolveDirectoryPath(dir, cwd))
-  );
 
   for (const target of targets) {
     const targetDir = resolveDirectoryPath(target.destination, cwd);
-    if (target.deleteExistingFromTarget && !resolvedSkillDirectories.has(targetDir)) {
-      throw new Error(
-        `deleteExistingFromTarget requires target destination to be listed in skillDirectories: ${target.destination}`
-      );
-    }
 
     for (const skill of skills) {
       const destPath = path.join(targetDir, skill.name);

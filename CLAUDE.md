@@ -108,7 +108,7 @@ Quick summary:
 - `writeTargetFile(target, skills, config, cwd)` - Injects managed section (prompt mode)
 - `extractManagedSection()` - Finds section by heading name
 - `replaceManagedSection()` - Replaces content from section heading to EOF
-- `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts
+- `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts before copying
 - `copySkillsToTarget(target, skills, cwd)` - Copies skills to target directory (native mode)
 - Managed section format (prompt mode):
   - Starts with configurable heading (e.g., `## Additional Instructions`)

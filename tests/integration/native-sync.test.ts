@@ -156,23 +156,6 @@ description: Old skill that should be removed
     expect(await fs.pathExists(pythonDir)).toBe(true);
   });
 
-  it('should error when deleteExistingFromTarget is not in skillDirectories', async () => {
-    const config: SkillsConfig = {
-      version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
-      skillDirectories: ['.claude/skills'],
-      additionalSkills: [],
-      ignore: [],
-    };
-
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
-
-    const result = await execCli(['sync'], { cwd: workspace.root });
-
-    expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
-    expect(result.stderr).toContain('deleteExistingFromTarget requires target destination');
-  });
-
   it('should create cache for native targets', async () => {
     const config: SkillsConfig = {
       version: '2.0',
