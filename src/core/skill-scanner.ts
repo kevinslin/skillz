@@ -6,26 +6,22 @@ import { parseSkill, validateSkill } from './skill-parser.js';
 import { debug, warning } from '../utils/logger.js';
 
 /**
- * Recursively scan a directory for skills
+ * Scan a directory for skills (flat structure only).
  */
-async function scanDirectoryRecursive(
-  directory: string,
-  ignore: string[] = [],
-  depth: number = 0,
-  maxDepth: number = 10
-): Promise<string[]> {
-  if (depth > maxDepth) {
-    debug(`Max depth ${maxDepth} reached at ${directory}`);
+export async function scanDirectory(directory: string, ignore: string[] = []): Promise<string[]> {
+  const resolvedDir = path.resolve(resolveHome(directory));
+
+  if (!(await fileExists(resolvedDir))) {
+    debug(`Directory not found: ${resolvedDir}`);
     return [];
   }
 
-  const subdirs = await readDirectories(directory);
+  const subdirs = await readDirectories(resolvedDir);
   const skillDirs: string[] = [];
 
   for (const subdir of subdirs) {
     const dirName = path.basename(subdir);
 
-    // Check if directory name matches any ignore pattern
     const shouldIgnore = ignore.some((pattern) => {
       try {
         return minimatch(dirName, pattern, { dot: true });
@@ -40,33 +36,12 @@ async function scanDirectoryRecursive(
       continue;
     }
 
-    // Check if it's a skill directory
     if (await isSkillDirectory(subdir)) {
       skillDirs.push(subdir);
-      // Don't recurse into skill directories
-      continue;
     }
-
-    // Not a skill directory, recurse into it
-    const nestedSkills = await scanDirectoryRecursive(subdir, ignore, depth + 1, maxDepth);
-    skillDirs.push(...nestedSkills);
   }
 
   return skillDirs;
-}
-
-/**
- * Scan a directory for skills
- */
-export async function scanDirectory(directory: string, ignore: string[] = []): Promise<string[]> {
-  const resolvedDir = path.resolve(resolveHome(directory));
-
-  if (!(await fileExists(resolvedDir))) {
-    debug(`Directory not found: ${resolvedDir}`);
-    return [];
-  }
-
-  return await scanDirectoryRecursive(resolvedDir, ignore);
 }
 
 /**
@@ -75,7 +50,6 @@ export async function scanDirectory(directory: string, ignore: string[] = []): P
 export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> {
   const allDirs = [...config.skillDirectories, ...config.additionalSkills];
   const skills: Skill[] = [];
-  const seenPaths = new Set<string>();
   const seenNames = new Set<string>();
   debug(`scanning all skill directories from ${allDirs}`);
 
@@ -101,19 +75,12 @@ export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> 
           continue;
         }
 
-        // Check for duplicate relativePaths (exact same skill)
-        if (seenPaths.has(skill.relativePath)) {
-          warning(`Duplicate skill at ${skill.relativePath}`);
-          continue;
-        }
-
-        // Check for duplicate names (would conflict when flattened)
+        // Check for duplicate names (would conflict in a flat structure)
         if (seenNames.has(skill.name)) {
           warning(`Duplicate skill name: ${skill.name} at ${skill.relativePath}`);
           continue;
         }
 
-        seenPaths.add(skill.relativePath);
         seenNames.add(skill.name);
         skills.push(skill);
         debug(`Found skill: ${skill.name} at ${skill.relativePath}`);
