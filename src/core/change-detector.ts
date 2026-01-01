@@ -6,11 +6,11 @@ import { hashesMatch } from '../utils/hash.js';
  */
 export function detectChanges(currentSkills: Skill[], cache: CacheFile): SkillChange[] {
   const changes: SkillChange[] = [];
-  const cachedSkillNames = new Set(Object.keys(cache.skills));
+  const cachedSkillPaths = new Set(Object.keys(cache.skills));
 
   // Check for new and modified skills
   for (const skill of currentSkills) {
-    const cachedEntry = cache.skills[skill.name];
+    const cachedEntry = cache.skills[skill.relativePath];
 
     if (!cachedEntry) {
       // New skill
@@ -37,15 +37,15 @@ export function detectChanges(currentSkills: Skill[], cache: CacheFile): SkillCh
       });
     }
 
-    cachedSkillNames.delete(skill.name);
+    cachedSkillPaths.delete(skill.relativePath);
   }
 
   // Check for removed skills
-  for (const removedName of cachedSkillNames) {
+  for (const removedPath of cachedSkillPaths) {
     changes.push({
       skill: null,
       type: 'removed',
-      oldHash: cache.skills[removedName].hash,
+      oldHash: cache.skills[removedPath].hash,
     });
   }
 

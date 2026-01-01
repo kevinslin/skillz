@@ -75,9 +75,11 @@ Quick summary:
 
 **src/core/skill-scanner.ts**
 
-- `scanDirectory(dir, ignore)` - Finds skill directories, applies glob ignore patterns
-- `scanAllSkillDirectories(config)` - Scans all configured directories
+- `scanDirectory(dir, ignore)` - Recursively finds skill directories at any nesting level, applies glob ignore patterns
+- `scanAllSkillDirectories(config)` - Scans all configured directories, computes `relativePath` (relative to skillDirectory) and `sourceDirectory` for each skill
+- Duplicate detection: checks both `relativePath` (exact path duplicates) and `skill.name` (would conflict when flattened to target)
 - Uses minimatch for glob patterns (e.g., `*.test`, `experimental-*`)
+- Max recursion depth: 10 levels (prevents infinite loops)
 
 **src/core/skill-parser.ts**
 
@@ -95,7 +97,9 @@ Quick summary:
 
 - Manages `.skillz-cache.json` for change detection
 - Stores skill hashes, paths, last modified timestamps
+- Cache keys use `skill.relativePath` (enables tracking duplicate skill names in different source directories)
 - Cache format validated via Zod schema
+- Cache version: 2.0 (v1.0 caches are automatically invalidated to trigger full sync)
 
 **src/core/template-engine.ts**
 
@@ -108,7 +112,7 @@ Quick summary:
 - `writeTargetFile(target, skills, config, cwd)` - Injects managed section (prompt mode)
 - `extractManagedSection()` - Finds section by heading name
 - `replaceManagedSection()` - Replaces content from section heading to EOF
-- `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts before copying
+- `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts (allows overwriting existing skill directories, but blocks non-skill files/dirs)
 - `copySkillsToTarget(target, skills, cwd)` - Copies skills to target directory (native mode)
 - Managed section format (prompt mode):
   - Starts with configurable heading (e.g., `## Additional Instructions`)
@@ -116,8 +120,10 @@ Quick summary:
   - Extends to end of file
   - Content before the section heading is preserved
 - Native mode:
-  - Creates flattened directory structure (skill name only)
-  - Validates all targets before copying any skills (abort on conflicts)
+  - Creates flattened directory structure (skill name only, regardless of source nesting)
+  - Recursively scans source directories to find skills at any nesting level
+  - Validates all targets before copying any skills (abort on conflicts with non-skill files/dirs)
+  - Allows overwriting existing skill directories (for updates)
   - Uses cache to detect changes (only re-copies when skills change)
   - Removes existing copied directories before re-copying on updates
 
@@ -143,7 +149,7 @@ Quick summary:
 
 **Key interfaces (src/types/index.ts):**
 
-- `Skill` - Parsed skill with name, description, content, path, hash
+- `Skill` - Parsed skill with name, description, content, path (absolute), relativePath (relative to skillDirectory), sourceDirectory, hash
 - `Config` - skillz.json structure with targets, directories, preset, ignore patterns
 - `CacheFile` - .skillz-cache.json structure with skill metadata
 - `SkillChange` - Change detection result (new/modified/removed)
@@ -260,12 +266,22 @@ Example configuration with native mode:
 }
 ```
 
-This creates flattened copies:
+This creates flattened copies (source skills can be nested, but destination is always flat):
 ```
+Source: .claude/skills/backend/python-expert → Destination: .skills/python-expert
+Source: .claude/skills/frontend/react-patterns → Destination: .skills/react-patterns
+
 .skills/
 ├── python-expert/
 ├── react-patterns/
 ```
+
+**Important behaviors:**
+- Skills are recursively scanned from source directories at any nesting level
+- All skills are copied to the destination using only their `skill.name` (flattened structure)
+- Duplicate skill names in different source directories will be detected and blocked
+- Existing skill directories at the destination can be overwritten (for updates)
+- Non-skill files/directories at the destination will block the sync (conflict detection)
 
 **Mixed Mode Example:**
 

@@ -3,6 +3,7 @@ import type { CacheFile, Skill, Config } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateCacheFile } from '../utils/validation.js';
 import { calculateConfigHash } from '../utils/hash.js';
+import { debug } from '../utils/logger.js';
 
 const CACHE_FILE = '.skillz-cache.json';
 
@@ -27,6 +28,12 @@ export async function loadCache(cwd: string): Promise<CacheFile | null> {
 
     if (!validation.success) {
       // Return empty cache if invalid
+      return null;
+    }
+
+    // Check for old cache format (version 1.0) and invalidate it
+    if (cache.version === '1.0') {
+      debug('Cache format outdated, will perform full sync');
       return null;
     }
 
@@ -56,7 +63,7 @@ export async function saveCache(cache: CacheFile, cwd: string): Promise<void> {
  */
 export function updateCache(skills: Skill[], targetFile: string, config: Config): CacheFile {
   const cache: CacheFile = {
-    version: '1.0',
+    version: '2.0',
     lastSync: new Date().toISOString(),
     targetFile,
     configHash: calculateConfigHash(config),
@@ -64,9 +71,10 @@ export function updateCache(skills: Skill[], targetFile: string, config: Config)
   };
 
   for (const skill of skills) {
-    cache.skills[skill.name] = {
+    cache.skills[skill.relativePath] = {
       hash: skill.hash,
       path: skill.path,
+      relativePath: skill.relativePath,
       lastModified: skill.lastModified.toISOString(),
     };
   }
@@ -79,7 +87,7 @@ export function updateCache(skills: Skill[], targetFile: string, config: Config)
  */
 export function getEmptyCache(targetFile: string, config: Config): CacheFile {
   return {
-    version: '1.0',
+    version: '2.0',
     lastSync: new Date().toISOString(),
     targetFile,
     configHash: calculateConfigHash(config),

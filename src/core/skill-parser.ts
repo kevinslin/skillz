@@ -37,6 +37,8 @@ export async function parseSkill(skillPath: string): Promise<Skill> {
     name: frontmatter.name as string,
     description: frontmatter.description as string,
     path: resolvedSkillPath,
+    relativePath: '', // Will be set by scanner
+    sourceDirectory: '', // Will be set by scanner
     content: body.trim(),
     frontmatter: frontmatter as Record<string, unknown>,
     lastModified,

@@ -200,9 +200,9 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     const validationSpin = spinner('Validating native targets...\n').start();
 
     try {
-      // Get cached skill names to skip validation for managed copies
-      const cachedSkillNames = cache ? new Set(Object.keys(cache.skills)) : new Set<string>();
-      await validateNativeTargets(nativeTargets, filteredSkills, cwd, cachedSkillNames);
+      // Get cached skill relativePaths to skip validation for managed copies
+      const cachedSkillPaths = cache ? new Set(Object.keys(cache.skills)) : new Set<string>();
+      await validateNativeTargets(nativeTargets, filteredSkills, cwd, cachedSkillPaths);
       validationSpin.succeed('No conflicts detected');
     } catch (err) {
       validationSpin.fail('Validation failed');

@@ -5,6 +5,8 @@ export interface Skill {
   name: string;
   description: string;
   path: string;
+  relativePath: string; // Relative path within skillDirectory
+  sourceDirectory: string; // Which skillDirectory this came from
   content: string;
   frontmatter: Record<string, unknown>;
   lastModified: Date;
@@ -58,6 +60,7 @@ export interface CacheFile {
 export interface SkillCacheEntry {
   hash: string;
   path: string;
+  relativePath: string;
   lastModified: string;
 }
 

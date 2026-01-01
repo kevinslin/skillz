@@ -25,7 +25,7 @@ function resolveDirectoryPath(directory: string, cwd: string): string {
  * Remove skill directories in a target that are not part of the current skill set.
  */
 async function removeStaleSkillsFromTarget(targetDir: string, skills: Skill[]): Promise<void> {
-  const activeSkillNames = new Set(skills.map((skill) => skill.name));
+  const activeSkillNames = new Set(skills.map((s) => s.name));
   const entries = await readDirectories(targetDir);
 
   for (const entry of entries) {
@@ -226,15 +226,18 @@ export async function validateNativeTargets(
       const destPath = path.join(targetDir, skill.name);
 
       // Skip if this skill is in cache (managed by us, safe to overwrite)
-      if (cachedSkills.has(skill.name)) {
+      if (cachedSkills.has(skill.relativePath)) {
         continue;
       }
 
       // Check if path exists (file, directory, or symlink)
       if (await pathExists(destPath)) {
-        if (target.deleteExistingFromTarget && (await isSkillDirectory(destPath))) {
+        // Skill directories can always be overwritten (managed by us)
+        if (await isSkillDirectory(destPath)) {
           continue;
         }
+
+        // Non-skill paths are conflicts (don't overwrite user files/dirs)
         conflicts.push({
           target: target.destination,
           skill: skill.name,
@@ -271,7 +274,7 @@ export async function copySkillsToTarget(
   // Copy each skill directory
   for (const skill of skills) {
     const sourcePath = path.resolve(cwd, skill.path);
-    const destPath = path.join(targetDir, skill.name); // Flattened
+    const destPath = path.join(targetDir, skill.name);
 
     if (path.resolve(sourcePath) === path.resolve(destPath)) {
       continue;
