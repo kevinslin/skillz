@@ -11,7 +11,7 @@ import {
   isSkillDirectory,
   resolveHome,
 } from '../utils/fs-helpers.js';
-import { debug } from '../utils/logger.js';
+import { debug, info } from '../utils/logger.js';
 import { renderSkills } from './template-engine.js';
 
 /**
@@ -38,6 +38,7 @@ async function removeStaleSkillsFromTarget(targetDir: string, skills: Skill[]): 
       continue;
     }
 
+    info(`removing stale skill from target: ${entry}`);
     await fs.rm(entry, { recursive: true, force: true });
   }
 }
@@ -268,6 +269,7 @@ export async function copySkillsToTarget(
   await ensureDir(targetDir);
 
   if (target.deleteExistingFromTarget) {
+    info(`Removing stale skills from target: ${targetDir}`);
     await removeStaleSkillsFromTarget(targetDir, cleanupSkills);
   }
 

@@ -48,7 +48,9 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
@@ -84,7 +86,9 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     // Create conflicting directory
     const conflictDir = path.join(workspace.root, '.skills/python-expert');
@@ -111,7 +115,9 @@ describe('native sync mode', () => {
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     // Create multiple conflicts
     await fs.ensureDir(path.join(workspace.root, '.skills/python-expert'));
@@ -134,7 +140,9 @@ describe('native sync mode', () => {
       ignore: ['obsolete-*'],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const obsoleteDir = path.join(workspace.root, '.skills/obsolete-skill');
     await fs.ensureDir(obsoleteDir);
@@ -165,7 +173,9 @@ description: Old skill that should be removed
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     await execCli(['sync'], { cwd: workspace.root });
 
@@ -183,7 +193,9 @@ description: Old skill that should be removed
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     // First sync
     await execCli(['sync'], { cwd: workspace.root });
@@ -214,7 +226,9 @@ description: Old skill that should be removed
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     // First sync
     await execCli(['sync'], { cwd: workspace.root });
@@ -239,7 +253,9 @@ description: Old skill that should be removed
       skillsSectionName: '## Additional Instructions',
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
@@ -272,7 +288,9 @@ description: Old skill that should be removed
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const result = await execCli(['sync', '--dry-run'], { cwd: workspace.root });
 
@@ -295,7 +313,9 @@ description: Old skill that should be removed
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
@@ -333,7 +353,9 @@ Web development best practices.`
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
@@ -372,7 +394,9 @@ Test content`
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     // First sync - copies test-skill and react-patterns
     await execCli(['sync'], { cwd: workspace.root });
@@ -422,7 +446,9 @@ Frontend content`
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, { spaces: JSON_INDENTATION_SPACES });
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 

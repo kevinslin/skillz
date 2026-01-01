@@ -50,6 +50,12 @@ parserOptions: {
 
 - When reading JSON configuration files in tests, explicitly type the result using generics (e.g., `fs.readJson<SkillsConfig>(configPath)`) to avoid `any` types and improve type safety.
 - After making changes to ESLint configurations or test files, run ESLint directly on the test files (e.g., `npx eslint tests/integration/init.test.ts`) to verify the fixes.
+- When debugging `console.log` statements, ensure that the relevant code is actually being executed. Use tools like `rg` to confirm that the code containing the `console.log` statement is being called, especially in functions like `copySkillsToTarget`. Verify that the correct `targetDir` is being passed to the function. If a `console.log` statement is not printing, check the following:
+    - That the code containing the statement is actually being executed.
+    - That the correct data is being passed to the function.
+    - That there are no errors preventing the execution of the `console.log` statement.
+- When debugging `console.log` statements that appear in the TypeScript source (`.ts`) but not in the compiled JavaScript code under `dist/`, ensure that the project has been rebuilt (`npm run build`) after adding the `console.log` statement. The CLI executes the transpiled code under `dist/`, so changes in the TypeScript source will not be reflected until the project is rebuilt. Alternatively, execute the TypeScript directly with `npx tsx src/cli.ts …` to see immediate output.
+    - Example: A `console.log` added to `src/core/target-manager.ts` will not print if running `node dist/cli.js` until `npm run build` is executed.
 
 ## TARGET HANDLING
 
