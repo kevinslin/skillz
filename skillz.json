@@ -1,12 +1,8 @@
 {
   "version": "2.0",
   "targets": [
-    {
-      "destination": ".codex/skills",
-      "syncMode": "native"
-    }
   ],
-  "skillDirectories": ["~/.claude/skills"],
+  "skillDirectories": [],
   "additionalSkills": [],
   "ignore": [],
   "skillsSectionName": "## Additional Instructions",

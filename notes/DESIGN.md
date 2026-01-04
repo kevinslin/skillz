@@ -7,13 +7,16 @@ A TypeScript-based CLI tool that enables any LLM to understand and utilize Claud
 ## Core Concepts
 
 ### Claude Skills Primer
+
 - Skills are stored in `SKILL.md` files with YAML frontmatter
 - Each skill has `name` and `description` metadata
 - Skills live in `.claude/skills/` (project-local) or `~/.claude/skills/` (global)
 - Use progressive disclosure: metadata → instructions → resources
 
 ### Cross-LLM Compatibility
+
 Different LLM tools use different file paths for their configuration. Skillz uses the same markdown format for all targets:
+
 - **Claude Code**: `AGENTS.md`
 - **Cursor**: `.cursor/rules/skills.mdc`
 - **Aider**: `.aider/conventions.md`
@@ -54,6 +57,7 @@ All targets use the same managed section format with skill links.
 Presets provide quick setup for common LLM tools:
 
 **agentsmd:**
+
 ```json
 {
   "preset": "agentsmd",
@@ -62,6 +66,7 @@ Presets provide quick setup for common LLM tools:
 ```
 
 **aider:**
+
 ```json
 {
   "preset": "aider",
@@ -78,6 +83,7 @@ Users can start with a preset and customize further using `skillz config` or by 
 Initializes skillz in the current directory.
 
 **Behavior:**
+
 1. Scans current directory and ancestors for target files (AGENTS.md, .cursor/rules/skills.mdc, etc.)
 2. Detects existing `.claude/skills/` directories
 3. Prompts user to confirm/customize detected configuration
@@ -85,6 +91,7 @@ Initializes skillz in the current directory.
 5. Optionally runs initial sync
 
 **Options:**
+
 - `--preset <name>` - Use a preset configuration (agentsmd, aider)
 - `--target <file>` - Specify custom target file path (e.g., AGENTS.md, .cursor/rules/skills.mdc)
 - `--additional-skills <path>` - Add additional skill directories (repeatable)
@@ -94,10 +101,12 @@ Initializes skillz in the current directory.
 - `--include-instructions` - Include full skill instructions (default: false, links to skills instead)
 
 **Presets:**
+
 - `agentsmd` - Sets target to `AGENTS.md`
 - `aider` - Sets target to `.aider/conventions.md`
 
 **Examples:**
+
 ```bash
 # Basic initialization - auto-detect everything
 skillz init
@@ -125,6 +134,7 @@ Creates a new skill with optional interactive guidance.
 **Modes:**
 
 1. **Interactive Mode (Recommended):**
+
    ```bash
    skillz create --interactive
    # or
@@ -141,6 +151,7 @@ Creates a new skill with optional interactive guidance.
    Generates well-structured SKILL.md with all requested sections.
 
 2. **Quick Mode:**
+
    ```bash
    skillz create <name> <description>
    ```
@@ -148,11 +159,13 @@ Creates a new skill with optional interactive guidance.
    Creates minimal skill with just frontmatter. Requires manual editing to add content.
 
 **Options:**
+
 - `-i, --interactive` - Launch interactive mode with guided prompts
 - `--path <directory>` - Custom directory path (overrides config)
 - `--skill-version <semver>` - Skill version (default: 0.0.0)
 
 **Interactive Prompt Flow:**
+
 ```
 1. Skill name → validates and normalizes
 2. Brief description → max 100 characters
@@ -168,6 +181,7 @@ Creates a new skill with optional interactive guidance.
 ```
 
 **Examples:**
+
 ```bash
 # Interactive mode (recommended for new skills)
 skillz create --interactive
@@ -186,6 +200,7 @@ skillz create
 ```
 
 **Generated Skill Structure (Interactive Mode):**
+
 ```markdown
 ---
 name: python-testing
@@ -220,6 +235,7 @@ Help write comprehensive test suites with pytest.
 Synchronizes skills from source directories to target files.
 
 **Behavior:**
+
 1. Reads `skillz.json` configuration
 2. Scans all configured skill directories
 3. Parses SKILL.md files and extracts frontmatter + instructions
@@ -228,6 +244,7 @@ Synchronizes skills from source directories to target files.
 6. Reports summary of changes
 
 **Options:**
+
 - `--dry-run` - Show what would be synced without making changes
 - `--force` - Overwrite target even if manual edits detected
 - `--verbose` - Show detailed operation logs
@@ -236,6 +253,7 @@ Synchronizes skills from source directories to target files.
 - `--template <name>` - Template: default, readme, or path to .hbs file
 
 **Examples:**
+
 ```bash
 # Standard sync (uses default template with LLM instructions)
 skillz sync
@@ -286,11 +304,13 @@ The managed section starts at the configurable section heading (default: `## Add
 Lists all available skills from configured directories.
 
 **Options:**
+
 - `--format <format>` - Output format: table, json, markdown
 - `--synced-only` - Only show skills present in target
 - `--unsynced-only` - Only show skills not yet synced
 
 **Examples:**
+
 ```bash
 skillz list
 skillz list --format json
@@ -302,20 +322,22 @@ skillz list --unsynced-only
 Watches skill directories and auto-syncs on changes.
 
 **Behavior:**
+
 - Monitors all configured skill directories
 - Auto-runs sync when changes detected
 - Debounces rapid changes (2 second delay)
 - Shows live status updates
 
 **Options:**
+
 - `--interval <ms>` - Polling interval (default: 1000)
-- `--no-debounce` - Disable debouncing
 
 #### `skillz clean [options]`
 
 Removes the managed section from target file(s).
 
 **Options:**
+
 - `--dry-run` - Show what would be removed
 
 #### `skillz validate`
@@ -323,6 +345,7 @@ Removes the managed section from target file(s).
 Validates skill files and configuration.
 
 **Checks:**
+
 - `skillz.json` schema validity
 - SKILL.md file format (frontmatter, required fields)
 - Skill name format (lowercase, hyphens, max 64 chars)
@@ -331,6 +354,7 @@ Validates skill files and configuration.
 - Circular references or duplicates
 
 **Output:**
+
 ```
 Validating configuration...
 ✓ skillz.json is valid
@@ -350,6 +374,7 @@ Found 2 errors, 1 warning
 View or modify configuration.
 
 **Examples:**
+
 ```bash
 # View all config
 skillz config
@@ -370,9 +395,11 @@ skillz config additionalSkills --remove /old/path
 ## Architecture
 
 ### Purpose
+
 Skillz CLI keeps Claude-compatible skills synchronized across target documents such as `AGENTS.md`. It discovers `SKILL.md` files, validates metadata, renders entries through Handlebars templates, and maintains a managed section in each configured target. The implementation is a TypeScript ES-module CLI that leans on async filesystem helpers to respect a user’s workspace.
 
 ### High-Level Flow
+
 1. **CLI bootstrap** (`src/cli.ts`) wires commands and shared flags through Commander.
 2. **Configuration** (`src/core/config.ts`) loads or creates `skillz.json`, supplying a `Config` object to every command.
 3. **Skill discovery** (`src/core/skill-scanner.ts`) walks configured directories, applies glob-based ignore rules, and yields parsed `Skill` models.
@@ -381,11 +408,13 @@ Skillz CLI keeps Claude-compatible skills synchronized across target documents s
 6. **Persistence & feedback** leverage utilities in `src/utils/` for FS access, hashing, validation, and logging.
 
 ### Command Layer
+
 - `src/cli.ts` registers commands and ensures failures exit with non-zero status.
 - `src/commands/init.ts` detects or constructs configuration, writes `skillz.json`, updates `.gitignore`, and optionally runs `sync`.
 - `src/commands/sync.ts` orchestrates synchronization, honoring `--dry-run`, `--force`, `--only`, and verbose logging before delegating to core services.
 
 ### Core Services
+
 - **Configuration (`src/core/config.ts`)**: default presets, JSON persistence, and zod-backed validation.
 - **Skill Scanner (`src/core/skill-scanner.ts`)**: tilde expansion, directory listing, glob ignores via `minimatch`, and deduplication with warnings.
 - **Skill Parser (`src/core/skill-parser.ts`)**: parses frontmatter through `gray-matter`, validates required fields, and produces deterministic hashes via `src/utils/hash.ts`.
@@ -395,13 +424,16 @@ Skillz CLI keeps Claude-compatible skills synchronized across target documents s
 - **Change Detector (`src/core/change-detector.ts`)**: categorizes skills as new/modified/removed/unchanged to drive incremental updates.
 
 ### Utilities & Cross-Cutting Concerns
+
 - **Filesystem helpers (`src/utils/fs-helpers.ts`)** provide resilient reads/writes, directory enumeration, tilde expansion, and atomic updates.
 - **Validation (`src/utils/validation.ts`)** centralizes zod schemas for configs, skills, and cache files.
 - **Logging (`src/utils/logger.ts`)** wraps `chalk`/`ora` for leveled logs and spinner UX.
 - **Hashing (`src/utils/hash.ts`)** normalizes metadata + content into SHA-based hashes relied upon by change detection.
 
 ### Key Interfaces
+
 #### Target File Management
+
 ```typescript
 interface TargetFileManager {
   read(filePath: string): TargetContent;
@@ -410,9 +442,11 @@ interface TargetFileManager {
   replaceManagedSection(content: string, newSection: string): string;
 }
 ```
+
 All targets share the same markdown format with delimited sections, so no adapters are needed—only file-path differences.
 
 #### Skill Model & Parser
+
 ```typescript
 interface Skill {
   name: string;
@@ -431,22 +465,26 @@ class SkillParser {
 ```
 
 ### Templates
+
 Handlebars templates in `src/templates/` (e.g., `skills-list.hbs`, `skills-full.hbs`) accept the `TemplateData` shape from `src/types/index.ts`. The default template renders a bulleted list with links:
 
 ```handlebars
-{{!-- Default template: skills-list.hbs --}}
-## Additional Instructions
-You can use skills. These are custom instructions that help you accomplish specific tasks. Your list of available skills below:
+{{! Default template: skills-list.hbs }}
+## Additional Instructions You can use skills. These are custom instructions that help you
+accomplish specific tasks. Your list of available skills below:
 
 {{#each skills}}
-- [{{name}}]({{path}}): {{description}}
+  - [{{name}}]({{path}}):
+  {{description}}
 {{/each}}
 ```
 
 Users can provide custom templates via config or `--template`.
 
 ### Managed Section Structure
+
 Managed sections start at a configurable heading (default `## Additional Instructions`) and extend to EOF:
+
 ```markdown
 ## Additional Instructions
 
@@ -456,12 +494,15 @@ You now have access to Skills...
 
 - [skill-name](path/to/SKILL.md): Description
 ```
+
 `target-manager` locates the heading, replaces the trailing content, and preserves everything before it.
 
 ### Change Detection & Cache
+
 Content hashing (SHA-256) drives incremental updates.
 
 **Hash Storage**
+
 ```json
 {
   "version": "1.0",
@@ -479,6 +520,7 @@ Content hashing (SHA-256) drives incremental updates.
 ```
 
 **Hash Calculation**
+
 ```typescript
 function calculateSkillHash(skill: Skill): string {
   const hashInput = `${skill.name}:${skill.description}:${skill.content}`;
@@ -487,6 +529,7 @@ function calculateSkillHash(skill: Skill): string {
 ```
 
 **Flow**
+
 1. Read cached hashes from `.skillz-cache.json`.
 2. Calculate hash of current configuration (`skillz.json`).
 3. Compare config hash to detect configuration changes.
@@ -495,35 +538,41 @@ function calculateSkillHash(skill: Skill): string {
 6. Regenerate content if either config or skills changed and update the cache file.
 
 **Benefits**
+
 - Avoids reading/writing unchanged targets.
 - Captures any metadata or content change.
 - Detects configuration changes (templates, targets, section names, etc.).
 - Stores timestamps/paths for diagnostics.
 
 **Cache File Management**
+
 - Add to `.gitignore` so each developer tracks their own state (optional to commit).
 - Automatically recreated if missing (treats all skills as new).
 - `skillz clean` removes both the managed section and cache.
 
 ### Safety Features
+
 - **Manual edit detection** surfaces warnings when the managed section drifts.
 - **Atomic writes** rely on temporary files + rename to prevent corruption.
 - **Validation gates** ensure configs/skills/templates parse cleanly before touching targets.
 - **Dry-run support** exists on destructive commands.
 
 ### Dependency Graph Snapshot
+
 - CLI commands depend on core services.
 - Core services share types/utilities.
 - Templates are consumed only through the template engine.
 - External deps: Commander, Inquirer, Handlebars, Gray-matter, Minimatch, Chalk/Ora, fs-extra (tests).
 
 ### Extensibility Notes
+
 - Adding commands follows the `src/cli.ts` + `src/commands/` pattern while reusing services.
 - Custom templates plug into existing config/CLI flags.
 - Supporting more skill sources only requires updating the config schema and scanner; change detection/cache automatically adjust through shared types.
 - Managed section tweaks live inside `target-manager` + templates to maintain backwards compatibility.
 
 ### Build & Runtime Expectations
+
 - `npm run build` compiles TS to `dist/`, copies template assets, and prepares `dist/cli.js`. `prepublishOnly` runs the same pipeline before publishing.
 - Requires Node.js 18+.
 - Assumes valid `SKILL.md` frontmatter (`name`, `description`) plus readable/writable `skillz.json` and `.skillz-cache.json`.
@@ -532,6 +581,7 @@ function calculateSkillHash(skill: Skill): string {
 ## CLI Framework and Dependencies
 
 Use **Commander.js** as the CLI framework along with these supporting libraries:
+
 - `chalk` - Terminal colors
 - `ora` - Spinners and progress
 - `inquirer` - Interactive prompts
@@ -595,12 +645,15 @@ skillz/
 ## Distribution
 
 ### NPM Package
+
 ```bash
 npm install -g skillz
 ```
 
 ### Binary Distribution
+
 Use `pkg` or `ncc` to create standalone binaries for:
+
 - macOS (arm64, x64)
 - Linux (arm64, x64)
 - Windows (x64)
@@ -628,6 +681,7 @@ Use `pkg` or `ncc` to create standalone binaries for:
 ## Migration Path
 
 For existing setups:
+
 1. Detect existing AGENTS.md or .cursor/rules/skills.mdc
 2. Parse existing skill sections (if any)
 3. Preserve custom content outside managed sections

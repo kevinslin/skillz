@@ -60,3 +60,21 @@ parserOptions: {
 ## TARGET HANDLING
 
 - When `target.deleteExistingFromTarget` is enabled, the `stageSkillsFromTarget` function is called to protect skills whose source path already lives inside the destination directory. This function copies those directories into a temporary staging area, and returns the location where they were staged. This allows for safe removal of everything under the target directory, followed by copying the staged (or original) skills back in. The copy loop will then pull from the staged version.
+- The `info()` call at `src/core/target-manager.ts:272` (i.e., `info(\`Removing stale skills from target: ${targetDir}\`);`) only executes when `target.deleteExistingFromTarget` is truthy. This property is an optional boolean in the `Target` type (`deleteExistingFromTarget?: boolean`). The `info()` call is skipped when:
+    1. `deleteExistingFromTarget` is `undefined` (the property wasn't set in `skillz.json`, which is the most common case).
+    2. `deleteExistingFromTarget` is `false` (explicitly disabled).
+    To ensure the message prints, `deleteExistingFromTarget` must be explicitly set to `true` in the target configuration within `skillz.json`. For example:
+
+```json
+{
+  "targets": [
+    { "destination": ".cursor/rules", "syncMode": "native", "deleteExistingFromTarget": true }
+  ]
+}
+```
+
+- Even when `deleteExistingFromTarget` is set to `true`, the `info()` message might not print due to early returns in the `sync` command. Specifically:
+    1. **"All skills are up to date"**: If the cache indicates no changes, the sync command exits early before calling `copySkillsToTarget`.
+    2. **Dry run mode**: Using the `--dry-run` flag causes an early exit.
+    3. **No skills found**: If no skills are identified, the command exits.
+- To force synchronization even when no changes are detected, use the `--force` flag with the `sync` command.
