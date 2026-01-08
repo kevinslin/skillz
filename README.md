@@ -342,6 +342,21 @@ skillz sync --dry-run
 skillz sync --only python-expert --only react-patterns --verbose
 ```
 
+### `skillz watch`
+
+Watch configured skill directories and run `sync` when changes are detected.
+
+Options:
+
+- `--interval <ms>`: Polling interval in milliseconds (default: 1000).
+
+Examples:
+
+```bash
+skillz watch
+skillz watch --interval 500
+```
+
 ### `skillz list`
 
 Display available skills in the configured directories.

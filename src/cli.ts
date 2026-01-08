@@ -7,6 +7,7 @@ import { listCommand } from './commands/list.js';
 import { createCommand } from './commands/create.js';
 import { editCommand } from './commands/edit.js';
 import { infoCommand } from './commands/info.js';
+import { watchCommand } from './commands/watch.js';
 
 // Types for command options
 type InitOptions = {
@@ -43,6 +44,10 @@ type CreateOptions = {
 
 type EditOptions = {
   editor?: string;
+};
+
+type WatchOptions = {
+  interval?: string;
 };
 
 const program = new Command();
@@ -150,6 +155,20 @@ program
   .action(async () => {
     try {
       await infoCommand();
+    } catch (error) {
+      console.error('Error:', (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+// Watch command
+program
+  .command('watch')
+  .description('Watch skill directories and auto-sync on changes')
+  .option('--interval <ms>', 'Polling interval in milliseconds (default: 1000)')
+  .action(async (options: WatchOptions) => {
+    try {
+      await watchCommand(options);
     } catch (error) {
       console.error('Error:', (error as Error).message);
       process.exit(1);
