@@ -18,6 +18,7 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src tests --ext .ts",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "precommit": "npm run format && npm run lint && npm test",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
