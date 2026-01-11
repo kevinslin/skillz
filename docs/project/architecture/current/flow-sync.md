@@ -35,6 +35,10 @@ load config (skillz.json); exit if missing
 apply --path-style and --template overrides
 if deleteExistingFromTarget is set on a non-native target -> error and exit
 scan skill directories and parse SKILL.md files
+if two skills share the same folder name:
+  keep the first discovered skill
+  warn and skip later duplicates
+  scan order follows config.skillDirectories then additionalSkills (directory entry order per filesystem)
 if no skills -> warn and return
 apply --only filter if provided
 load cache (.skillz-cache.json)
@@ -114,3 +118,13 @@ for each target
   v
 update cache
 ```
+
+## Future Considerations
+
+### Open Questions
+- Should duplicate skill names be a hard error instead of a warning in sync flow?
+- Do we need deterministic directory entry ordering to avoid non-repeatable "first wins" behavior?
+
+### Potential Improvements
+- Add a preflight report summarizing skipped duplicate skills with their source directories.
+- Offer a config option to prefer later duplicates or fail fast when collisions are detected.
