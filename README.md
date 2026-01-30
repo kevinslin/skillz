@@ -436,10 +436,34 @@ export EDITOR=vim
 ## Development Scripts
 
 - `npm run build`: Compile TypeScript sources to `dist/`.
-- `npm run dev`: Run the CLI in watch mode via `tsx`.
+- `npm run dev`: Compile TypeScript in watch mode to `dist/`.
 - `npm run test`: Run the Jest test suite.
 - `npm run lint`: Run ESLint.
 - `npm run format`: Run Prettier.
+
+## Local Development
+
+To run a local development build of the CLI:
+
+```bash
+npm install
+
+# terminal 1: keep TypeScript compiling into dist/
+npm run dev
+
+# terminal 2: run the CLI from the compiled output
+node dist/cli.js <command>
+```
+
+If you want the `skillz` binary on your PATH during development:
+
+```bash
+npm run build
+npm link
+
+# now you can run:
+skillz <command>
+```
 
 ## Contributing
 

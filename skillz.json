@@ -1,11 +1,23 @@
 {
   "version": "2.0",
+  "syncMode": "native",
   "targets": [
+    {
+      "destination": "AGENTS.md"
+    },
+    {
+      "destination": "CLAUDE.md"
+    }
   ],
-  "skillDirectories": [],
+  "skillDirectories": [
+	  "~/code/skills",
+	  "~/code/skills-private"
+  ],
   "additionalSkills": [],
   "ignore": [],
   "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "vim",
-  "autoSyncAfterEdit": true
+  "autoSyncAfterEdit": true,
+  "template": "default",
+  "pathStyle": "relative"
 }
