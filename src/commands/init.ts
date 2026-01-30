@@ -244,18 +244,19 @@ async function confirmOrEditConfig(config: Config): Promise<Config> {
 
 async function addToGitignore(cwd: string): Promise<void> {
   const gitignorePath = path.join(cwd, '.gitignore');
-  const cacheEntry = '.skillz-cache.json';
+  const entries = ['.skillz-cache.json', '.skills'];
 
   let gitignoreContent = '';
   if (await fileExists(gitignorePath)) {
     gitignoreContent = await safeReadFile(gitignorePath);
   }
 
-  if (!gitignoreContent.includes(cacheEntry)) {
+  const missingEntries = entries.filter((entry) => !gitignoreContent.includes(entry));
+  if (missingEntries.length > 0) {
     const newContent = gitignoreContent
-      ? `${gitignoreContent.trim()}\n${cacheEntry}\n`
-      : `${cacheEntry}\n`;
+      ? `${gitignoreContent.trim()}\n${missingEntries.join('\n')}\n`
+      : `${missingEntries.join('\n')}\n`;
     await safeWriteFile(gitignorePath, newContent);
-    success('Added .skillz-cache.json to .gitignore');
+    success(`Added ${missingEntries.join(', ')} to .gitignore`);
   }
 }

@@ -48,7 +48,7 @@ describe('init command', () => {
     expect(config.targets.map((t) => t.destination)).toContain('.cursorrules');
   });
 
-  it('should add .skillz-cache.json to .gitignore', async () => {
+  it('should add .skillz-cache.json and .skills to .gitignore', async () => {
     await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
       cwd: workspace.root,
     });
@@ -56,6 +56,7 @@ describe('init command', () => {
     const gitignorePath = path.join(workspace.root, '.gitignore');
     const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
     expect(gitignoreContent).toContain('.skillz-cache.json');
+    expect(gitignoreContent).toContain('.skills');
   });
 
   it('should run sync by default after init', async () => {

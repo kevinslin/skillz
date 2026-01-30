@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Skillz is a TypeScript CLI that scans Claude Agent Skills (SKILL.md files) and syncs them to various LLM tool configuration files (AGENTS.md, .cursor/rules/skills.mdc, etc.). It's designed to make Claude skills usable across any LLM development environment.
 
+If a `.skills/` directory exists in the repo, check it for additional local skills alongside any configured skill directories.
+
 **Current Status:** MVP with `init`, `sync`, `list`, and `create` commands implemented (~75% complete). Commands remaining: `validate`, `config`, `watch`, `clean`.
 
 **📋 See TODO.md for comprehensive, up-to-date task list and implementation status.**
