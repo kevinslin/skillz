@@ -251,7 +251,13 @@ async function addToGitignore(cwd: string): Promise<void> {
     gitignoreContent = await safeReadFile(gitignorePath);
   }
 
-  const missingEntries = entries.filter((entry) => !gitignoreContent.includes(entry));
+  const existingEntries = new Set(
+    gitignoreContent
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#')),
+  );
+  const missingEntries = entries.filter((entry) => !existingEntries.has(entry));
   if (missingEntries.length > 0) {
     const newContent = gitignoreContent
       ? `${gitignoreContent.trim()}\n${missingEntries.join('\n')}\n`

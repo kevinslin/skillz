@@ -59,6 +59,20 @@ describe('init command', () => {
     expect(gitignoreContent).toContain('.skills');
   });
 
+  it('should add .skills even when .gitignore has similar entries', async () => {
+    const gitignorePath = path.join(workspace.root, '.gitignore');
+    await fs.writeFile(gitignorePath, '.skills-old\n');
+
+    await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
+      cwd: workspace.root,
+    });
+
+    const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
+    const gitignoreLines = gitignoreContent.split(/\r?\n/);
+    expect(gitignoreLines).toContain('.skills');
+    expect(gitignoreLines).toContain('.skills-old');
+  });
+
   it('should run sync by default after init', async () => {
     const result = await execCli(['init', '--preset', 'agentsmd'], {
       cwd: workspace.root,
