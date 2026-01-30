@@ -228,9 +228,7 @@ type LegacyConfig = Omit<Config, 'targets' | 'skillDirectories'> & {
 function normalizeSkillDirectories(
   skillDirectories: LegacySkillDirectory[] = []
 ): SkillDirectory[] {
-  return skillDirectories.map((dir) =>
-    typeof dir === 'string' ? { localPath: dir } : (dir as SkillDirectory)
-  );
+  return skillDirectories.map((dir) => (typeof dir === 'string' ? { localPath: dir } : dir));
 }
 
 /**

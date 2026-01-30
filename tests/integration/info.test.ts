@@ -110,7 +110,9 @@ describe('info command', () => {
 
     expect(result.exitCode).toBe(0);
 
-    const migrated = await fs.readJson(configPath);
+    const migrated = (await fs.readJson(configPath)) as {
+      skillDirectories: Array<{ localPath: string }>;
+    };
     expect(migrated.skillDirectories).toEqual([{ localPath: '.claude/skills' }]);
   });
 });
