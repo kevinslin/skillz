@@ -134,7 +134,7 @@ export async function renderSkills(
       };
     }),
     lastSync: new Date().toISOString(),
-    sources: config.skillDirectories,
+    sources: config.skillDirectories.map((dir) => dir.localPath),
     sectionName: config.skillsSectionName,
   };
 

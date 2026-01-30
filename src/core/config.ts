@@ -55,7 +55,7 @@ export function getDefaultConfig(preset?: string): Config {
   const baseConfig: Config = {
     version: '2.0',
     targets: [],
-    skillDirectories: ['.claude/skills'],
+    skillDirectories: [{ localPath: '.claude/skills' }],
     additionalSkills: [],
     ignore: [],
     skillsSectionName: '## Additional Instructions',

@@ -311,7 +311,7 @@ describe('create command', () => {
     // Manually edit config to use ~ path
     const configPath = path.join(workspace.root, 'skillz.json');
     const config = (await fs.readJson(configPath)) as Config;
-    config.skillDirectories = ['~/.test-skills'];
+    config.skillDirectories = [{ localPath: '~/.test-skills' }];
     await fs.writeJson(configPath, config);
 
     const result = await execCli(['create', 'tilde-test', 'Testing tilde expansion'], {

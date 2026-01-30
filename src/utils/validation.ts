@@ -19,7 +19,12 @@ export const ConfigSchema = z.object({
   version: z.string(),
   preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
   targets: z.array(TargetSchema), // Allow empty array for skill management only
-  skillDirectories: z.array(z.string()),
+  skillDirectories: z.array(
+    z.object({
+      localPath: z.string().min(1, 'Skill directory localPath is required'),
+      remotePath: z.string().min(1).optional(),
+    })
+  ),
   additionalSkills: z.array(z.string()),
   ignore: z.array(z.string()),
   skillsSectionName: z.string().default('## Additional Instructions'),

@@ -22,7 +22,7 @@ const JSON_INDENTATION_SPACES = 2;
 type SkillsConfig = {
   version: string;
   targets: Array<{ destination: string; syncMode?: string; deleteExistingFromTarget?: boolean }>;
-  skillDirectories: string[];
+  skillDirectories: Array<{ localPath: string; remotePath?: string }>;
   additionalSkills: string[];
   ignore: string[];
   skillsSectionName?: string;
@@ -43,7 +43,7 @@ describe('native sync mode', () => {
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -81,7 +81,7 @@ describe('native sync mode', () => {
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -110,7 +110,7 @@ describe('native sync mode', () => {
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -135,7 +135,7 @@ describe('native sync mode', () => {
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
-      skillDirectories: ['.claude/skills', '.skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.skills' }],
       additionalSkills: [],
       ignore: ['obsolete-*'],
     };
@@ -168,7 +168,7 @@ description: Old skill that should be removed
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -188,7 +188,7 @@ description: Old skill that should be removed
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -221,7 +221,7 @@ description: Old skill that should be removed
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -247,7 +247,7 @@ description: Old skill that should be removed
         { destination: 'AGENTS.md', syncMode: 'prompt' },
         { destination: '.skills', syncMode: 'native' },
       ],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
       skillsSectionName: '## Additional Instructions',
@@ -283,7 +283,7 @@ description: Old skill that should be removed
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -308,7 +308,7 @@ description: Old skill that should be removed
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: 'some/nested/skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -348,7 +348,7 @@ Web development best practices.`
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills', '.claude/more-skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.claude/more-skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -389,7 +389,7 @@ Test content`
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
-      skillDirectories: ['.claude/skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
@@ -441,7 +441,7 @@ Frontend content`
     const config: SkillsConfig = {
       version: '2.0',
       targets: [{ destination: '.skills', syncMode: 'native' }],
-      skillDirectories: ['.claude/skills', '.claude/more-skills'],
+      skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.claude/more-skills' }],
       additionalSkills: [],
       ignore: [],
     };

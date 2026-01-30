@@ -136,7 +136,7 @@ async function writeSkillToDirectory(
       logError('Add at least one directory to skillDirectories array or use --path option');
       process.exit(1);
     }
-    const configPath = resolveHome(config.skillDirectories[0]);
+    const configPath = resolveHome(config.skillDirectories[0].localPath);
     targetDir = path.isAbsolute(configPath) ? configPath : path.join(cwd, configPath);
   }
 

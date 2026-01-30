@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createMockWorkspace, MockWorkspace } from '../helpers/workspace.js';
 import { execCli } from '../helpers/cli.js';
-import type { Target } from '../../src/types/index.js';
+import type { SkillDirectory, Target } from '../../src/types/index.js';
 import fs from 'fs-extra';
 import path from 'path';
 
 type SkillsConfig = {
   preset?: string;
   targets: Target[];
-  skillDirectories: string[];
+  skillDirectories: SkillDirectory[];
 };
 
 describe('init command', () => {
@@ -88,7 +88,7 @@ describe('init command', () => {
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.targets).toEqual([]);
     expect(config.preset).toBeUndefined();
-    expect(config.skillDirectories).toContain('.claude/skills');
+    expect(config.skillDirectories.map((dir) => dir.localPath)).toContain('.claude/skills');
 
     // Output should mention skill management only
     expect(result.stdout).toContain('No targets configured');
@@ -170,12 +170,12 @@ describe('init command', () => {
     expect(config.preset).toBe('agentsmd');
 
     // Should include both default .claude/skills and global ~/.claude/skills
-    expect(config.skillDirectories).toContain('.claude/skills');
+    expect(config.skillDirectories.map((dir) => dir.localPath)).toContain('.claude/skills');
 
     // Check for global skills directory (should be HOME/.claude/skills)
     const homeDir = process.env.HOME || '~';
     const globalSkillsPath = path.join(homeDir, '.claude/skills');
-    expect(config.skillDirectories).toContain(globalSkillsPath);
+    expect(config.skillDirectories.map((dir) => dir.localPath)).toContain(globalSkillsPath);
   });
 
   it('should combine --global-skills with different presets', async () => {
@@ -192,7 +192,7 @@ describe('init command', () => {
     // Should include global skills directory
     const homeDir = process.env.HOME || '~';
     const globalSkillsPath = path.join(homeDir, '.claude/skills');
-    expect(config.skillDirectories).toContain(globalSkillsPath);
+    expect(config.skillDirectories.map((dir) => dir.localPath)).toContain(globalSkillsPath);
   });
 
   it('should save custom template path with --template flag', async () => {

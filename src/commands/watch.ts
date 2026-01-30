@@ -37,7 +37,10 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
     process.exit(1);
   }
 
-  const watchRoots = [...config.skillDirectories, ...config.additionalSkills];
+  const watchRoots = [
+    ...config.skillDirectories.map((dir) => dir.localPath),
+    ...config.additionalSkills,
+  ];
   if (watchRoots.length === 0) {
     error('No skill directories configured to watch.');
     process.exit(1);
