@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createMockWorkspace, MockWorkspace } from '../helpers/workspace.js';
 import { execCli } from '../helpers/cli.js';
+import fs from 'fs-extra';
+import path from 'path';
 
 describe('info command', () => {
   let workspace: MockWorkspace;
@@ -85,5 +87,30 @@ describe('info command', () => {
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('No configuration file found');
     expect(result.stderr).toContain('Run `skillz init` first');
+  });
+
+  it('should migrate legacy string skillDirectories', async () => {
+    const configPath = path.join(workspace.root, 'skillz.json');
+    await fs.writeJson(
+      configPath,
+      {
+        version: '2.0',
+        targets: [],
+        skillDirectories: ['.claude/skills'],
+        additionalSkills: [],
+        ignore: [],
+        skillsSectionName: '## Additional Instructions',
+      },
+      { spaces: 2 }
+    );
+
+    const result = await execCli(['info'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const migrated = await fs.readJson(configPath);
+    expect(migrated.skillDirectories).toEqual([{ localPath: '.claude/skills' }]);
   });
 });
