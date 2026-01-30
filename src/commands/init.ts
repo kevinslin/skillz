@@ -309,13 +309,25 @@ async function syncRemoteSkills(config: Config, cwd: string): Promise<void> {
       process.exit(1);
     }
     info(`Pulling latest skills from ${remotePath} into ${remoteDirectory.localPath}`);
-    await execFileAsync('git', ['-C', destination, 'pull', '--ff-only']);
-    success('Remote skills updated.');
+    try {
+      await execFileAsync('git', ['-C', destination, 'pull', '--ff-only']);
+      success('Remote skills updated.');
+    } catch (err) {
+      error(`Failed to pull remote skills: ${(err as Error).message}`);
+      error('You may have local changes or the remote has diverged. Resolve manually.');
+      process.exit(1);
+    }
     return;
   }
 
   await ensureDir(path.dirname(destination));
   info(`Cloning skills from ${remotePath} into ${remoteDirectory.localPath}`);
-  await execFileAsync('git', ['clone', remotePath, destination]);
-  success('Remote skills cloned.');
+  try {
+    await execFileAsync('git', ['clone', remotePath, destination]);
+    success('Remote skills cloned.');
+  } catch (err) {
+    error(`Failed to clone remote skills: ${(err as Error).message}`);
+    error('Check that the remote URL is correct and you have access.');
+    process.exit(1);
+  }
 }
