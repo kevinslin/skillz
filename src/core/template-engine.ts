@@ -123,6 +123,13 @@ export async function renderSkills(
   // Resolve template path
   const templatePath = resolveTemplatePath(template, basePath);
 
+  const defaultSectionName = '## Additional Instructions';
+  const baseSectionName = config.skillsSectionName ?? defaultSectionName;
+  const sectionName =
+    template === 'readme' && baseSectionName === defaultSectionName
+      ? '### Available Skills'
+      : baseSectionName;
+
   const data: TemplateData = {
     skills: skills.map((skill) => {
       const skillPath = computeSkillPath(skill.path, target.destination, pathStyle, basePath);
@@ -134,8 +141,8 @@ export async function renderSkills(
       };
     }),
     lastSync: new Date().toISOString(),
-    sources: config.skillDirectories,
-    sectionName: config.skillsSectionName,
+    sources: config.skillDirectories.map((dir) => dir.localPath),
+    sectionName,
   };
 
   return await renderTemplate(templatePath, data);

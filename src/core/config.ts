@@ -1,5 +1,5 @@
 import path from 'path';
-import type { Config, DetectedConfig, Target } from '../types/index.js';
+import type { Config, DetectedConfig, SkillDirectory, Target } from '../types/index.js';
 import { safeReadFile, safeWriteFile, fileExists } from '../utils/fs-helpers.js';
 import { validateConfig } from '../utils/validation.js';
 import { debug, info, success } from '../utils/logger.js';
@@ -55,7 +55,7 @@ export function getDefaultConfig(preset?: string): Config {
   const baseConfig: Config = {
     version: '2.0',
     targets: [],
-    skillDirectories: ['.claude/skills'],
+    skillDirectories: [{ localPath: '.claude/skills' }],
     additionalSkills: [],
     ignore: [],
     skillsSectionName: '## Additional Instructions',
@@ -192,37 +192,49 @@ export function needsMigration(config: unknown): boolean {
 
   const parsed = config as Record<string, unknown>;
 
-  // Check if targets is an array
-  if (!Array.isArray(parsed.targets)) {
-    return false;
-  }
-
   if (parsed.version === '1.0') {
     return true;
   }
 
-  return parsed.targets.some((target) => {
-    if (typeof target === 'string') {
-      return true;
-    }
+  const needsSkillDirectoryMigration =
+    Array.isArray(parsed.skillDirectories) &&
+    parsed.skillDirectories.some((dir) => typeof dir === 'string');
 
-    if (typeof target === 'object' && target !== null) {
-      return !('destination' in target) && 'name' in target;
-    }
+  const needsTargetMigration =
+    Array.isArray(parsed.targets) &&
+    parsed.targets.some((target) => {
+      if (typeof target === 'string') {
+        return true;
+      }
 
-    return false;
-  });
+      if (typeof target === 'object' && target !== null) {
+        return !('destination' in target) && 'name' in target;
+      }
+
+      return false;
+    });
+
+  return needsSkillDirectoryMigration || needsTargetMigration;
 }
 
 type LegacyNameTarget = Omit<Target, 'destination'> & { name: string };
 type LegacyTarget = Target | LegacyNameTarget | string;
+type LegacySkillDirectory = SkillDirectory | string;
+type LegacyConfig = Omit<Config, 'targets' | 'skillDirectories'> & {
+  targets: LegacyTarget[];
+  skillDirectories?: LegacySkillDirectory[];
+};
+
+function normalizeSkillDirectories(
+  skillDirectories: LegacySkillDirectory[] = []
+): SkillDirectory[] {
+  return skillDirectories.map((dir) => (typeof dir === 'string' ? { localPath: dir } : dir));
+}
 
 /**
  * Migrate config from legacy targets to Target[] targets
  */
-export function migrateConfig(
-  config: Omit<Config, 'targets'> & { targets: LegacyTarget[] }
-): Config {
+export function migrateConfig(config: LegacyConfig): Config {
   const targets = config.targets.map((target) => {
     if (typeof target === 'string') {
       return { destination: target };
@@ -239,10 +251,15 @@ export function migrateConfig(
     };
   });
 
+  const skillDirectories = normalizeSkillDirectories(
+    Array.isArray(config.skillDirectories) ? config.skillDirectories : []
+  );
+
   return {
     ...config,
     version: config.version === '1.0' ? '2.0' : config.version,
     targets,
+    skillDirectories,
   };
 }
 

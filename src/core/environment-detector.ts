@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileExists } from '../utils/fs-helpers.js';
-import type { Target } from '../types/index.js';
+import type { SkillDirectory, Target } from '../types/index.js';
 
 /**
  * Represents a detected development environment
@@ -12,7 +12,7 @@ export interface DetectedEnvironment {
   preset: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   markers: string[];
   targets: Target[];
-  skillDirectories: string[];
+  skillDirectories: SkillDirectory[];
 }
 
 /**
@@ -26,7 +26,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     preset: 'agentsmd',
     markers: ['AGENTS.md'],
     targets: [{ destination: 'AGENTS.md' }],
-    skillDirectories: ['.claude/skills'],
+    skillDirectories: [{ localPath: '.claude/skills' }],
   },
   {
     id: 'cursor',
@@ -35,7 +35,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     preset: 'cursor',
     markers: ['.cursor/rules'],
     targets: [{ destination: '.cursor/rules/skills.mdc' }],
-    skillDirectories: ['.claude/skills'],
+    skillDirectories: [{ localPath: '.claude/skills' }],
   },
   {
     id: 'claude',
@@ -44,7 +44,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     preset: 'claude',
     markers: ['CLAUDE.md', '.claude/CLAUDE.md'],
     targets: [{ destination: 'CLAUDE.md' }],
-    skillDirectories: ['.claude/skills'],
+    skillDirectories: [{ localPath: '.claude/skills' }],
   },
   {
     id: 'aider',
@@ -53,7 +53,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     preset: 'aider',
     markers: ['.aider/conventions.md'],
     targets: [{ destination: '.aider/conventions.md' }],
-    skillDirectories: ['.claude/skills'],
+    skillDirectories: [{ localPath: '.claude/skills' }],
   },
 ];
 

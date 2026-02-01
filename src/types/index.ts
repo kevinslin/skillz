@@ -32,7 +32,7 @@ export interface Config {
   version: string;
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   targets: Target[];
-  skillDirectories: string[];
+  skillDirectories: SkillDirectory[];
   additionalSkills: string[];
   ignore: string[];
   skillsSectionName: string;
@@ -41,6 +41,11 @@ export interface Config {
   template?: string;
   pathStyle?: 'relative' | 'absolute';
   syncMode?: 'prompt' | 'native';
+}
+
+export interface SkillDirectory {
+  localPath: string;
+  remotePath?: string;
 }
 
 /**

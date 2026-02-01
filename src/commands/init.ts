@@ -1,8 +1,10 @@
+import { execFile } from 'child_process';
 import path from 'path';
+import { promisify } from 'util';
 import type { Config, DetectedConfig } from '../types/index.js';
-import { getDefaultConfig, saveConfig, inferConfig } from '../core/config.js';
+import { getDefaultConfig, saveConfig, inferConfig, loadConfig } from '../core/config.js';
 import { info, success, warning, error } from '../utils/logger.js';
-import { fileExists, safeReadFile, safeWriteFile } from '../utils/fs-helpers.js';
+import { fileExists, safeReadFile, safeWriteFile, ensureDir } from '../utils/fs-helpers.js';
 import { detectEnvironments, type DetectedEnvironment } from '../core/environment-detector.js';
 import {
   confirm,
@@ -12,11 +14,14 @@ import {
   setNonInteractive,
 } from '../utils/prompts.js';
 
+const execFileAsync = promisify(execFile);
+
 interface InitOptions {
   preset?: string;
   target?: string;
   additionalSkills?: string[];
   globalSkills?: boolean;
+  remote?: boolean;
   sync?: boolean;
   template?: string;
   nonInteractive?: boolean;
@@ -35,6 +40,15 @@ export async function initCommand(options: InitOptions): Promise<void> {
   // Check if already initialized
   const configPath = path.join(cwd, 'skillz.json');
   if (await fileExists(configPath)) {
+    if (options.remote) {
+      const existingConfig = await loadConfig(cwd);
+      if (!existingConfig) {
+        error('Failed to load existing skillz.json');
+        process.exit(1);
+      }
+      await syncRemoteSkills(existingConfig, cwd);
+      return;
+    }
     warning('Configuration file already exists at skillz.json');
     warning('Remove it first or use `skillz config` to modify settings');
     process.exit(1);
@@ -88,8 +102,8 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   if (options.globalSkills) {
     const globalSkillsDir = path.join(process.env.HOME || '~', '.claude/skills');
-    if (!config.skillDirectories.includes(globalSkillsDir)) {
-      config.skillDirectories.push(globalSkillsDir);
+    if (!config.skillDirectories.some((dir) => dir.localPath === globalSkillsDir)) {
+      config.skillDirectories.push({ localPath: globalSkillsDir });
     }
   }
 
@@ -114,7 +128,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
     const detected: DetectedConfig = await inferConfig(cwd);
     if (detected.skillDirectories.length > 0) {
       info(`Detected existing skill directories: ${detected.skillDirectories.join(', ')}`);
-      config.additionalSkills = detected.skillDirectories;
+      config.skillDirectories = detected.skillDirectories.map((dir) => ({ localPath: dir }));
     }
   }
 
@@ -264,5 +278,63 @@ async function addToGitignore(cwd: string): Promise<void> {
       : `${missingEntries.join('\n')}\n`;
     await safeWriteFile(gitignorePath, newContent);
     success(`Added ${missingEntries.join(', ')} to .gitignore`);
+  }
+}
+
+async function syncRemoteSkills(config: Config, cwd: string): Promise<void> {
+  const remoteDirectories = config.skillDirectories.filter((dir) => dir.remotePath);
+
+  if (remoteDirectories.length === 0) {
+    error('No remote skill directories configured. Add remotePath to skillDirectories first.');
+    process.exit(1);
+  }
+
+  if (remoteDirectories.length > 1) {
+    error('Multiple remote skill directories are not supported with --remote.');
+    process.exit(1);
+  }
+
+  const remoteDirectory = remoteDirectories[0];
+  const remotePath = remoteDirectory.remotePath;
+  if (!remotePath) {
+    error('Remote skill directory is missing a remotePath.');
+    process.exit(1);
+  }
+
+  if (remoteDirectory.localPath !== '.skills') {
+    info('Updating skillDirectories localPath to ".skills" for remote init.');
+    remoteDirectory.localPath = '.skills';
+    await saveConfig(config, cwd);
+  }
+
+  const destination = path.join(cwd, remoteDirectory.localPath);
+  const gitDir = path.join(destination, '.git');
+
+  if (await fileExists(destination)) {
+    if (!(await fileExists(gitDir))) {
+      error(`Destination exists but is not a git repo: ${destination}`);
+      process.exit(1);
+    }
+    info(`Pulling latest skills from ${remotePath} into ${remoteDirectory.localPath}`);
+    try {
+      await execFileAsync('git', ['-C', destination, 'pull', '--ff-only']);
+      success('Remote skills updated.');
+    } catch (err) {
+      error(`Failed to pull remote skills: ${(err as Error).message}`);
+      error('You may have local changes or the remote has diverged. Resolve manually.');
+      process.exit(1);
+    }
+    return;
+  }
+
+  await ensureDir(path.dirname(destination));
+  info(`Cloning skills from ${remotePath} into ${remoteDirectory.localPath}`);
+  try {
+    await execFileAsync('git', ['clone', remotePath, destination]);
+    success('Remote skills cloned.');
+  } catch (err) {
+    error(`Failed to clone remote skills: ${(err as Error).message}`);
+    error('Check that the remote URL is correct and you have access.');
+    process.exit(1);
   }
 }

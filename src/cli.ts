@@ -15,6 +15,7 @@ type InitOptions = {
   target?: string;
   additionalSkills?: string[];
   globalSkills?: boolean;
+  remote?: boolean;
   sync?: boolean;
   template?: string;
   nonInteractive?: boolean;
@@ -65,6 +66,7 @@ program
   .option('--target <file>', 'Specify custom target file path')
   .option('--additional-skills <path>', 'Add additional skill directories', collect, [])
   .option('--global-skills', 'Include global ~/.claude/skills/ directory')
+  .option('--remote', 'Pull skills from remotePath into .skills using existing skillz.json')
   .option('--no-sync', 'Skip initial sync after initialization')
   .option('--template <path>', 'Custom template for skill formatting')
   .option('--non-interactive', 'Run in non-interactive mode (auto-confirm all prompts)')

@@ -48,7 +48,8 @@ export async function scanDirectory(directory: string, ignore: string[] = []): P
  * Scan all skill directories from config
  */
 export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> {
-  const allDirs = [...config.skillDirectories, ...config.additionalSkills];
+  const localSkillDirs = config.skillDirectories.map((dir) => dir.localPath);
+  const allDirs = [...localSkillDirs, ...config.additionalSkills];
   const skills: Skill[] = [];
   const seenNames = new Set<string>();
   debug(`scanning all skill directories from ${allDirs}`);
