@@ -46,6 +46,7 @@ export interface Config {
 export interface SkillDirectory {
   localPath: string;
   remotePath?: string;
+  syncFromRoot?: boolean;
 }
 
 /**

@@ -65,7 +65,19 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
       "preset": "agentsmd"
     }
   ],
-  "skillDirectories": [".claude/skills"],
+  "skillDirectories": [
+    {
+      "localPath": ".claude/skills"
+    },
+    {
+      "localPath": "root-skill",
+      "syncFromRoot": true
+    },
+    {
+      "localPath": "~/.claude/skills",
+      "remotePath": "git@github.com:your-org/skills.git"
+    }
+  ],
   "additionalSkills": ["~/my-custom-skills"],
   "ignore": ["*.test", "experimental-*"],
   "skillsSectionName": "## Additional Instructions",
@@ -90,7 +102,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
   - `preset` (string, optional): Preset override for this target. Defaults to global `preset`.
   - Can be an empty array `[]` if only managing skills without syncing.
-- `skillDirectories` (string[]): Directories to scan for `SKILL.md` files.
+- `skillDirectories` (SkillDirectory[]): Directories to scan for skills.
 - `additionalSkills` (string[]): Additional skill directories beyond `skillDirectories`. Can be empty `[]`.
 - `ignore` (string[]): Glob patterns to exclude skill directories (e.g., `["*.test", "experimental-*"]`). Can be empty `[]`.
 
@@ -122,6 +134,12 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   - `"prompt"` - Inject skill instructions into target file (default)
   - `"native"` - Copy skill directories to target directory
 
+**SkillDirectory Fields:**
+
+- `localPath` (string): Directory path to scan.
+- `remotePath` (string, optional): Remote source used by `skillz init --remote`.
+- `syncFromRoot` (boolean, optional): Treat the directory itself as a skill (must contain `SKILL.md`).
+
 ### Sync Modes
 
 Skillz supports two ways to sync skills to your development environment:
@@ -139,7 +157,11 @@ The default `syncMode: "prompt"` writes skill instructions directly into your ta
       "syncMode": "prompt"
     }
   ],
-  "skillDirectories": [".claude/skills"]
+  "skillDirectories": [
+    {
+      "localPath": ".claude/skills"
+    }
+  ]
 }
 ```
 
@@ -168,7 +190,11 @@ For tools that can directly read skill directories (e.g., file-based IDEs), use 
       "syncMode": "native"
     }
   ],
-  "skillDirectories": [".claude/skills"]
+  "skillDirectories": [
+    {
+      "localPath": ".claude/skills"
+    }
+  ]
 }
 ```
 
@@ -207,7 +233,11 @@ You can combine both sync modes in one project:
       "syncMode": "native"
     }
   ],
-  "skillDirectories": [".claude/skills"]
+  "skillDirectories": [
+    {
+      "localPath": ".claude/skills"
+    }
+  ]
 }
 ```
 
@@ -221,7 +251,11 @@ For skill management without syncing to targets:
 {
   "version": "2.0",
   "targets": [],
-  "skillDirectories": [".claude/skills"],
+  "skillDirectories": [
+    {
+      "localPath": ".claude/skills"
+    }
+  ],
   "additionalSkills": [],
   "ignore": []
 }

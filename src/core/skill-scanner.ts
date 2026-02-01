@@ -1,6 +1,6 @@
 import path from 'path';
 import { minimatch } from 'minimatch';
-import type { Skill, Config } from '../types/index.js';
+import type { Skill, Config, SkillDirectory } from '../types/index.js';
 import { readDirectories, isSkillDirectory, fileExists, resolveHome } from '../utils/fs-helpers.js';
 import { parseSkill, validateSkill } from './skill-parser.js';
 import { debug, warning } from '../utils/logger.js';
@@ -48,23 +48,39 @@ export async function scanDirectory(directory: string, ignore: string[] = []): P
  * Scan all skill directories from config
  */
 export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> {
-  const localSkillDirs = config.skillDirectories.map((dir) => dir.localPath);
-  const allDirs = [...localSkillDirs, ...config.additionalSkills];
+  const directoryEntries: SkillDirectory[] = [
+    ...config.skillDirectories,
+    ...config.additionalSkills.map((dir) => ({ localPath: dir })),
+  ];
+  const allDirs = directoryEntries.map((dir) => dir.localPath);
   const skills: Skill[] = [];
   const seenNames = new Set<string>();
   debug(`scanning all skill directories from ${allDirs}`);
 
-  for (const dir of allDirs) {
-    const skillDirs = await scanDirectory(dir, config.ignore);
-    const resolvedSkillDir = path.resolve(resolveHome(dir));
+  for (const entry of directoryEntries) {
+    const resolvedSkillDir = path.resolve(resolveHome(entry.localPath));
+    let skillDirs: string[] = [];
+
+    if (entry.syncFromRoot) {
+      if (!(await isSkillDirectory(resolvedSkillDir))) {
+        throw new Error(
+          `Skill directory "${entry.localPath}" does not contain SKILL.md (syncFromRoot enabled).`
+        );
+      }
+      skillDirs = [resolvedSkillDir];
+    } else {
+      skillDirs = await scanDirectory(entry.localPath, config.ignore);
+    }
 
     for (const skillDir of skillDirs) {
       try {
         const skill = await parseSkill(skillDir);
+        const relativePath =
+          path.relative(resolvedSkillDir, skill.path) || path.basename(skill.path);
 
         // Compute relative path within skillDirectory
-        skill.relativePath = path.relative(resolvedSkillDir, skill.path);
-        skill.sourceDirectory = dir;
+        skill.relativePath = relativePath;
+        skill.sourceDirectory = entry.localPath;
 
         // Validate skill
         const validation = validateSkill(skill);

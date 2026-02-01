@@ -129,6 +129,67 @@ description: Skill used to verify *.test ignore patterns
     expect(agentsContent).not.toContain('sandbox-test');
   });
 
+  it('should error when syncFromRoot skill directory lacks SKILL.md', async () => {
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.skillDirectories = [{ localPath: '.claude/skills', syncFromRoot: true }];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('SKILL.md');
+    expect(result.stderr).toContain('syncFromRoot');
+  });
+
+  it('should sync skill from root when syncFromRoot is enabled', async () => {
+    const rootSkillDir = path.join(workspace.root, 'root-skill');
+    await fs.ensureDir(rootSkillDir);
+    await fs.writeFile(
+      path.join(rootSkillDir, 'SKILL.md'),
+      `---
+name: root-skill
+description: Root-level skill directory
+---
+
+# Root Skill
+
+Root skill content.
+`
+    );
+
+    const nestedSkillDir = path.join(rootSkillDir, 'nested-skill');
+    await fs.ensureDir(nestedSkillDir);
+    await fs.writeFile(
+      path.join(nestedSkillDir, 'SKILL.md'),
+      `---
+name: nested-skill
+description: Nested skill that should be ignored
+---
+
+# Nested Skill
+`
+    );
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.skillDirectories = [{ localPath: 'root-skill', syncFromRoot: true }];
+    config.additionalSkills = [];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('root-skill');
+    expect(agentsContent).not.toContain('nested-skill');
+  });
+
   it('should sync only specified skills with --only flag', async () => {
     const result = await execCli(['sync', '--only', 'python-expert'], {
       cwd: workspace.root,
