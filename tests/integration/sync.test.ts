@@ -190,6 +190,54 @@ description: Nested skill that should be ignored
     expect(agentsContent).not.toContain('nested-skill');
   });
 
+  it('should sync only skills listed in skillDirectories include', async () => {
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.skillDirectories = [
+      {
+        localPath: '.claude/skills',
+        include: ['python-expert'],
+      },
+    ];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('python-expert');
+    expect(agentsContent).not.toContain('react-patterns');
+
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    const cache = (await fs.readJson(cachePath)) as CacheFile;
+    expect(cache.skills['python-expert']).toBeDefined();
+    expect(cache.skills['react-patterns']).toBeUndefined();
+  });
+
+  it('should report no skills when skillDirectories include is empty', async () => {
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.skillDirectories = [
+      {
+        localPath: '.claude/skills',
+        include: [],
+      },
+    ];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('No skills found');
+    const cachePath = path.join(workspace.root, '.skillz-cache.json');
+    expect(await fs.pathExists(cachePath)).toBe(false);
+  });
+
   it('should sync only specified skills with --only flag', async () => {
     const result = await execCli(['sync', '--only', 'python-expert'], {
       cwd: workspace.root,

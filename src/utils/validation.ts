@@ -24,6 +24,7 @@ export const ConfigSchema = z.object({
       localPath: z.string().min(1, 'Skill directory localPath is required'),
       remotePath: z.string().min(1).optional(),
       syncFromRoot: z.boolean().optional(),
+      include: z.array(z.string()).optional(),
     })
   ),
   additionalSkills: z.array(z.string()),

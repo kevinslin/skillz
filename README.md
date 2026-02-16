@@ -67,7 +67,8 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   ],
   "skillDirectories": [
     {
-      "localPath": ".claude/skills"
+      "localPath": ".claude/skills",
+      "include": ["python-expert", "react-patterns"]
     },
     {
       "localPath": "root-skill",
@@ -139,6 +140,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 - `localPath` (string): Directory path to scan.
 - `remotePath` (string, optional): Remote source used by `skillz init --remote`.
 - `syncFromRoot` (boolean, optional): Treat the directory itself as a skill (must contain `SKILL.md`).
+- `include` (string[], optional): If set, only sync skills whose `name` matches one of these values.
 
 ### Sync Modes
 
