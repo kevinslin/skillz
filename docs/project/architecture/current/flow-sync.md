@@ -15,6 +15,7 @@ directories are removed before copying.
 
 **Related Documents:**
 - `docs/project/architecture/template-architecture.md`
+- `docs/project/architecture/current/flow-cache.md`
 
 ## Terminology
 

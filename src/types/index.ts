@@ -47,6 +47,7 @@ export interface SkillDirectory {
   localPath: string;
   remotePath?: string;
   syncFromRoot?: boolean;
+  include?: string[];
 }
 
 /**

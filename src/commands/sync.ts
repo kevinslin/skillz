@@ -91,9 +91,16 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   const skills = await scanAllSkillDirectories(config);
   spin.succeed(`Found ${skills.length} skill(s)`);
 
+  // Load cache
+  debug(`loading cache from ${cwd}`);
+  const cache = await loadCache(cwd);
+
   if (skills.length === 0) {
     warning('No skills found. Make sure your skill directories contain SKILL.md files.');
-    return;
+    if (!cache) {
+      return;
+    }
+    info('Continuing sync with empty skill set to clear stale managed output');
   }
 
   // Filter to --only skills if specified
@@ -107,10 +114,6 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
       process.exit(1);
     }
   }
-
-  // Load cache
-  debug(`loading cache from ${cwd}`);
-  const cache = await loadCache(cwd);
 
   // Detect changes if not forcing and cache exists
   if (!options.force && cache && cache !== null) {

@@ -60,6 +60,7 @@ export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> 
   for (const entry of directoryEntries) {
     const resolvedSkillDir = path.resolve(resolveHome(entry.localPath));
     let skillDirs: string[] = [];
+    const includedNames = entry.include ? new Set(entry.include) : null;
 
     if (entry.syncFromRoot) {
       if (!(await isSkillDirectory(resolvedSkillDir))) {
@@ -89,6 +90,13 @@ export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> 
           validation.errors.forEach((err) => {
             warning(`  - ${err.field}: ${err.message}`);
           });
+          continue;
+        }
+
+        if (includedNames && !includedNames.has(skill.name)) {
+          debug(
+            `Skipping skill ${skill.name} from ${entry.localPath}: not listed in include filter`
+          );
           continue;
         }
 
