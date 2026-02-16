@@ -199,6 +199,7 @@ description: Nested skill that should be ignored
         include: ['python-expert'],
       },
     ];
+    config.additionalSkills = [];
     await fs.writeJson(configPath, config, { spaces: 2 });
 
     const result = await execCli(['sync'], {
@@ -217,7 +218,15 @@ description: Nested skill that should be ignored
     expect(cache.skills['react-patterns']).toBeUndefined();
   });
 
-  it('should report no skills when skillDirectories include is empty', async () => {
+  it('should clear stale synced content when skillDirectories include is empty', async () => {
+    await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    let agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('python-expert');
+    expect(agentsContent).toContain('react-patterns');
+
     const configPath = path.join(workspace.root, 'skillz.json');
     const config = (await fs.readJson(configPath)) as Config;
     config.skillDirectories = [
@@ -226,6 +235,7 @@ description: Nested skill that should be ignored
         include: [],
       },
     ];
+    config.additionalSkills = [];
     await fs.writeJson(configPath, config, { spaces: 2 });
 
     const result = await execCli(['sync'], {
@@ -234,8 +244,17 @@ description: Nested skill that should be ignored
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('No skills found');
+    expect(result.stdout).toContain('Continuing sync with empty skill set');
+    expect(result.stdout).toContain('removed skill(s)');
+
+    agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).not.toContain('python-expert');
+    expect(agentsContent).not.toContain('react-patterns');
+
     const cachePath = path.join(workspace.root, '.skillz-cache.json');
-    expect(await fs.pathExists(cachePath)).toBe(false);
+    expect(await fs.pathExists(cachePath)).toBe(true);
+    const cache = (await fs.readJson(cachePath)) as CacheFile;
+    expect(Object.keys(cache.skills)).toEqual([]);
   });
 
   it('should sync only specified skills with --only flag', async () => {
