@@ -40,8 +40,8 @@ All targets use the same managed section format with skill links.
     { "destination": ".cursor/rules/skills.mdc" }
   ],
   "skillDirectories": [
-    ".claude/skills",
-    "~/.claude/skills"
+    { "localPath": ".claude/skills", "ignore": ["experimental-*"] },
+    { "localPath": "~/.claude/skills" }
   ],
   "additionalSkills": [
     "/custom/path/to/skills"
@@ -402,7 +402,7 @@ Skillz CLI keeps Claude-compatible skills synchronized across target documents s
 
 1. **CLI bootstrap** (`src/cli.ts`) wires commands and shared flags through Commander.
 2. **Configuration** (`src/core/config.ts`) loads or creates `skillz.json`, supplying a `Config` object to every command.
-3. **Skill discovery** (`src/core/skill-scanner.ts`) walks configured directories, applies glob-based ignore rules, and yields parsed `Skill` models.
+3. **Skill discovery** (`src/core/skill-scanner.ts`) walks configured directories, applies global plus per-directory glob ignore rules, and yields parsed `Skill` models.
 4. **Change detection & caching** (`src/core/change-detector.ts`, `src/core/cache-manager.ts`) compares current hashes to the last synced state to avoid unnecessary writes.
 5. **Rendering & target updates** (`src/core/template-engine.ts`, `src/core/target-manager.ts`) build Handlebars output and splice the managed section into each target file.
 6. **Persistence & feedback** leverage utilities in `src/utils/` for FS access, hashing, validation, and logging.
@@ -416,7 +416,7 @@ Skillz CLI keeps Claude-compatible skills synchronized across target documents s
 ### Core Services
 
 - **Configuration (`src/core/config.ts`)**: default presets, JSON persistence, and zod-backed validation.
-- **Skill Scanner (`src/core/skill-scanner.ts`)**: tilde expansion, directory listing, glob ignores via `minimatch`, and deduplication with warnings.
+- **Skill Scanner (`src/core/skill-scanner.ts`)**: tilde expansion, directory listing, global and per-directory glob ignores via `minimatch`, and deduplication with warnings.
 - **Skill Parser (`src/core/skill-parser.ts`)**: parses frontmatter through `gray-matter`, validates required fields, and produces deterministic hashes via `src/utils/hash.ts`.
 - **Template Engine (`src/core/template-engine.ts`)**: caches compiled Handlebars templates, prepares relative paths, and renders summaries or full instructions.
 - **Target Manager (`src/core/target-manager.ts`)**: reads/writes managed sections while preserving custom content.

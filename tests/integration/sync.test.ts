@@ -129,6 +129,53 @@ description: Skill used to verify *.test ignore patterns
     expect(agentsContent).not.toContain('sandbox-test');
   });
 
+  it('should apply ignore patterns per skillDirectory', async () => {
+    const localIgnoredDir = path.join(workspace.skillsDir, 'sandbox-local');
+    await fs.ensureDir(localIgnoredDir);
+    await fs.writeFile(
+      path.join(localIgnoredDir, 'SKILL.md'),
+      `---
+name: sandbox-local
+description: Skill ignored only in the first configured directory
+---
+`
+    );
+
+    const secondarySkillsDir = path.join(workspace.root, '.claude', 'more-skills');
+    const secondaryMatchingDir = path.join(secondarySkillsDir, 'sandbox-remote');
+    await fs.ensureDir(secondaryMatchingDir);
+    await fs.writeFile(
+      path.join(secondaryMatchingDir, 'SKILL.md'),
+      `---
+name: sandbox-remote
+description: Skill should still sync from second configured directory
+---
+`
+    );
+
+    const configPath = path.join(workspace.root, 'skillz.json');
+    const config = (await fs.readJson(configPath)) as Config;
+    config.ignore = [];
+    config.skillDirectories = [
+      { localPath: '.claude/skills', ignore: ['sandbox-*'] },
+      { localPath: '.claude/more-skills' },
+    ];
+    config.additionalSkills = [];
+    await fs.writeJson(configPath, config, { spaces: 2 });
+
+    const result = await execCli(['sync'], {
+      cwd: workspace.root,
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).not.toContain('sandbox-local');
+    expect(agentsContent).toContain('sandbox-remote');
+    expect(agentsContent).toContain('python-expert');
+    expect(agentsContent).toContain('react-patterns');
+  });
+
   it('should error when syncFromRoot skill directory lacks SKILL.md', async () => {
     const configPath = path.join(workspace.root, 'skillz.json');
     const config = (await fs.readJson(configPath)) as Config;

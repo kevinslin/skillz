@@ -68,7 +68,8 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   "skillDirectories": [
     {
       "localPath": ".claude/skills",
-      "include": ["python-expert", "react-patterns"]
+      "include": ["python-expert", "react-patterns"],
+      "ignore": ["experimental-*"]
     },
     {
       "localPath": "root-skill",
@@ -105,7 +106,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   - Can be an empty array `[]` if only managing skills without syncing.
 - `skillDirectories` (SkillDirectory[]): Directories to scan for skills.
 - `additionalSkills` (string[]): Additional skill directories beyond `skillDirectories`. Can be empty `[]`.
-- `ignore` (string[]): Glob patterns to exclude skill directories (e.g., `["*.test", "experimental-*"]`). Can be empty `[]`.
+- `ignore` (string[]): Global glob patterns to exclude skill directories across all `skillDirectories` entries (e.g., `["*.test", "experimental-*"]`). It can be empty (`[]`).
 
 **Optional Fields:**
 
@@ -141,6 +142,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 - `remotePath` (string, optional): Remote source used by `skillz init --remote`.
 - `syncFromRoot` (boolean, optional): Treat the directory itself as a skill (must contain `SKILL.md`).
 - `include` (string[], optional): If set, only sync skills whose `name` matches one of these values.
+- `ignore` (string[], optional): Glob patterns to exclude subdirectories only for this skill directory entry.
 
 ### Sync Modes
 
