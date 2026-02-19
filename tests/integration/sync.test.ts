@@ -172,6 +172,8 @@ description: Skill should still sync from second configured directory
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(agentsContent).not.toContain('sandbox-local');
     expect(agentsContent).toContain('sandbox-remote');
+    expect(agentsContent).toContain('python-expert');
+    expect(agentsContent).toContain('react-patterns');
   });
 
   it('should error when syncFromRoot skill directory lacks SKILL.md', async () => {

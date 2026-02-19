@@ -61,7 +61,7 @@ export async function scanAllSkillDirectories(config: Config): Promise<Skill[]> 
     const resolvedSkillDir = path.resolve(resolveHome(entry.localPath));
     let skillDirs: string[] = [];
     const includedNames = entry.include ? new Set(entry.include) : null;
-    const ignorePatterns = [...new Set([...(config.ignore ?? []), ...(entry.ignore ?? [])])];
+    const ignorePatterns = [...new Set([...config.ignore, ...(entry.ignore ?? [])])];
 
     if (entry.syncFromRoot) {
       if (!(await isSkillDirectory(resolvedSkillDir))) {

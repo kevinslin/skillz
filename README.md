@@ -106,7 +106,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   - Can be an empty array `[]` if only managing skills without syncing.
 - `skillDirectories` (SkillDirectory[]): Directories to scan for skills.
 - `additionalSkills` (string[]): Additional skill directories beyond `skillDirectories`. Can be empty `[]`.
-- `ignore` (string[]): Global glob patterns to exclude skill directories across all `skillDirectories` entries (e.g., `["*.test", "experimental-*"]`). Can be empty `[]`.
+- `ignore` (string[]): Global glob patterns to exclude skill directories across all `skillDirectories` entries (e.g., `["*.test", "experimental-*"]`). It can be empty (`[]`).
 
 **Optional Fields:**
 
