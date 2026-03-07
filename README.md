@@ -382,7 +382,9 @@ skillz sync --only python-expert --only react-patterns --verbose
 
 ### `skillz watch`
 
-Watch configured skill directories and run `sync` when changes are detected.
+Watch configured skill directories and `skillz.json`, then run `sync` when skill or config
+changes are detected. Config edits also refresh the active watch roots without restarting
+the command.
 
 Options:
 

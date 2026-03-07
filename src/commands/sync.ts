@@ -20,6 +20,7 @@ import {
 } from '../utils/logger.js';
 import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 import { calculateConfigHash, hashesMatch } from '../utils/hash.js';
+import type { Config } from '../types/index.js';
 
 interface SyncOptions {
   dryRun?: boolean;
@@ -30,15 +31,20 @@ interface SyncOptions {
   template?: string;
 }
 
-export async function syncCommand(options: SyncOptions): Promise<void> {
+interface SyncContext {
+  cwd?: string;
+  config?: Config;
+}
+
+export async function syncCommand(options: SyncOptions, context: SyncContext = {}): Promise<void> {
   if (options.verbose) {
     setVerbose(true);
   }
 
-  const { cwd } = await ensureSkillzProjectCwd();
+  const cwd = context.cwd ?? (await ensureSkillzProjectCwd()).cwd;
 
   // Load configuration
-  const config = await loadConfig(cwd);
+  const config = context.config ? { ...context.config } : await loadConfig(cwd);
   if (!config) {
     error('No configuration file found. Run `skillz init` first.');
     process.exit(1);

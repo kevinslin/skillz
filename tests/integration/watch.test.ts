@@ -30,6 +30,10 @@ const SYNC_WAIT_TIMEOUT_MS = 10000;
  * Sleep interval for polling watcher output in tests.
  */
 const OUTPUT_POLL_INTERVAL_MS = 50;
+/**
+ * Additional settle time to ensure debounced syncs have either fired or expired.
+ */
+const WATCH_SETTLE_MS = 2500;
 
 interface WatchProcess {
   child: ChildProcessWithoutNullStreams;
@@ -105,6 +109,97 @@ describe('watch command', () => {
     const exitCode = await watchProcess.stop();
     expect(exitCode).toBe(0);
   });
+
+  it(
+    'should sync on skillz.json changes and refresh watched directories',
+    async () => {
+      await execCli(['init', '--preset', 'agentsmd', '--no-sync'], {
+        cwd: workspace.root,
+      });
+
+      const extraSkillsDir = path.join(workspace.root, 'extra-skills');
+      const extraSkillDir = path.join(extraSkillsDir, 'config-added-skill');
+      await fs.ensureDir(extraSkillDir);
+      await fs.writeFile(
+        path.join(extraSkillDir, 'SKILL.md'),
+        `---
+name: config-added-skill
+description: Added through skillz.json updates
+---
+
+# Config Added Skill
+
+This skill is used to validate config-driven watcher refreshes.
+`
+      );
+
+      const watchProcess = spawnWatch(
+        ['watch', '--interval', FAST_WATCH_INTERVAL_MS.toString()],
+        workspace.root
+      );
+      await watchProcess.waitForOutput((stdout) => stdout.includes('Watching'));
+
+      const configPath = path.join(workspace.root, 'skillz.json');
+      const config = (await fs.readJson(configPath)) as Record<string, unknown>;
+      config.additionalSkills = ['extra-skills'];
+      config.skillsSectionName = '## Updated Skills';
+      await fs.writeJson(configPath, config, { spaces: 2 });
+
+      await watchProcess.waitForOutput(
+        (stdout) => countOccurrences(stdout, 'Sync complete') >= 1,
+        SYNC_WAIT_TIMEOUT_MS
+      );
+
+      await sleep(WATCH_SETTLE_MS);
+      const syncCountAfterConfig = countOccurrences(
+        watchProcess.output.stdout,
+        'Syncing skills...'
+      );
+
+      const extraSkillPath = path.join(extraSkillDir, 'SKILL.md');
+      const original = await fs.readFile(extraSkillPath, 'utf-8');
+      await fs.writeFile(extraSkillPath, `${original}\n## Updated Content\n`);
+
+      await watchProcess.waitForOutput(
+        (stdout) => countOccurrences(stdout, 'Syncing skills...') > syncCountAfterConfig,
+        SYNC_WAIT_TIMEOUT_MS
+      );
+
+      let agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+      expect(agentsContent).toContain('## Updated Skills');
+      expect(agentsContent).toContain('config-added-skill');
+
+      config.additionalSkills = [];
+      await fs.writeJson(configPath, config, { spaces: 2 });
+
+      const syncCountAfterExtraSkillEdit = countOccurrences(
+        watchProcess.output.stdout,
+        'Syncing skills...'
+      );
+      await watchProcess.waitForOutput(
+        (stdout) => countOccurrences(stdout, 'Syncing skills...') > syncCountAfterExtraSkillEdit,
+        SYNC_WAIT_TIMEOUT_MS
+      );
+
+      await sleep(WATCH_SETTLE_MS);
+      agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+      expect(agentsContent).not.toContain('config-added-skill');
+
+      const syncCountAfterRemoval = countOccurrences(
+        watchProcess.output.stdout,
+        'Syncing skills...'
+      );
+      await fs.writeFile(extraSkillPath, `${original}\n## Updated Content\n## Removed Content\n`);
+      await sleep(WATCH_SETTLE_MS);
+      expect(countOccurrences(watchProcess.output.stdout, 'Syncing skills...')).toBe(
+        syncCountAfterRemoval
+      );
+
+      const exitCode = await watchProcess.stop();
+      expect(exitCode).toBe(0);
+    },
+    WATCH_TEST_TIMEOUT_MS
+  );
 });
 
 function spawnWatch(args: string[], cwd: string): WatchProcess {
@@ -165,4 +260,8 @@ function countOccurrences(text: string, needle: string): number {
     return 0;
   }
   return text.split(needle).length - 1;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

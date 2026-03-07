@@ -5,6 +5,7 @@ import { ensureSkillzProjectCwd } from '../utils/workspace.js';
 import { resolveHome, fileExists } from '../utils/fs-helpers.js';
 import { info, success, warning, error } from '../utils/logger.js';
 import { syncCommand } from './sync.js';
+import type { Config } from '../types/index.js';
 
 interface WatchOptions {
   interval?: string;
@@ -18,12 +19,14 @@ const DEFAULT_POLL_INTERVAL_MS = 1000;
  * Debounce delay for change bursts in milliseconds.
  */
 const DEBOUNCE_MS = 2000;
+const CONFIG_FILE = 'skillz.json';
 
 /**
  * Watch configured skill directories and auto-sync on changes.
  */
 export async function watchCommand(options: WatchOptions): Promise<void> {
   const { cwd } = await ensureSkillzProjectCwd();
+  const configPath = path.join(cwd, CONFIG_FILE);
 
   const config = await loadConfig(cwd);
   if (!config) {
@@ -37,10 +40,7 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
     process.exit(1);
   }
 
-  const watchRoots = [
-    ...config.skillDirectories.map((dir) => dir.localPath),
-    ...config.additionalSkills,
-  ];
+  const watchRoots = getConfiguredWatchRoots(config);
   if (watchRoots.length === 0) {
     error('No skill directories configured to watch.');
     process.exit(1);
@@ -56,8 +56,9 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
   let hasPendingChange = false;
   let isSyncing = false;
   let pendingSync = false;
+  let watchedRoots = new Set(resolvedRoots);
 
-  const watcher = chokidar.watch(resolvedRoots, {
+  const watcher = chokidar.watch([configPath, ...resolvedRoots], {
     ignoreInitial: true,
     usePolling: true,
     interval,
@@ -65,12 +66,20 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
 
   watcher.on('ready', () => {
     const directoryLabel = resolvedRoots.length === 1 ? 'directory' : 'directories';
-    info(`Watching ${resolvedRoots.length} ${directoryLabel} for changes.`);
+    info(`Watching ${resolvedRoots.length} ${directoryLabel} and ${CONFIG_FILE} for changes.`);
     info(`Polling interval: ${interval}ms, debounce: ${DEBOUNCE_MS}ms.`);
     info('Press Ctrl+C to stop.');
   });
 
   watcher.on('all', (eventName, changedPath) => {
+    const resolvedChangedPath = path.resolve(changedPath);
+    if (
+      resolvedChangedPath !== configPath &&
+      !isWithinWatchedRoots(resolvedChangedPath, watchedRoots)
+    ) {
+      return;
+    }
+
     const label = `${eventName} ${path.basename(changedPath)}`;
     scheduleSync(label);
   });
@@ -80,6 +89,50 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
     error(`Watcher error: ${message}`);
     process.exit(1);
   });
+
+  const refreshWatchedRoots = async (): Promise<Config> => {
+    const currentConfig = await loadConfig(cwd);
+    if (!currentConfig) {
+      throw new Error('No configuration file found. Run `skillz init` first.');
+    }
+
+    const nextRoots = await resolveWatchRoots(getConfiguredWatchRoots(currentConfig), cwd);
+    const nextRootSet = new Set(nextRoots);
+    const rootsToAdd = nextRoots.filter((root) => !watchedRoots.has(root));
+    const rootsToRemove = [...watchedRoots].filter((root) => !nextRootSet.has(root));
+
+    if (rootsToRemove.length > 0) {
+      watcher.unwatch(rootsToRemove);
+    }
+
+    if (rootsToAdd.length > 0) {
+      watcher.add(rootsToAdd);
+    }
+
+    if (rootsToAdd.length === 0 && rootsToRemove.length === 0) {
+      return currentConfig;
+    }
+
+    watchedRoots = nextRootSet;
+
+    const changeSummary: string[] = [];
+    if (rootsToAdd.length > 0) {
+      changeSummary.push(`added ${rootsToAdd.length}`);
+    }
+    if (rootsToRemove.length > 0) {
+      changeSummary.push(`removed ${rootsToRemove.length}`);
+    }
+
+    info(`Updated watched directories: ${watchedRoots.size} active (${changeSummary.join(', ')}).`);
+
+    if (watchedRoots.size === 0) {
+      warning(
+        'No existing skill directories are currently being watched. Waiting for future skillz.json changes.'
+      );
+    }
+
+    return currentConfig;
+  };
 
   const scheduleSync = (label: string) => {
     if (!hasPendingChange) {
@@ -107,7 +160,8 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
     isSyncing = true;
     info('Syncing skills...');
     try {
-      await syncCommand({});
+      const currentConfig = await refreshWatchedRoots();
+      await syncCommand({}, { cwd, config: currentConfig });
       success('Sync complete');
     } catch (err) {
       error(`Sync failed: ${(err as Error).message}`);
@@ -150,6 +204,19 @@ function parseInterval(value: string | undefined): number | null {
   }
 
   return parsed;
+}
+
+function getConfiguredWatchRoots(config: Config): string[] {
+  return [...config.skillDirectories.map((dir) => dir.localPath), ...config.additionalSkills];
+}
+
+function isWithinWatchedRoots(changedPath: string, watchedRoots: Set<string>): boolean {
+  return [...watchedRoots].some((root) => {
+    const relativePath = path.relative(root, changedPath);
+    return (
+      relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
+    );
+  });
 }
 
 async function resolveWatchRoots(roots: string[], cwd: string): Promise<string[]> {
