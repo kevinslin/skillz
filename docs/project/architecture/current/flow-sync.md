@@ -1,6 +1,6 @@
 # Sync Flow
 
-Last updated: 2026-01-07
+Last updated: 2026-03-10
 
 Maintenance: When revising this doc you must follow instructions in
 @shortcut:revise-flow-doc.md.
@@ -8,8 +8,8 @@ Maintenance: When revising this doc you must follow instructions in
 ## Overview
 
 The sync command collects skills, checks whether anything changed, and applies
-updates to each configured target. It supports prompt mode (managed section in
-a target file) and native mode (copies skill directories). When
+updates to each configured target. File targets use managed-section syncing by
+default, while native targets copy skill directories. When
 `deleteExistingFromTarget` is enabled for a native target, stale skill
 directories are removed before copying.
 
@@ -20,7 +20,7 @@ directories are removed before copying.
 ## Terminology
 
 - **Target**: An entry in `skillz.json` that receives synced skills.
-- **Prompt mode**: Writes a managed section into a target file via templates.
+- **File target**: Writes a managed section into a target file via templates.
 - **Native mode**: Copies skill directories into a destination directory.
 - **Managed section**: The section in a target file managed by Skillz.
 - **deleteExistingFromTarget**: Native-only option that deletes stale skill
@@ -67,7 +67,7 @@ if any conflict -> throw, sync aborts
 ```text
 for each target:
   syncMode = resolveTargetSyncMode(target, config)
-  if prompt:
+  if file:
     read target file and extract managed section
     validate no duplicate section headers
     render skills with template + pathStyle
@@ -114,7 +114,7 @@ validate native targets
   |
   v
 for each target
-  |-- prompt: render template -> write managed section
+  |-- file: render template -> write managed section
   |-- native: optional stale cleanup -> copy skill dirs
   v
 update cache

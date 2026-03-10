@@ -288,8 +288,11 @@ export function resolveTargetPreset(
 }
 
 /**
- * Resolve syncMode for a target (target-specific > global > default)
+ * Resolve sync behavior for a target (target-specific > global > default)
  */
-export function resolveTargetSyncMode(target: Target, config: Config): 'prompt' | 'native' {
-  return target.syncMode ?? config.syncMode ?? 'prompt';
+export function resolveTargetSyncMode(target: Target, config: Config): 'file' | 'native' {
+  return target.syncMode === 'native' ||
+    (target.syncMode === undefined && config.syncMode === 'native')
+    ? 'native'
+    : 'file';
 }

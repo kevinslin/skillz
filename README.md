@@ -58,7 +58,6 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   "targets": [
     {
       "destination": "AGENTS.md",
-      "syncMode": "prompt",
       "deleteExistingFromTarget": false,
       "template": "default",
       "pathStyle": "relative",
@@ -86,8 +85,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   "defaultEditor": "code",
   "autoSyncAfterEdit": true,
   "template": "default",
-  "pathStyle": "relative",
-  "syncMode": "prompt"
+  "pathStyle": "relative"
 }
 ```
 
@@ -97,8 +95,8 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 
 - `version` (string): Configuration schema version. Currently `"2.0"`.
 - `targets` (Target[]): Array of target objects. Each target has:
-  - `destination` (string): File path for prompt mode or directory path for native mode
-  - `syncMode` (string, optional): `"prompt"` or `"native"`. Defaults to global `syncMode` or `"prompt"`.
+  - `destination` (string): File path for managed-file sync or directory path for native sync
+  - `syncMode` (string, optional): `"native"` to copy skill directories into a target directory. Omit it to sync into a target file.
   - `deleteExistingFromTarget` (boolean, optional): When true, removes existing skill directories in the target before copying. Only applies to `"native"` sync. Target destination must be listed in `skillDirectories`. Default: `false`.
   - `template` (string, optional): Template override for this target. Defaults to global `template`.
   - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
@@ -132,9 +130,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   - `"relative"` - Relative paths (default, more portable)
   - `"absolute"` - Absolute paths
 
-- `syncMode` (string): Sync mode for targets. Possible values:
-  - `"prompt"` - Inject skill instructions into target file (default)
-  - `"native"` - Copy skill directories to target directory
+- `syncMode` (string): Optional global default for targets. The only supported explicit value is `"native"`, which copies skill directories to the target directory. Omit it to keep managed-file syncing as the default behavior.
 
 **SkillDirectory Fields:**
 
@@ -144,21 +140,20 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 - `include` (string[], optional): If set, only sync skills whose `name` matches one of these values.
 - `ignore` (string[], optional): Glob patterns to exclude subdirectories only for this skill directory entry.
 
-### Sync Modes
+### Sync Behavior
 
-Skillz supports two ways to sync skills to your development environment:
+Skillz syncs to target files by default. Use `syncMode: "native"` only when you want to copy skill directories to a destination folder instead of updating a file.
 
-#### Prompt Mode (Default)
+#### Managed File Targets (Default)
 
-The default `syncMode: "prompt"` writes skill instructions directly into your target file. This is ideal for LLM-powered tools that read from instruction files like `AGENTS.md` or `CLAUDE.md`.
+Omit `syncMode` for targets like `AGENTS.md` or `CLAUDE.md`. Skillz will write the managed section directly into the target file.
 
 ```json
 {
   "version": "2.0",
   "targets": [
     {
-      "destination": "AGENTS.md",
-      "syncMode": "prompt"
+      "destination": "AGENTS.md"
     }
   ],
   "skillDirectories": [
@@ -181,7 +176,7 @@ When synced, skills appear in your target file like this:
 - [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development
 ```
 
-#### Native Mode
+#### Native Targets
 
 For tools that can directly read skill directories (e.g., file-based IDEs), use `syncMode: "native"` to copy skill directories instead of embedding content:
 
@@ -213,15 +208,15 @@ This creates a flattened structure of copied skill directories:
 
 **Key differences:**
 
-- **Prompt mode**: Target `destination` is a file path (e.g., `AGENTS.md`)
-- **Native mode**: Target `destination` is a directory path (e.g., `.skills`)
+- **Managed file targets**: Target `destination` is a file path (e.g., `AGENTS.md`)
+- **Native targets**: Target `destination` is a directory path (e.g., `.skills`)
 - Native mode validates for conflicts before copying any skills (aborts on conflicts)
 - Native mode uses cache to detect changes (only re-copies when skills change)
 - Native structure is flattened (skill name only, not full path)
 
-#### Mixed Mode
+#### Mixed Targets
 
-You can combine both sync modes in one project:
+You can combine default file targets and explicit native targets in one project:
 
 ```json
 {
@@ -229,7 +224,6 @@ You can combine both sync modes in one project:
   "targets": [
     {
       "destination": "AGENTS.md",
-      "syncMode": "prompt",
       "template": "default"
     },
     {

@@ -168,17 +168,13 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   if (options.dryRun) {
     info('Dry run mode: no files will be modified');
 
-    const promptTargets = config.targets.filter(
-      (t) => resolveTargetSyncMode(t, config) === 'prompt'
-    );
+    const fileTargets = config.targets.filter((t) => resolveTargetSyncMode(t, config) === 'file');
     const nativeTargets = config.targets.filter(
       (t) => resolveTargetSyncMode(t, config) === 'native'
     );
 
-    if (promptTargets.length > 0) {
-      info(
-        `Would sync ${filteredSkills.length} skill(s) to ${promptTargets.length} file target(s)`
-      );
+    if (fileTargets.length > 0) {
+      info(`Would sync ${filteredSkills.length} skill(s) to ${fileTargets.length} file target(s)`);
     }
 
     if (nativeTargets.length > 0) {
@@ -220,7 +216,9 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   try {
     for (const target of config.targets) {
       const syncMode = resolveTargetSyncMode(target, config);
-      info(`Syncing ${filteredSkills.length} skills to ${target.destination} in ${syncMode} mode`);
+      info(
+        `Syncing ${filteredSkills.length} skills to ${target.destination} using ${syncMode} sync`
+      );
 
       if (syncMode === 'native') {
         await copySkillsToTarget(target, filteredSkills, cwd, skills);
@@ -237,7 +235,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     throw err;
   }
 
-  // Update cache for both prompt and native mode targets
+  // Update cache for both file and native targets
   if (config.targets.length > 0) {
     const newCache = updateCache(filteredSkills, config.targets[0].destination, config);
     await saveCache(newCache, cwd);

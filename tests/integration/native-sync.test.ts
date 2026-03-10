@@ -240,13 +240,10 @@ description: Old skill that should be removed
     expect(result.stdout).toContain('All skills are up to date');
   });
 
-  it('should support mixed targets (some prompt, some native)', async () => {
+  it('should support mixed targets (file and native)', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [
-        { destination: 'AGENTS.md', syncMode: 'prompt' },
-        { destination: '.skills', syncMode: 'native' },
-      ],
+      targets: [{ destination: 'AGENTS.md' }, { destination: '.skills', syncMode: 'native' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -261,7 +258,7 @@ description: Old skill that should be removed
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
-    // Verify prompt target was written
+    // Verify file target was written
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(agentsContent).toContain('## Additional Instructions');
     expect(agentsContent).toContain('python-expert');
@@ -277,6 +274,26 @@ description: Old skill that should be removed
     // Verify cache was created
     const cachePath = path.join(workspace.root, '.skillz-cache.json');
     expect(await fs.pathExists(cachePath)).toBe(true);
+  });
+
+  it('should reject prompt sync mode in config', async () => {
+    const config: SkillsConfig = {
+      version: '2.0',
+      targets: [{ destination: 'AGENTS.md', syncMode: 'prompt' }],
+      skillDirectories: [{ localPath: '.claude/skills' }],
+      additionalSkills: [],
+      ignore: [],
+    };
+
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
+
+    const result = await execCli(['sync'], { cwd: workspace.root });
+
+    expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
+    expect(result.stderr).toContain('Invalid configuration');
+    expect(result.stderr).toContain('Remove syncMode for file targets');
   });
 
   it('should respect --dry-run for native mode', async () => {

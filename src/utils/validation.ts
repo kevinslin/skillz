@@ -1,5 +1,23 @@
 import { z } from 'zod';
 
+const UNSUPPORTED_SYNC_MODE_MESSAGE =
+  'syncMode "prompt" is no longer supported. Remove syncMode for file targets or set syncMode to "native" for directory targets.';
+
+const SyncModeSchema = z
+  .string()
+  .optional()
+  .superRefine((value, ctx) => {
+    if (value === undefined || value === 'native') {
+      return;
+    }
+
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: UNSUPPORTED_SYNC_MODE_MESSAGE,
+    });
+  })
+  .transform((value) => (value === 'native' ? value : undefined));
+
 /**
  * Schema for Target
  */
@@ -8,7 +26,7 @@ export const TargetSchema = z.object({
   template: z.string().optional(),
   preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
   pathStyle: z.enum(['relative', 'absolute']).optional(),
-  syncMode: z.enum(['prompt', 'native']).optional(),
+  syncMode: SyncModeSchema,
   deleteExistingFromTarget: z.boolean().optional(),
 });
 
@@ -35,7 +53,7 @@ export const ConfigSchema = z.object({
   autoSyncAfterEdit: z.boolean().optional(),
   template: z.string().optional(),
   pathStyle: z.enum(['relative', 'absolute']).optional().default('relative'),
-  syncMode: z.enum(['prompt', 'native']).optional().default('prompt'),
+  syncMode: SyncModeSchema,
 });
 
 /**

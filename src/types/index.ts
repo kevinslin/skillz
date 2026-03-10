@@ -21,7 +21,7 @@ export interface Target {
   template?: string;
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
   pathStyle?: 'relative' | 'absolute';
-  syncMode?: 'prompt' | 'native';
+  syncMode?: 'native';
   deleteExistingFromTarget?: boolean;
 }
 
@@ -40,7 +40,7 @@ export interface Config {
   autoSyncAfterEdit?: boolean;
   template?: string;
   pathStyle?: 'relative' | 'absolute';
-  syncMode?: 'prompt' | 'native';
+  syncMode?: 'native';
 }
 
 export interface SkillDirectory {

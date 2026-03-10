@@ -111,12 +111,12 @@ Quick summary:
 
 **src/core/target-manager.ts**
 
-- `writeTargetFile(target, skills, config, cwd)` - Injects managed section (prompt mode)
+- `writeTargetFile(target, skills, config, cwd)` - Injects the managed section into a target file
 - `extractManagedSection()` - Finds section by heading name
 - `replaceManagedSection()` - Replaces content from section heading to EOF
 - `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts (allows overwriting existing skill directories, but blocks non-skill files/dirs)
 - `copySkillsToTarget(target, skills, cwd)` - Copies skills to target directory (native mode)
-- Managed section format (prompt mode):
+- Managed section format (default file sync):
   - Starts with configurable heading (e.g., `## Additional Instructions`)
   - Contains rendered skill content from templates
   - Extends to end of file
@@ -246,12 +246,10 @@ Each target can override global settings:
 }
 ```
 
-**Native Sync Mode:**
+**Sync Modes:**
 
-The `syncMode` property enables two different sync strategies:
-
-- **`prompt` (default)**: Writes skill instructions into the target file (file path)
-- **`native`**: Copies skill directories to the target directory (directory path)
+By default, targets are synced as managed files. The only supported explicit `syncMode`
+value is `"native"`, which copies skill directories to a destination directory.
 
 Example configuration with native mode:
 
@@ -285,7 +283,7 @@ Source: .claude/skills/frontend/react-patterns → Destination: .skills/react-pa
 - Existing skill directories at the destination can be overwritten (for updates)
 - Non-skill files/directories at the destination will block the sync (conflict detection)
 
-**Mixed Mode Example:**
+**Mixed Target Example:**
 
 ```json
 {
@@ -293,7 +291,6 @@ Source: .claude/skills/frontend/react-patterns → Destination: .skills/react-pa
   "targets": [
     {
       "destination": "AGENTS.md",
-      "syncMode": "prompt",
       "template": "default"
     },
     {
