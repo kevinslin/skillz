@@ -5,10 +5,7 @@ import { z } from 'zod';
  */
 export const TargetSchema = z.object({
   destination: z.string().min(1, 'Target destination is required'),
-  template: z.string().optional(),
   preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
-  pathStyle: z.enum(['relative', 'absolute']).optional(),
-  syncMode: z.enum(['prompt', 'native']).optional(),
   deleteExistingFromTarget: z.boolean().optional(),
 });
 
@@ -30,12 +27,8 @@ export const ConfigSchema = z.object({
   ),
   additionalSkills: z.array(z.string()),
   ignore: z.array(z.string()),
-  skillsSectionName: z.string().default('## Additional Instructions'),
   defaultEditor: z.string().optional(),
   autoSyncAfterEdit: z.boolean().optional(),
-  template: z.string().optional(),
-  pathStyle: z.enum(['relative', 'absolute']).optional().default('relative'),
-  syncMode: z.enum(['prompt', 'native']).optional().default('prompt'),
 });
 
 /**
