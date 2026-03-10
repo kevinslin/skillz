@@ -2,19 +2,20 @@
 
 <img width="400" height="400" alt="ChatGPT Image Nov 9, 2025, 05_20_01 PM" src="https://ik.imagekit.io/fpjzhqpv1/ChatGPT%20Image%20Nov%209,%202025,%2005_20_01%20PM_KQnKRx_Zt.png?updatedAt=1762739794959" />
 
-Skillz is a CLI that enables [skills](https://open.substack.com/pub/treeandforest/p/skills-as-object-oriented-programming) across any LLM powered tool in a matter of seconds.
-It works by injecting skill instructions in the `AGENTS.md` (or tool equivalent) instruction file and surfaces all discoverable skills by appending their frontmatter to the bottom of the file.
+Skillz is a CLI for managing Claude-style `SKILL.md` directories and syncing them into a workspace-local target directory that LLM tools can read.
 
 ## Key Features
 
-- Enable skill usage by automatically detecting tool environment and injecting skill usage instructions
-- Enable skills to be automatically synced from well known paths (eg. `.claude/skills`) as well as the ability to customize additional paths
-- Various methods to manage and edit skills from the CLI
+- Detect common AI-tool environments during `init`
+- Scan local and global skill directories
+- Copy skills into a native target directory such as `.skills`
+- Track config and skill changes with `.skillz-cache.json`
+- Create and edit skills from the CLI
 
 ## Requirements
 
 - Node.js 18 or newer
-- npm (or pnpm/yarn) for dependency management
+- npm, pnpm, or yarn
 
 ## Installation
 
@@ -24,32 +25,24 @@ npm install -g skillz
 
 ## Quickstart
 
-```sh
+```bash
 cd <your-workspace>
-# this automatically detects your environment
 skillz init
-
-# your skills are now automatically synced
 skillz sync
 ```
 
-After syncing, the CLI maintains a managed section in your target file(s). For example, in `AGENTS.md`:
+By default, presets now sync to `.skills/`:
 
-```markdown
-## Additional Instructions
-
-You now have access to Skills. Skills are specialized instruction sets...
-[comprehensive skill usage instructions]
-
-### Available Skills
-
-- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development assistance with best practices
-- [react-patterns](.claude/skills/react-patterns/SKILL.md): Modern React patterns and best practices
+```text
+.skills/
+├── python-expert/
+├── react-patterns/
+└── web-expert/
 ```
 
 ## Configuration
 
-The CLI stores project settings in `skillz.json`. Here's a complete reference showing all possible configuration fields:
+Skillz stores project settings in `skillz.json`.
 
 ```json
 {
@@ -57,10 +50,8 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   "preset": "agentsmd",
   "targets": [
     {
-      "destination": "AGENTS.md",
+      "destination": ".skills",
       "deleteExistingFromTarget": false,
-      "template": "default",
-      "pathStyle": "relative",
       "preset": "agentsmd"
     }
   ],
@@ -81,428 +72,144 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   ],
   "additionalSkills": ["~/my-custom-skills"],
   "ignore": ["*.test", "experimental-*"],
-  "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "code",
-  "autoSyncAfterEdit": true,
-  "template": "default",
-  "pathStyle": "relative"
+  "autoSyncAfterEdit": true
 }
 ```
 
 ### Configuration Fields
 
-**Required Fields:**
+Required:
 
-- `version` (string): Configuration schema version. Currently `"2.0"`.
-- `targets` (Target[]): Array of target objects. Each target has:
-  - `destination` (string): File path for managed-file sync or directory path for native sync
-  - `syncMode` (string, optional): `"native"` to copy skill directories into a target directory. Omit it to sync into a target file.
-  - `deleteExistingFromTarget` (boolean, optional): When true, removes existing skill directories in the target before copying. Only applies to `"native"` sync. Target destination must be listed in `skillDirectories`. Default: `false`.
-  - `template` (string, optional): Template override for this target. Defaults to global `template`.
-  - `pathStyle` (string, optional): Path style override for this target. Defaults to global `pathStyle`.
-  - `preset` (string, optional): Preset override for this target. Defaults to global `preset`.
-  - Can be an empty array `[]` if only managing skills without syncing.
-- `skillDirectories` (SkillDirectory[]): Directories to scan for skills.
-- `additionalSkills` (string[]): Additional skill directories beyond `skillDirectories`. Can be empty `[]`.
-- `ignore` (string[]): Global glob patterns to exclude skill directories across all `skillDirectories` entries (e.g., `["*.test", "experimental-*"]`). It can be empty (`[]`).
+- `version`: Configuration schema version. Currently `"2.0"`.
+- `targets`: Array of target directories. Each target has:
+  - `destination`: Directory to receive copied skills.
+  - `deleteExistingFromTarget`: When true, removes stale copied skill directories before copying.
+  - `preset`: Optional preset label.
+- `skillDirectories`: Directories to scan for `SKILL.md` skills.
+- `additionalSkills`: Additional skill directories beyond `skillDirectories`.
+- `ignore`: Global glob patterns to exclude skills across all configured directories.
 
-**Optional Fields:**
+Optional:
 
-- `preset` (string): Preset configuration name. Possible values:
-  - `"agentsmd"` - For Codex/AGENTS.md environments
-  - `"aider"` - For Aider `.aider/conventions.md`
-  - `"cursor"` - For Cursor `.cursor/rules/skills.mdc`
-  - `"claude"` - For Claude Code `CLAUDE.md`
-  - Can be omitted for custom configurations.
+- `preset`: One of `agentsmd`, `aider`, `cursor`, `claude`.
+- `defaultEditor`: Default editor for `skillz edit`.
+- `autoSyncAfterEdit`: Automatically run `sync` after editing a skill.
 
-- `skillsSectionName` (string): Heading name for the managed section in target files. Default: `"## Additional Instructions"`.
+SkillDirectory fields:
 
-- `defaultEditor` (string): Default editor for `skillz edit` command. Falls back to `$EDITOR` environment variable or `vi`. Examples: `"code"`, `"vim"`, `"nano"`, `"cursor"`.
+- `localPath`: Directory path to scan.
+- `remotePath`: Remote source used by `skillz init --remote`.
+- `syncFromRoot`: Treat the directory itself as a skill.
+- `include`: Only sync skills whose `name` matches one of these values.
+- `ignore`: Glob patterns to exclude subdirectories for this entry only.
 
-- `autoSyncAfterEdit` (boolean): Automatically run `sync` after editing a skill. Default: `true`.
+## Sync Model
 
-- `template` (string): Template to use when syncing. Possible values:
-  - `"default"` - Full skill instructions for LLMs (default)
-  - `"readme"` - Minimal, human-readable skill links
-  - Custom template path (e.g., `"./templates/custom.hbs"` or absolute path)
+Skillz is native-only. Sync always copies skill directories into configured target directories.
 
-- `pathStyle` (string): Path style for skill links in synced files. Possible values:
-  - `"relative"` - Relative paths (default, more portable)
-  - `"absolute"` - Absolute paths
+Behavior:
 
-- `syncMode` (string): Optional global default for targets. The only supported explicit value is `"native"`, which copies skill directories to the target directory. Omit it to keep managed-file syncing as the default behavior.
+- Targets must be directories, not files.
+- Copy validation aborts before writing when conflicts are detected.
+- Copied output is flattened to `target/<skill-name>`.
+- Cache detects both skill changes and config changes.
+- `deleteExistingFromTarget` removes stale copied skills before the new copy pass.
 
-**SkillDirectory Fields:**
+Legacy note:
 
-- `localPath` (string): Directory path to scan.
-- `remotePath` (string, optional): Remote source used by `skillz init --remote`.
-- `syncFromRoot` (boolean, optional): Treat the directory itself as a skill (must contain `SKILL.md`).
-- `include` (string[], optional): If set, only sync skills whose `name` matches one of these values.
-- `ignore` (string[], optional): Glob patterns to exclude subdirectories only for this skill directory entry.
+- Prompt/file targets such as `AGENTS.md`, `CLAUDE.md`, or `.cursor/rules/skills.mdc` are no longer supported as sync destinations.
+- Old configs that still reference those file targets fail with a migration-oriented error instead of creating directories with file names.
 
-### Sync Behavior
+## Environment Detection
 
-Skillz syncs to target files by default. Use `syncMode: "native"` only when you want to copy skill directories to a destination folder instead of updating a file.
+`skillz init` still detects common workspace markers:
 
-#### Managed File Targets (Default)
+- `AGENTS.md` for Codex-style workspaces
+- `.cursor/rules` for Cursor
+- `CLAUDE.md` or `.claude/CLAUDE.md` for Claude Code
+- `.aider/conventions.md` for Aider
 
-Omit `syncMode` for targets like `AGENTS.md` or `CLAUDE.md`. Skillz will write the managed section directly into the target file.
-
-```json
-{
-  "version": "2.0",
-  "targets": [
-    {
-      "destination": "AGENTS.md"
-    }
-  ],
-  "skillDirectories": [
-    {
-      "localPath": ".claude/skills"
-    }
-  ]
-}
-```
-
-When synced, skills appear in your target file like this:
-
-```markdown
-## Additional Instructions
-
-[Skill usage instructions...]
-
-### Available Skills
-
-- [python-expert](.claude/skills/python-expert/SKILL.md): Expert Python development
-```
-
-#### Native Targets
-
-For tools that can directly read skill directories (e.g., file-based IDEs), use `syncMode: "native"` to copy skill directories instead of embedding content:
-
-```json
-{
-  "version": "2.0",
-  "targets": [
-    {
-      "destination": ".skills",
-      "syncMode": "native"
-    }
-  ],
-  "skillDirectories": [
-    {
-      "localPath": ".claude/skills"
-    }
-  ]
-}
-```
-
-This creates a flattened structure of copied skill directories:
-
-```
-.skills/
-├── python-expert/
-├── react-patterns/
-└── web-expert/
-```
-
-**Key differences:**
-
-- **Managed file targets**: Target `destination` is a file path (e.g., `AGENTS.md`)
-- **Native targets**: Target `destination` is a directory path (e.g., `.skills`)
-- Native mode validates for conflicts before copying any skills (aborts on conflicts)
-- Native mode uses cache to detect changes (only re-copies when skills change)
-- Native structure is flattened (skill name only, not full path)
-
-#### Mixed Targets
-
-You can combine default file targets and explicit native targets in one project:
-
-```json
-{
-  "version": "2.0",
-  "targets": [
-    {
-      "destination": "AGENTS.md",
-      "template": "default"
-    },
-    {
-      "destination": ".cursor/.skills",
-      "syncMode": "native"
-    }
-  ],
-  "skillDirectories": [
-    {
-      "localPath": ".claude/skills"
-    }
-  ]
-}
-```
-
-This syncs skills to both a file (for LLMs) and a directory (for direct access).
-
-### Minimal Configuration Example
-
-For skill management without syncing to targets:
-
-```json
-{
-  "version": "2.0",
-  "targets": [],
-  "skillDirectories": [
-    {
-      "localPath": ".claude/skills"
-    }
-  ],
-  "additionalSkills": [],
-  "ignore": []
-}
-```
+Those markers influence the chosen preset, but preset targets now default to `.skills`.
 
 ## Commands
 
 ### `skillz init`
 
-Initialize Skillz in the current directory, detect existing targets, and create `skillz.json`.
+Initialize `skillz.json` in the current directory.
 
-**Automatic Environment Detection:**
+Common options:
 
-When you run `skillz init` without flags in an interactive terminal, Skillz automatically detects your development environment and recommends the appropriate configuration:
-
-- **Codex/AGENTS.md**: Detects `AGENTS.md` files and suggests the `agentsmd` preset
-- **Cursor**: Detects `.cursorrules` or `.cursor/rules` directory and suggests the `cursor` preset (creates `.cursor/rules/skills.mdc`)
-- **Claude Code**: Detects `CLAUDE.md` or `.claude/CLAUDE.md` files and suggests the `claude` preset
-- **Aider**: Detects `.aider/conventions.md` files and suggests the `aider` preset
-
-After detection, you can:
-
-- Accept the suggested configuration
-- Edit the configuration in your `$EDITOR` before saving
-- Cancel and configure manually
-
-Options:
-
-- `--preset <name>`: Apply a preset (`agentsmd`, `aider`, `cursor`, `claude`) for default targets.
-- `--target <path>`: Supply one or more custom target files.
-- `--additional-skills <path>`: Add extra skill directories (repeatable).
-- `--global-skills`: Include the global `~/.claude/skills/` directory.
-- `--template <path>`: Use a custom Handlebars template for rendered output.
-- `--include-instructions`: Embed full skill bodies instead of link lists.
-- `--no-sync`: Skip the initial synchronization run.
+- `--preset <name>`
+- `--target <directory>`
+- `--additional-skills <path>`
+- `--global-skills`
+- `--remote`
+- `--no-sync`
+- `--non-interactive`
 
 Examples:
 
 ```bash
-# Auto-detect environment and configure interactively
 skillz init
-
-# Use specific preset (skips detection)
-skillz init --preset cursor
-
-# Multiple environments
-skillz init --preset aider --global-skills
-
-# Custom target
-skillz init --target .cursor/rules/skills.mdc --template ./templates/company.hbs
-```
-
-### `skillz create`
-
-Create a new skill with a template `SKILL.md` file in your configured skill directory.
-
-**Interactive Mode (Recommended):**
-
-```bash
-skillz create -i
-```
-
-Launches an interactive prompt that guides you through creating a well-structured skill with:
-
-- Capabilities section
-- Guidelines section
-- Examples placeholder
-- Anti-patterns section (optional)
-
-**Quick Mode:**
-
-```bash
-skillz create <name> <description>
-```
-
-Creates a minimal skill with just frontmatter. You'll need to manually edit the SKILL.md file to add content.
-
-**Options:**
-
-- `-i, --interactive`: Launch interactive mode with guided prompts (recommended)
-- `--path <directory>`: Custom directory path (overrides config)
-- `--skill-version <semver>`: Skill version in semver format (default: `0.0.0`)
-
-The command automatically normalizes skill names by converting to lowercase, replacing underscores and spaces with hyphens, and removing special characters. The original name format is preserved in the SKILL.md frontmatter.
-
-**Examples:**
-
-```bash
-# Interactive mode - creates well-structured skill
-skillz create --interactive
-
-# Quick mode - minimal skill (requires manual editing)
-skillz create python-expert "Expert Python development assistance"
-skillz create bake_cake "Bake delicious cakes" --skill-version 1.0.0
-skillz create custom-skill "Custom location" --path ~/my-skills
-
-# Trigger interactive mode by omitting arguments
-skillz create
+skillz init --preset agentsmd
+skillz init --target vendor-skills --no-sync
+skillz init --preset agentsmd --global-skills
 ```
 
 ### `skillz sync`
 
-Scan configured skill directories and update every target file with the latest skills.
+Copy skills from configured sources into target directories.
 
 Options:
 
-- `--dry-run`: Show pending updates without touching the filesystem.
-- `--force`: Ignore change detection and rewrite targets even if nothing changed.
-- `--no-backup`: Skip automatic backup creation.
-- `--verbose`: Print detailed scanning and write activity.
-- `--only <skill>`: Restrict the sync to one or more named skills (repeatable).
+- `--dry-run`
+- `--force`
+- `--verbose`
+- `--only <skill-name>` (repeatable)
 
 Examples:
 
 ```bash
 skillz sync
 skillz sync --dry-run
+skillz sync --only python-expert
 skillz sync --only python-expert --only react-patterns --verbose
-```
-
-### `skillz watch`
-
-Watch configured skill directories and run `sync` when changes are detected.
-
-Options:
-
-- `--interval <ms>`: Polling interval in milliseconds (default: 1000).
-
-Examples:
-
-```bash
-skillz watch
-skillz watch --interval 500
 ```
 
 ### `skillz list`
 
-Display available skills in the configured directories.
+List discovered skills.
 
-Options:
+### `skillz create`
 
-- `--format <table|json|markdown>`: Choose the output format (`table` is default).
-- `--synced-only`: Limit the list to skills currently present in targets.
-- `--unsynced-only`: List skills that have not been synced yet.
+Create a new skill.
 
 Examples:
 
 ```bash
-skillz list
-skillz list --format json --unsynced-only
+skillz create python-expert "Expert Python assistance"
+skillz create --interactive
+skillz create test-skill "A test skill" --skill-version 1.2.3
 ```
 
 ### `skillz edit`
 
-Open an existing skill in your preferred editor for editing.
+Open an existing skill in your preferred editor.
 
-Usage:
+### `skillz info`
 
-```bash
-skillz edit <skill-name>
-```
+Show project configuration and discovered-skill counts.
 
-The command will:
+### `skillz watch`
 
-1. Find the skill by name (case-insensitive, handles hyphens/underscores interchangeably)
-2. Open it in your configured editor
-3. Automatically run `sync` after you close the editor (unless `autoSyncAfterEdit` is set to `false`)
+Watch configured skill directories and auto-sync on changes.
 
-**Editor Selection Priority:**
-
-1. `--editor` flag (if provided)
-2. `defaultEditor` from `skillz.json`
-3. `$EDITOR` environment variable
-4. `vi` (fallback)
-
-**Special Behavior:**
-
-- For VS Code and Cursor editors, opens the entire skill folder
-- For other editors, opens the `SKILL.md` file directly
-
-Options:
-
-- `--editor <name>`: Override the default editor for this session
-
-Examples:
-
-```bash
-# Edit using default editor
-skillz edit python-expert
-
-# Edit using specific editor
-skillz edit python-expert --editor code
-```
-
-**Configuration:**
-
-Set your preferred editor in `skillz.json`:
-
-```json
-{
-  "defaultEditor": "code",
-  "autoSyncAfterEdit": true
-}
-```
-
-Or set the `EDITOR` environment variable:
-
-```bash
-export EDITOR=vim
-```
-
-## Development Scripts
-
-- `npm run build`: Compile TypeScript sources to `dist/`.
-- `npm run dev`: Compile TypeScript in watch mode to `dist/`.
-- `npm run test`: Run the Jest test suite.
-- `npm run lint`: Run ESLint.
-- `npm run format`: Run Prettier.
-
-## Local Development
-
-To run a local development build of the CLI:
-
-```bash
-npm install
-
-# terminal 1: keep TypeScript compiling into dist/
-npm run dev
-
-# terminal 2: run the CLI from the compiled output
-node dist/cli.js <command>
-```
-
-If you want the `skillz` binary on your PATH during development:
+## Development
 
 ```bash
 npm run build
-npm link
-
-# now you can run:
-skillz <command>
+npm test
+npm run lint
+npm run format
 ```
-
-## Contributing
-
-1. Fork the repository and create a branch for your changes.
-2. Run the unit and integration test suites (`npm run test`).
-3. Open a pull request with a clear description of the problem and proposed solution.
-
-## License
-
-Skillz CLI is released under the Apache License. See `LICENSE` for details.

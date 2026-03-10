@@ -7,25 +7,21 @@ Maintenance: When revising this doc you must follow instructions in
 
 ## Overview
 
-The sync command collects skills, checks whether anything changed, and applies
-updates to each configured target. File targets use managed-section syncing by
-default, while native targets copy skill directories. When
-`deleteExistingFromTarget` is enabled for a native target, stale skill
-directories are removed before copying.
+The sync command collects skills, checks whether anything changed, validates target
+directories, and copies skills into each configured target. Sync is native-only.
+When `deleteExistingFromTarget` is enabled, stale copied skill directories are
+removed before the new copy pass.
 
 **Related Documents:**
-- `docs/project/architecture/template-architecture.md`
 - `docs/project/architecture/current/flow-cache.md`
 
 ## Terminology
 
-- **Target**: An entry in `skillz.json` that receives synced skills.
-- **File target**: Writes a managed section into a target file via templates.
-- **Native mode**: Copies skill directories into a destination directory.
-- **Managed section**: The section in a target file managed by Skillz.
-- **deleteExistingFromTarget**: Native-only option that deletes stale skill
-  directories under the target before copying.
-- **Cache**: `.skillz-cache.json` used to detect changes and allow safe overwrites.
+- **Target**: A directory entry in `skillz.json` that receives copied skills.
+- **Native sync**: Copy skill directories into a destination directory.
+- **Cache**: `.skillz-cache.json`, used to detect config and skill changes.
+- **deleteExistingFromTarget**: Optional cleanup flag that removes stale copied
+  skills before copying the current set.
 
 ## Flow
 
@@ -33,14 +29,12 @@ directories are removed before copying.
 - `src/commands/sync.ts`
 ```text
 load config (skillz.json); exit if missing
-apply --path-style and --template overrides
-if deleteExistingFromTarget is set on a non-native target -> error and exit
 scan skill directories and parse SKILL.md files
 if two skills share the same folder name:
   keep the first discovered skill
   warn and skip later duplicates
-  scan order follows config.skillDirectories then additionalSkills (directory entry order per filesystem)
-if no skills -> warn and return
+if no skills:
+  warn and return unless cache exists
 apply --only filter if provided
 load cache (.skillz-cache.json)
 if not --force and cache exists:
@@ -48,51 +42,34 @@ if not --force and cache exists:
   detect skill changes vs cache
   if no config change and no skill change -> success and return
 if --dry-run:
-  print what would sync and return
+  print what would copy and return
 ```
 **File(s)**: `src/commands/sync.ts`, `src/core/skill-scanner.ts`, `src/core/cache-manager.ts`, `src/core/change-detector.ts`
 
-### Validate native targets
+### Validate target directories
 - `src/core/target-manager.ts`
 ```text
-for each native target:
+for each target:
+  ensure target path is not an existing file
   for each skill:
-    if path exists and is not a skill dir (SKILL.md) and not in cache -> conflict
-if any conflict -> throw, sync aborts
+    if target/<skill.name> exists and is not a skill directory and not in cache -> conflict
+if any conflict -> throw and abort sync
 ```
 **File(s)**: `src/commands/sync.ts`, `src/core/target-manager.ts`, `src/utils/fs-helpers.ts`
 
-### Sync per target
+### Copy per target
 - `src/commands/sync.ts`
 ```text
 for each target:
-  syncMode = resolveTargetSyncMode(target, config)
-  if file:
-    read target file and extract managed section
-    validate no duplicate section headers
-    render skills with template + pathStyle
-    replace managed section or append if missing
-  if native:
-    ensure target directory exists
-    if deleteExistingFromTarget:
-      list directories under target
-      delete directories that contain SKILL.md but are not in the current skill set
-    for each skill:
-      remove existing target/<skill.name>
-      copy source skill dir to target/<skill.name>
+  ensure target directory exists
+  if deleteExistingFromTarget:
+    list directories under target
+    delete directories that contain SKILL.md but are not in the current skill set
+  for each skill:
+    remove existing target/<skill.name>
+    copy source skill dir to target/<skill.name>
 ```
-**File(s)**: `src/commands/sync.ts`, `src/core/target-manager.ts`, `src/core/template-engine.ts`
-
-### deleteExistingFromTarget behavior details
-- `src/core/target-manager.ts`
-```text
-only allowed when syncMode is native (validated before scanning)
-uses cleanupSkills passed from syncCommand (full scan, not --only)
-checks directory names against skill names
-only deletes directories that contain SKILL.md
-removes with fs.rm({ recursive: true, force: true })
-```
-**File(s)**: `src/commands/sync.ts`, `src/core/target-manager.ts`, `src/utils/fs-helpers.ts`
+**File(s)**: `src/commands/sync.ts`, `src/core/target-manager.ts`
 
 ### Cache update
 - `src/core/cache-manager.ts`
@@ -103,19 +80,19 @@ after successful sync, write .skillz-cache.json with config hash + skill hashes
 
 ## Architecture Diagram
 
-```
+```text
 skillz sync
   |
   v
 load config -> scan skills -> diff cache -> dry run?
   |
   v
-validate native targets
+validate target directories
   |
   v
 for each target
-  |-- file: render template -> write managed section
-  |-- native: optional stale cleanup -> copy skill dirs
+  |-- optional stale cleanup
+  |-- copy skill dirs
   v
 update cache
 ```
@@ -123,9 +100,9 @@ update cache
 ## Future Considerations
 
 ### Open Questions
-- Should duplicate skill names be a hard error instead of a warning in sync flow?
+- Should duplicate skill names become a hard error instead of a warning?
 - Do we need deterministic directory entry ordering to avoid non-repeatable "first wins" behavior?
 
 ### Potential Improvements
-- Add a preflight report summarizing skipped duplicate skills with their source directories.
-- Offer a config option to prefer later duplicates or fail fast when collisions are detected.
+- Add a preflight report summarizing skipped duplicate skills with source directories.
+- Offer a config option to fail fast when duplicate skill names are discovered.

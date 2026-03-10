@@ -14,14 +14,11 @@ export interface Skill {
 }
 
 /**
- * Target file configuration with optional per-target overrides
+ * Target directory configuration
  */
 export interface Target {
   destination: string;
-  template?: string;
   preset?: 'agentsmd' | 'aider' | 'cursor' | 'claude';
-  pathStyle?: 'relative' | 'absolute';
-  syncMode?: 'native';
   deleteExistingFromTarget?: boolean;
 }
 
@@ -35,12 +32,8 @@ export interface Config {
   skillDirectories: SkillDirectory[];
   additionalSkills: string[];
   ignore: string[];
-  skillsSectionName: string;
   defaultEditor?: string;
   autoSyncAfterEdit?: boolean;
-  template?: string;
-  pathStyle?: 'relative' | 'absolute';
-  syncMode?: 'native';
 }
 
 export interface SkillDirectory {
@@ -70,19 +63,6 @@ export interface SkillCacheEntry {
   path: string;
   relativePath: string;
   lastModified: string;
-}
-
-/**
- * Managed section extracted from target file
- */
-export interface ManagedSection {
-  startLine: number;
-  endLine: number;
-  content: string;
-  metadata: {
-    lastSync: string;
-    sources: string[];
-  };
 }
 
 /**
@@ -147,34 +127,10 @@ export interface DetectedConfig {
 }
 
 /**
- * Target file content structure
- */
-export interface TargetContent {
-  fullContent: string;
-  managedSection: ManagedSection | null;
-  hasManualEdits: boolean;
-}
-
-/**
  * CLI result for testing
  */
 export interface CliResult {
   exitCode: number;
   stdout: string;
   stderr: string;
-}
-
-/**
- * Template data for rendering skills
- */
-export interface TemplateData {
-  skills: Array<{
-    name: string;
-    description: string;
-    path: string;
-    content?: string;
-  }>;
-  lastSync: string;
-  sources: string[];
-  sectionName: string;
 }

@@ -5,29 +5,70 @@ import { validateConfig } from '../utils/validation.js';
 import { debug, info, success } from '../utils/logger.js';
 
 const CONFIG_FILE = 'skillz.json';
+const DEFAULT_TARGET_DIRECTORY = '.skills';
+const LEGACY_FILE_TARGETS = new Set([
+  'AGENTS.md',
+  '.cursorrules',
+  '.cursor/rules/skills.mdc',
+  'CLAUDE.md',
+  '.claude/CLAUDE.md',
+  '.aider/conventions.md',
+]);
+const FILE_TARGET_PATTERN = /\.(md|mdc|txt)$/i;
+const UNSUPPORTED_SYNC_MODE_MESSAGE =
+  'Prompt mode is no longer supported. Update your targets to directories such as ".skills" and remove syncMode/template/pathStyle settings.';
+
+type RawTarget =
+  | Target
+  | {
+      name?: string;
+      destination?: string;
+      preset?: Target['preset'];
+      syncMode?: string;
+      deleteExistingFromTarget?: boolean;
+      template?: string;
+      pathStyle?: string;
+    }
+  | string;
+
+type RawSkillDirectory = SkillDirectory | string;
+
+type RawConfig = {
+  version?: string;
+  preset?: Config['preset'];
+  targets?: RawTarget[];
+  skillDirectories?: RawSkillDirectory[];
+  additionalSkills?: unknown;
+  ignore?: unknown;
+  defaultEditor?: unknown;
+  autoSyncAfterEdit?: unknown;
+  syncMode?: string;
+  template?: string;
+  pathStyle?: string;
+  skillsSectionName?: string;
+};
 
 /**
  * Load configuration from file
  */
 export async function loadConfig(cwd: string): Promise<Config | null> {
-  let config = await detectExistingConfig(cwd);
+  const rawConfig = await detectExistingConfig(cwd);
 
-  if (!config) {
+  if (!rawConfig) {
     return null;
   }
 
-  // Auto-migrate legacy target formats and version 1.0 configs
-  if (needsMigration(config)) {
-    info('Migrating skillz.json to new target format...');
-    config = migrateConfig(config);
-    await saveConfig(config, cwd);
-    success('Configuration migrated successfully');
-  }
-
+  const config = normalizeConfig(rawConfig);
   const validation = validateConfig(config);
 
   if (!validation.success) {
     throw new Error(`Invalid configuration: ${JSON.stringify(validation.error.errors)}`);
+  }
+
+  if (JSON.stringify(rawConfig) !== JSON.stringify(config)) {
+    info('Migrating skillz.json to native-only config...');
+    await saveConfig(config, cwd);
+    success('Configuration migrated successfully');
   }
 
   return config;
@@ -37,14 +78,15 @@ export async function loadConfig(cwd: string): Promise<Config | null> {
  * Save configuration to file
  */
 export async function saveConfig(config: Config, cwd: string): Promise<void> {
-  const validation = validateConfig(config);
+  const normalizedConfig = normalizeConfig(config);
+  const validation = validateConfig(normalizedConfig);
 
   if (!validation.success) {
     throw new Error(`Invalid configuration: ${JSON.stringify(validation.error.errors)}`);
   }
 
   const configPath = path.join(cwd, CONFIG_FILE);
-  const content = JSON.stringify(config, null, 2);
+  const content = JSON.stringify(normalizedConfig, null, 2);
   await safeWriteFile(configPath, content);
 }
 
@@ -58,18 +100,15 @@ export function getDefaultConfig(preset?: string): Config {
     skillDirectories: [{ localPath: '.claude/skills' }],
     additionalSkills: [],
     ignore: [],
-    skillsSectionName: '## Additional Instructions',
     defaultEditor: process.env.EDITOR || 'vi',
     autoSyncAfterEdit: true,
-    template: 'default',
-    pathStyle: 'relative',
   };
 
   if (preset === 'agentsmd') {
     return {
       ...baseConfig,
       preset: 'agentsmd',
-      targets: [{ destination: 'AGENTS.md' }],
+      targets: [{ destination: DEFAULT_TARGET_DIRECTORY }],
     };
   }
 
@@ -77,7 +116,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'aider',
-      targets: [{ destination: '.aider/conventions.md' }],
+      targets: [{ destination: DEFAULT_TARGET_DIRECTORY }],
     };
   }
 
@@ -85,7 +124,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'cursor',
-      targets: [{ destination: '.cursor/rules/skills.mdc' }],
+      targets: [{ destination: DEFAULT_TARGET_DIRECTORY }],
     };
   }
 
@@ -93,18 +132,17 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'claude',
-      targets: [{ destination: 'CLAUDE.md' }],
+      targets: [{ destination: DEFAULT_TARGET_DIRECTORY }],
     };
   }
 
-  // No preset: return empty targets for skill management only
   return baseConfig;
 }
 
 /**
- * Read existing configuration in directory if present
+ * Read existing raw configuration in directory if present
  */
-export async function detectExistingConfig(cwd: string): Promise<Config | null> {
+export async function detectExistingConfig(cwd: string): Promise<RawConfig | null> {
   const configPath = path.join(cwd, CONFIG_FILE);
   const exists = await fileExists(configPath);
 
@@ -119,7 +157,7 @@ export async function detectExistingConfig(cwd: string): Promise<Config | null> 
   }
 
   try {
-    return JSON.parse(content) as Config;
+    return JSON.parse(content) as RawConfig;
   } catch (error) {
     throw new Error(`Failed to parse config file: ${(error as Error).message}`);
   }
@@ -132,14 +170,7 @@ export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   const targets: Target[] = [];
   const skillDirectories: string[] = [];
 
-  const potentialTargets = [
-    'AGENTS.md',
-    '.cursorrules',
-    '.cursor/rules/skills.mdc',
-    'CLAUDE.md',
-    '.claude/CLAUDE.md',
-    '.aider/conventions.md',
-  ];
+  const potentialTargets = [DEFAULT_TARGET_DIRECTORY];
 
   for (const target of potentialTargets) {
     const targetPath = path.join(cwd, target);
@@ -176,123 +207,109 @@ export async function updateConfig(cwd: string, key: string, value: unknown): Pr
     throw new Error('No configuration file found. Run `skillz init` first.');
   }
 
-  // Update the config
   (config as unknown as Record<string, unknown>)[key] = value;
 
   await saveConfig(config, cwd);
 }
 
-/**
- * Check if config needs migration from legacy targets
- */
-export function needsMigration(config: unknown): boolean {
-  if (!config || typeof config !== 'object') {
-    return false;
+function normalizeConfig(rawConfig: unknown): Config {
+  if (!rawConfig || typeof rawConfig !== 'object') {
+    throw new Error('Invalid configuration: expected an object');
   }
 
-  const parsed = config as Record<string, unknown>;
+  const parsed = rawConfig as RawConfig;
 
-  if (parsed.version === '1.0') {
-    return true;
+  if (parsed.syncMode && parsed.syncMode !== 'native') {
+    throw new Error(UNSUPPORTED_SYNC_MODE_MESSAGE);
   }
-
-  const needsSkillDirectoryMigration =
-    Array.isArray(parsed.skillDirectories) &&
-    parsed.skillDirectories.some((dir) => typeof dir === 'string');
-
-  const needsTargetMigration =
-    Array.isArray(parsed.targets) &&
-    parsed.targets.some((target) => {
-      if (typeof target === 'string') {
-        return true;
-      }
-
-      if (typeof target === 'object' && target !== null) {
-        return !('destination' in target) && 'name' in target;
-      }
-
-      return false;
-    });
-
-  return needsSkillDirectoryMigration || needsTargetMigration;
-}
-
-type LegacyNameTarget = Omit<Target, 'destination'> & { name: string };
-type LegacyTarget = Target | LegacyNameTarget | string;
-type LegacySkillDirectory = SkillDirectory | string;
-type LegacyConfig = Omit<Config, 'targets' | 'skillDirectories'> & {
-  targets: LegacyTarget[];
-  skillDirectories?: LegacySkillDirectory[];
-};
-
-function normalizeSkillDirectories(
-  skillDirectories: LegacySkillDirectory[] = []
-): SkillDirectory[] {
-  return skillDirectories.map((dir) => (typeof dir === 'string' ? { localPath: dir } : dir));
-}
-
-/**
- * Migrate config from legacy targets to Target[] targets
- */
-export function migrateConfig(config: LegacyConfig): Config {
-  const targets = config.targets.map((target) => {
-    if (typeof target === 'string') {
-      return { destination: target };
-    }
-
-    const destination = 'destination' in target ? target.destination : target.name;
-    return {
-      destination,
-      template: target.template,
-      preset: target.preset,
-      pathStyle: target.pathStyle,
-      syncMode: target.syncMode,
-      deleteExistingFromTarget: target.deleteExistingFromTarget,
-    };
-  });
-
-  const skillDirectories = normalizeSkillDirectories(
-    Array.isArray(config.skillDirectories) ? config.skillDirectories : []
-  );
 
   return {
-    ...config,
-    version: config.version === '1.0' ? '2.0' : config.version,
-    targets,
-    skillDirectories,
+    version: parsed.version === '1.0' ? '2.0' : parsed.version ?? '2.0',
+    preset: parsed.preset,
+    targets: normalizeTargets(parsed.targets),
+    skillDirectories: normalizeSkillDirectories(parsed.skillDirectories),
+    additionalSkills: normalizeStringArray(parsed.additionalSkills),
+    ignore: normalizeStringArray(parsed.ignore),
+    defaultEditor:
+      typeof parsed.defaultEditor === 'string' ? parsed.defaultEditor : process.env.EDITOR || 'vi',
+    autoSyncAfterEdit:
+      typeof parsed.autoSyncAfterEdit === 'boolean' ? parsed.autoSyncAfterEdit : true,
   };
 }
 
-/**
- * Resolve template for a target (target-specific > global > default)
- */
-export function resolveTargetTemplate(target: Target, config: Config): string {
-  return target.template ?? config.template ?? 'default';
+function normalizeTargets(targets: RawTarget[] | undefined): Target[] {
+  if (!Array.isArray(targets)) {
+    return [];
+  }
+
+  return targets.map((target) => {
+    if (typeof target === 'string') {
+      return buildTarget(target, undefined, undefined);
+    }
+
+    const targetObject = target as Record<string, unknown>;
+    const destination =
+      typeof targetObject.destination === 'string'
+        ? targetObject.destination
+        : typeof targetObject.name === 'string'
+          ? targetObject.name
+          : '';
+    const syncMode =
+      typeof targetObject.syncMode === 'string' ? targetObject.syncMode : undefined;
+    const preset =
+      targetObject.preset === 'agentsmd' ||
+      targetObject.preset === 'aider' ||
+      targetObject.preset === 'cursor' ||
+      targetObject.preset === 'claude'
+        ? targetObject.preset
+        : undefined;
+    const deleteExistingFromTarget =
+      typeof targetObject.deleteExistingFromTarget === 'boolean'
+        ? targetObject.deleteExistingFromTarget
+        : undefined;
+
+    if (syncMode && syncMode !== 'native') {
+      throw new Error(UNSUPPORTED_SYNC_MODE_MESSAGE);
+    }
+
+    return buildTarget(destination, preset, deleteExistingFromTarget);
+  });
 }
 
-/**
- * Resolve pathStyle for a target (target-specific > global > default)
- */
-export function resolveTargetPathStyle(target: Target, config: Config): 'relative' | 'absolute' {
-  return target.pathStyle ?? config.pathStyle ?? 'relative';
+function normalizeSkillDirectories(skillDirectories: RawSkillDirectory[] = []): SkillDirectory[] {
+  return skillDirectories.map((dir) => (typeof dir === 'string' ? { localPath: dir } : dir));
 }
 
-/**
- * Resolve preset for a target (target-specific > global)
- */
-export function resolveTargetPreset(
-  target: Target,
-  config: Config
-): 'agentsmd' | 'aider' | 'cursor' | 'claude' | undefined {
-  return target.preset ?? config.preset;
+function buildTarget(
+  destination: string,
+  preset: Target['preset'],
+  deleteExistingFromTarget: boolean | undefined
+): Target {
+  if (!destination) {
+    throw new Error('Invalid configuration: target destination is required');
+  }
+
+  if (isLegacyFileTarget(destination)) {
+    throw new Error(
+      `Legacy file target "${destination}" is no longer supported. Update the target to a directory such as "${DEFAULT_TARGET_DIRECTORY}".`
+    );
+  }
+
+  return {
+    destination,
+    preset,
+    deleteExistingFromTarget,
+  };
 }
 
-/**
- * Resolve sync behavior for a target (target-specific > global > default)
- */
-export function resolveTargetSyncMode(target: Target, config: Config): 'file' | 'native' {
-  return target.syncMode === 'native' ||
-    (target.syncMode === undefined && config.syncMode === 'native')
-    ? 'native'
-    : 'file';
+function normalizeStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function isLegacyFileTarget(destination: string): boolean {
+  const normalized = destination.replaceAll('\\', '/').replace(/\/+$/, '');
+  const basename = path.posix.basename(normalized);
+  return LEGACY_FILE_TARGETS.has(normalized) || FILE_TARGET_PATTERN.test(basename);
 }

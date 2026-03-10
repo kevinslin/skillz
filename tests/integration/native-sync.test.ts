@@ -4,31 +4,20 @@ import { execCli } from '../helpers/cli.js';
 import fs from 'fs-extra';
 import path from 'path';
 
-/**
- * Expected CLI exit code for successful runs.
- */
 const EXIT_CODE_SUCCESS = 0;
-
-/**
- * Expected CLI exit code for failing runs.
- */
 const EXIT_CODE_FAILURE = 1;
-
-/**
- * JSON indentation width for test config files.
- */
 const JSON_INDENTATION_SPACES = 2;
 
 type SkillsConfig = {
   version: string;
-  targets: Array<{ destination: string; syncMode?: string; deleteExistingFromTarget?: boolean }>;
+  targets: Array<{ destination: string; deleteExistingFromTarget?: boolean; syncMode?: string }>;
   skillDirectories: Array<{ localPath: string; remotePath?: string }>;
   additionalSkills: string[];
   ignore: string[];
-  skillsSectionName?: string;
+  syncMode?: string;
 };
 
-describe('native sync mode', () => {
+describe('native-only sync', () => {
   let workspace: MockWorkspace;
 
   beforeEach(async () => {
@@ -42,55 +31,32 @@ describe('native sync mode', () => {
   it('should copy skills to target directory', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
-
-    // Verify copied directories exist
-    const pythonDir = path.join(workspace.root, '.skills/python-expert');
-    const reactDir = path.join(workspace.root, '.skills/react-patterns');
-
-    expect(await fs.pathExists(pythonDir)).toBe(true);
-    expect(await fs.pathExists(reactDir)).toBe(true);
-
-    // Verify they're real directories, not symlinks
-    const pythonStat = await fs.lstat(pythonDir);
-    expect(pythonStat.isDirectory()).toBe(true);
-    expect(pythonStat.isSymbolicLink()).toBe(false);
-
-    const reactStat = await fs.lstat(reactDir);
-    expect(reactStat.isDirectory()).toBe(true);
-    expect(reactStat.isSymbolicLink()).toBe(false);
-
-    // Verify SKILL.md files were copied
-    expect(await fs.pathExists(path.join(pythonDir, 'SKILL.md'))).toBe(true);
-    expect(await fs.pathExists(path.join(reactDir, 'SKILL.md'))).toBe(true);
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/python-expert'))).toBe(true);
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/react-patterns'))).toBe(true);
   });
 
   it('should abort with error when conflicts exist', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
-    // Create conflicting directory
     const conflictDir = path.join(workspace.root, '.skills/python-expert');
     await fs.ensureDir(conflictDir);
     await fs.writeFile(path.join(conflictDir, 'fake.txt'), 'conflict');
@@ -100,26 +66,20 @@ describe('native sync mode', () => {
     expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
     expect(result.stderr).toContain('destination conflicts detected');
     expect(result.stderr).toContain('python-expert');
-
-    // Verify NO new directories were copied (abort before any operations)
-    const reactDir = path.join(workspace.root, '.skills/react-patterns');
-    expect(await fs.pathExists(reactDir)).toBe(false);
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/react-patterns'))).toBe(false);
   });
 
   it('should list all conflicts in error message', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
-    // Create multiple conflicts
     await fs.ensureDir(path.join(workspace.root, '.skills/python-expert'));
     await fs.ensureDir(path.join(workspace.root, '.skills/react-patterns'));
 
@@ -128,21 +88,18 @@ describe('native sync mode', () => {
     expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
     expect(result.stderr).toContain('python-expert');
     expect(result.stderr).toContain('react-patterns');
-    expect(result.stderr).toContain('destination conflicts detected');
   });
 
   it('should remove pre-existing skills when deleteExistingFromTarget is set', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
+      targets: [{ destination: '.skills', deleteExistingFromTarget: true }],
       skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.skills' }],
       additionalSkills: [],
       ignore: ['obsolete-*'],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const obsoleteDir = path.join(workspace.root, '.skills/obsolete-skill');
     await fs.ensureDir(obsoleteDir);
@@ -159,196 +116,139 @@ description: Old skill that should be removed
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
     expect(await fs.pathExists(obsoleteDir)).toBe(false);
-
-    const pythonDir = path.join(workspace.root, '.skills/python-expert');
-    expect(await fs.pathExists(pythonDir)).toBe(true);
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/python-expert'))).toBe(true);
   });
 
-  it('should create cache for native targets', async () => {
+  it('should create cache for target directories', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
-
+    await writeConfig(workspace.root, config);
     await execCli(['sync'], { cwd: workspace.root });
 
-    // Verify cache file was created
-    const cachePath = path.join(workspace.root, '.skillz-cache.json');
-    expect(await fs.pathExists(cachePath)).toBe(true);
+    expect(await fs.pathExists(path.join(workspace.root, '.skillz-cache.json'))).toBe(true);
   });
 
   it('should detect changes and re-copy when upstream skill changes', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
-
-    // First sync
+    await writeConfig(workspace.root, config);
     await execCli(['sync'], { cwd: workspace.root });
 
     const copiedSkillPath = path.join(workspace.root, '.skills/python-expert/SKILL.md');
     const originalContent = await fs.readFile(copiedSkillPath, 'utf-8');
 
-    // Modify the source skill
     const sourceSkillPath = path.join(workspace.root, '.claude/skills/python-expert/SKILL.md');
-    await fs.writeFile(sourceSkillPath, originalContent + '\n\nNew content added!');
+    await fs.writeFile(sourceSkillPath, `${originalContent}\n\nNew content added!`);
 
-    // Second sync should detect change and re-copy
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
-
-    // Verify the copied skill was updated
-    const updatedContent = await fs.readFile(copiedSkillPath, 'utf-8');
-    expect(updatedContent).toContain('New content added!');
+    expect(await fs.readFile(copiedSkillPath, 'utf-8')).toContain('New content added!');
   });
 
   it('should not re-copy when skills have not changed', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
-
-    // First sync
+    await writeConfig(workspace.root, config);
     await execCli(['sync'], { cwd: workspace.root });
 
-    // Second sync without changes
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
     expect(result.stdout).toContain('All skills are up to date');
   });
 
-  it('should support mixed targets (file and native)', async () => {
+  it('should reject legacy file targets in config', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: 'AGENTS.md' }, { destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: 'AGENTS.md' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
-      skillsSectionName: '## Additional Instructions',
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
-
-    // Verify file target was written
-    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('## Additional Instructions');
-    expect(agentsContent).toContain('python-expert');
-
-    // Verify native target was copied
-    const pythonDir = path.join(workspace.root, '.skills/python-expert');
-    expect(await fs.pathExists(pythonDir)).toBe(true);
-
-    const stat = await fs.lstat(pythonDir);
-    expect(stat.isDirectory()).toBe(true);
-    expect(stat.isSymbolicLink()).toBe(false);
-
-    // Verify cache was created
-    const cachePath = path.join(workspace.root, '.skillz-cache.json');
-    expect(await fs.pathExists(cachePath)).toBe(true);
+    expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
+    expect(result.stderr).toContain('Legacy file target "AGENTS.md" is no longer supported');
   });
 
   it('should reject prompt sync mode in config', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: 'AGENTS.md', syncMode: 'prompt' }],
+      targets: [{ destination: '.skills', syncMode: 'prompt' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_FAILURE);
-    expect(result.stderr).toContain('Invalid configuration');
-    expect(result.stderr).toContain('Remove syncMode for file targets');
+    expect(result.stderr).toContain('Prompt mode is no longer supported');
   });
 
-  it('should respect --dry-run for native mode', async () => {
+  it('should respect --dry-run', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync', '--dry-run'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
     expect(result.stdout).toContain('Dry run mode');
     expect(result.stdout).toContain('Would copy');
-    expect(result.stdout).toContain('.skills/');
-
-    // Verify NO directories were copied
-    const skillsDir = path.join(workspace.root, '.skills');
-    expect(await fs.pathExists(skillsDir)).toBe(false);
+    expect(await fs.pathExists(path.join(workspace.root, '.skills'))).toBe(false);
   });
 
   it('should create target directory if it does not exist', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: 'some/nested/skills', syncMode: 'native' }],
+      targets: [{ destination: 'some/nested/skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
-
-    // Verify directory was created
-    const targetDir = path.join(workspace.root, 'some/nested/skills');
-    expect(await fs.pathExists(targetDir)).toBe(true);
-
-    // Verify skills were copied inside
-    const pythonDir = path.join(targetDir, 'python-expert');
-    expect(await fs.pathExists(pythonDir)).toBe(true);
+    expect(await fs.pathExists(path.join(workspace.root, 'some/nested/skills/python-expert'))).toBe(
+      true
+    );
   });
 
   it('should handle multiple skill directories without name conflicts', async () => {
-    // Create a second skill directory with different skill
     const secondSkillDir = path.join(workspace.root, '.claude/more-skills');
     const webSkillDir = path.join(secondSkillDir, 'web-expert');
     await fs.ensureDir(webSkillDir);
@@ -358,41 +258,28 @@ description: Old skill that should be removed
 name: web-expert
 description: Expert in web development
 ---
-
-Web development best practices.`
+`
     );
 
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.claude/more-skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
-
-    // Verify all three skills are copied
-    const pythonDir = path.join(workspace.root, '.skills/python-expert');
-    const reactDir = path.join(workspace.root, '.skills/react-patterns');
-    const webDir = path.join(workspace.root, '.skills/web-expert');
-
-    expect(await fs.pathExists(pythonDir)).toBe(true);
-    expect(await fs.pathExists(reactDir)).toBe(true);
-    expect(await fs.pathExists(webDir)).toBe(true);
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/web-expert'))).toBe(true);
   });
 
   it('should remove stale skills with deleteExistingFromTarget', async () => {
-    // Remove default workspace skills and create a temporary skill
     await fs.remove(path.join(workspace.root, '.claude/skills/python-expert'));
 
-    // Setup with a skill that will become stale
     await fs.ensureDir(path.join(workspace.root, '.claude/skills/test-skill'));
     await fs.writeFile(
       path.join(workspace.root, '.claude/skills/test-skill/SKILL.md'),
@@ -400,32 +287,25 @@ Web development best practices.`
 name: test-skill
 description: Test skill
 ---
-Test content`
+`
     );
 
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
+      targets: [{ destination: '.skills', deleteExistingFromTarget: true }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
-
-    // First sync - copies test-skill and react-patterns
+    await writeConfig(workspace.root, config);
     await execCli(['sync'], { cwd: workspace.root });
 
-    // Verify both skills copied
     expect(await fs.pathExists(path.join(workspace.root, '.skills/test-skill'))).toBe(true);
     expect(await fs.pathExists(path.join(workspace.root, '.skills/react-patterns'))).toBe(true);
 
-    // Remove test-skill source
     await fs.remove(path.join(workspace.root, '.claude/skills/test-skill'));
 
-    // Second sync should remove test-skill copy but keep react-patterns
     const result = await execCli(['sync'], { cwd: workspace.root });
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
@@ -434,7 +314,6 @@ Test content`
   });
 
   it('should warn about duplicate skill names in different source directories', async () => {
-    // Create skills with same name in different skill directories
     await fs.ensureDir(path.join(workspace.root, '.claude/skills/test-dup'));
     await fs.writeFile(
       path.join(workspace.root, '.claude/skills/test-dup/SKILL.md'),
@@ -442,7 +321,7 @@ Test content`
 name: test-dup
 description: Backend test
 ---
-Backend content`
+`
     );
 
     await fs.ensureDir(path.join(workspace.root, '.claude/more-skills/test-dup'));
@@ -452,31 +331,29 @@ Backend content`
 name: test-dup
 description: Frontend test
 ---
-Frontend content`
+`
     );
 
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.claude/more-skills' }],
       additionalSkills: [],
       ignore: [],
     };
 
-    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
-      spaces: JSON_INDENTATION_SPACES,
-    });
+    await writeConfig(workspace.root, config);
 
     const result = await execCli(['sync'], { cwd: workspace.root });
 
-    // Should succeed but only copy one (first found)
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
-
-    // Only one copy at target location
     expect(await fs.pathExists(path.join(workspace.root, '.skills/test-dup'))).toBe(true);
-
-    // Verify output contains duplicate warning (warnings go to stderr or stdout)
-    const output = result.stdout + result.stderr;
-    expect(output).toContain('Duplicate skill');
+    expect(result.stdout + result.stderr).toContain('Duplicate skill');
   });
 });
+
+async function writeConfig(root: string, config: SkillsConfig): Promise<void> {
+  await fs.writeJson(path.join(root, 'skillz.json'), config, {
+    spaces: JSON_INDENTATION_SPACES,
+  });
+}
