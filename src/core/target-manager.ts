@@ -14,6 +14,16 @@ import {
 import { debug, info } from '../utils/logger.js';
 import { renderSkills } from './template-engine.js';
 
+export const SKILLS_SECTION_NAME = '## Skills';
+
+function validateManagedSectionHeading(content: string): void {
+  const firstContentLine = content.split('\n').find((line) => line.trim().length > 0);
+
+  if (firstContentLine?.trim() !== SKILLS_SECTION_NAME) {
+    throw new Error(`Prompt templates must start with "${SKILLS_SECTION_NAME}".`);
+  }
+}
+
 /**
  * Resolve a directory path relative to cwd, expanding home when needed.
  */
@@ -44,14 +54,14 @@ async function removeStaleSkillsFromTarget(targetDir: string, skills: Skill[]): 
 }
 
 /**
- * Find all occurrences of a section name in content
+ * Find all occurrences of the managed skills section in content
  */
-function findSectionOccurrences(content: string, sectionName: string): number[] {
+function findSkillsSectionOccurrences(content: string): number[] {
   const lines = content.split('\n');
   const occurrences: number[] = [];
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() === sectionName.trim()) {
+    if (lines[i].trim() === SKILLS_SECTION_NAME) {
       occurrences.push(i);
     }
   }
@@ -60,30 +70,30 @@ function findSectionOccurrences(content: string, sectionName: string): number[] 
 }
 
 /**
- * Validate that section name appears at most once
+ * Validate that the managed skills section appears at most once
  */
-export function validateNoDuplicateSections(content: string, sectionName: string): void {
-  const occurrences = findSectionOccurrences(content, sectionName);
+export function validateNoDuplicateSkillsSections(content: string): void {
+  const occurrences = findSkillsSectionOccurrences(content);
 
   if (occurrences.length > 1) {
     throw new Error(
-      `Section "${sectionName}" appears ${occurrences.length} times in the target file (lines: ${occurrences.map((n) => n + 1).join(', ')}). ` +
-        `Please manually remove duplicate sections or choose a different skillsSectionName in skillz.json.`
+      `Section "${SKILLS_SECTION_NAME}" appears ${occurrences.length} times in the target file (lines: ${occurrences.map((n) => n + 1).join(', ')}). ` +
+        `Please manually remove duplicate sections.`
     );
   }
 }
 
 /**
- * Extract managed section from content based on section name
+ * Extract managed skills section from content
  * Returns everything from the section heading to EOF
  */
-export function extractManagedSection(content: string, sectionName: string): ManagedSection | null {
+export function extractManagedSection(content: string): ManagedSection | null {
   const lines = content.split('\n');
   let startLine = -1;
 
   // Find the section heading
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() === sectionName.trim()) {
+    if (lines[i].trim() === SKILLS_SECTION_NAME) {
       startLine = i;
       break;
     }
@@ -112,12 +122,8 @@ export function extractManagedSection(content: string, sectionName: string): Man
  * Replace managed section in content
  * Replaces everything from the section heading to EOF, or appends if not found
  */
-export function replaceManagedSection(
-  content: string,
-  newSection: string,
-  sectionName: string
-): string {
-  const managedSection = extractManagedSection(content, sectionName);
+export function replaceManagedSection(content: string, newSection: string): string {
+  const managedSection = extractManagedSection(content);
   if (!managedSection) {
     // No existing section, append to end
     const trimmedContent = content.trim();
@@ -147,12 +153,9 @@ export async function createManagedSection(
 /**
  * Read target file
  */
-export async function readTargetFile(
-  filePath: string,
-  sectionName: string
-): Promise<TargetContent> {
+export async function readTargetFile(filePath: string): Promise<TargetContent> {
   const fullContent = await safeReadFile(filePath);
-  const managedSection = fullContent ? extractManagedSection(fullContent, sectionName) : null;
+  const managedSection = fullContent ? extractManagedSection(fullContent) : null;
 
   return {
     fullContent,
@@ -170,17 +173,14 @@ export async function writeTargetFile(
   config: Config,
   cwd: string
 ): Promise<void> {
-  const targetContent = await readTargetFile(target.destination, config.skillsSectionName);
+  const targetContent = await readTargetFile(target.destination);
   debug(`reading target file from ${target.destination}`);
   // Validate no duplicate sections before writing
-  validateNoDuplicateSections(targetContent.fullContent, config.skillsSectionName);
+  validateNoDuplicateSkillsSections(targetContent.fullContent);
 
   const newSection = await createManagedSection(skills, target, config, cwd);
-  const updatedContent = replaceManagedSection(
-    targetContent.fullContent,
-    newSection,
-    config.skillsSectionName
-  );
+  validateManagedSectionHeading(newSection);
+  const updatedContent = replaceManagedSection(targetContent.fullContent, newSection);
 
   await safeWriteFile(target.destination, updatedContent);
 }

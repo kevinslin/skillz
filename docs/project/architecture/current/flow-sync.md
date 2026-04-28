@@ -22,7 +22,7 @@ directories are removed before copying.
 - **Target**: An entry in `skillz.json` that receives synced skills.
 - **Prompt mode**: Writes a managed section into a target file via templates.
 - **Native mode**: Copies skill directories into a destination directory.
-- **Managed section**: The section in a target file managed by Skillz.
+- **Managed section**: The `## Skills` section in a target file managed by Skillz.
 - **deleteExistingFromTarget**: Native-only option that deletes stale skill
   directories under the target before copying.
 - **Cache**: `.skillz-cache.json` used to detect changes and allow safe overwrites.
@@ -71,6 +71,7 @@ for each target:
     read target file and extract managed section
     validate no duplicate section headers
     render skills with template + pathStyle
+    require rendered template to start with ## Skills
     replace managed section or append if missing
   if native:
     ensure target directory exists

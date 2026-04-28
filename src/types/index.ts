@@ -35,7 +35,6 @@ export interface Config {
   skillDirectories: SkillDirectory[];
   additionalSkills: string[];
   ignore: string[];
-  skillsSectionName: string;
   defaultEditor?: string;
   autoSyncAfterEdit?: boolean;
   template?: string;
@@ -176,5 +175,4 @@ export interface TemplateData {
   }>;
   lastSync: string;
   sources: string[];
-  sectionName: string;
 }

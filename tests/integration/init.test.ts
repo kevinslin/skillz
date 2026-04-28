@@ -84,7 +84,7 @@ describe('init command', () => {
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     const normalizedContent = agentsContent.replaceAll(workspace.root, '<workspace>');
 
-    expect(normalizedContent).toContain('## Additional Instructions');
+    expect(normalizedContent).toContain('## Skills');
     expect(normalizedContent).toContain('python-expert');
     expect(normalizedContent).toContain('react-patterns');
     expect(normalizedContent).toMatchSnapshot();
@@ -215,7 +215,7 @@ describe('init command', () => {
     const templatePath = path.join(workspace.root, 'custom-template.hbs');
     await fs.writeFile(
       templatePath,
-      `# Custom Skills
+      `## Skills
 
 {{#each skills}}
 - [{{name}}]({{path}}): {{description}}
@@ -243,7 +243,9 @@ describe('init command', () => {
     const templatePath = path.join(workspace.root, 'custom-template.hbs');
     await fs.writeFile(
       templatePath,
-      `# Custom Skills List
+      `## Skills
+
+Custom skills list:
 
 {{#each skills}}
 * **{{name}}** - {{description}}
@@ -270,7 +272,7 @@ Last synced: {{lastSync}}
 
     // Verify the AGENTS.md file contains the custom template format
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('# Custom Skills List');
+    expect(agentsContent).toContain('Custom skills list:');
     expect(agentsContent).toContain('* **python-expert**');
     expect(agentsContent).toContain('* **react-patterns**');
     expect(agentsContent).toContain('Last synced:');

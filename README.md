@@ -36,7 +36,7 @@ skillz sync
 After syncing, the CLI maintains a managed section in your target file(s). For example, in `AGENTS.md`:
 
 ```markdown
-## Additional Instructions
+## Skills
 
 You now have access to Skills. Skills are specialized instruction sets...
 [comprehensive skill usage instructions]
@@ -82,7 +82,6 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   ],
   "additionalSkills": ["~/my-custom-skills"],
   "ignore": ["*.test", "experimental-*"],
-  "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "code",
   "autoSyncAfterEdit": true,
   "template": "default",
@@ -117,8 +116,6 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
   - `"claude"` - For Claude Code `CLAUDE.md`
   - Can be omitted for custom configurations.
 
-- `skillsSectionName` (string): Heading name for the managed section in target files. Default: `"## Additional Instructions"`.
-
 - `defaultEditor` (string): Default editor for `skillz edit` command. Falls back to `$EDITOR` environment variable or `vi`. Examples: `"code"`, `"vim"`, `"nano"`, `"cursor"`.
 
 - `autoSyncAfterEdit` (boolean): Automatically run `sync` after editing a skill. Default: `true`.
@@ -126,7 +123,7 @@ The CLI stores project settings in `skillz.json`. Here's a complete reference sh
 - `template` (string): Template to use when syncing. Possible values:
   - `"default"` - Full skill instructions for LLMs (default)
   - `"readme"` - Minimal, human-readable skill links
-  - Custom template path (e.g., `"./templates/custom.hbs"` or absolute path)
+  - Custom template path (e.g., `"./templates/custom.hbs"` or absolute path). Prompt templates must start with `## Skills`.
 
 - `pathStyle` (string): Path style for skill links in synced files. Possible values:
   - `"relative"` - Relative paths (default, more portable)
@@ -172,7 +169,7 @@ The default `syncMode: "prompt"` writes skill instructions directly into your ta
 When synced, skills appear in your target file like this:
 
 ```markdown
-## Additional Instructions
+## Skills
 
 [Skill usage instructions...]
 

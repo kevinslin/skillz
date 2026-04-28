@@ -112,12 +112,12 @@ Quick summary:
 **src/core/target-manager.ts**
 
 - `writeTargetFile(target, skills, config, cwd)` - Injects managed section (prompt mode)
-- `extractManagedSection()` - Finds section by heading name
+- `extractManagedSection()` - Finds the canonical `## Skills` section
 - `replaceManagedSection()` - Replaces content from section heading to EOF
 - `validateNativeTargets(targets, skills, cwd, cachedSkills)` - Pre-flight validation for native mode conflicts (allows overwriting existing skill directories, but blocks non-skill files/dirs)
 - `copySkillsToTarget(target, skills, cwd)` - Copies skills to target directory (native mode)
 - Managed section format (prompt mode):
-  - Starts with configurable heading (e.g., `## Additional Instructions`)
+  - Starts with `## Skills`
   - Contains rendered skill content from templates
   - Extends to end of file
   - Content before the section heading is preserved
@@ -185,7 +185,7 @@ it('should sync skills', async () => {
   expect(result.exitCode).toBe(0);
 
   const content = await fs.readFile(workspace.agentsFile, 'utf-8');
-  expect(content).toContain('## Additional Instructions');
+  expect(content).toContain('## Skills');
   expect(content).toContain('Available Skills');
 });
 ```

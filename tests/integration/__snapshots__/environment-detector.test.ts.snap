@@ -3,7 +3,7 @@
 exports[`environment-detector should detect AGENTS.md environment 1`] = `
 "# Existing agents file
 
-## Additional Instructions
+## Skills
 
 You now have access to Skills. Skills are specialized instruction sets stored as markdown files that extend your capabilities. When a task matches a skill's purpose, load and follow that skill's instructions.
 
@@ -47,7 +47,7 @@ Below is the list of skills you can access. Load a skill by reading its SKILL.md
 `;
 
 exports[`environment-detector should detect Cursor environment: skills.mdc 1`] = `
-"## Additional Instructions
+"## Skills
 
 You now have access to Skills. Skills are specialized instruction sets stored as markdown files that extend your capabilities. When a task matches a skill's purpose, load and follow that skill's instructions.
 

@@ -9,7 +9,7 @@ This file contains configuration for AI agents working on this project.
 
 This is a Python web application built with FastAPI and React.
 
-## Additional Instructions
+## Skills
 
 You now have access to Skills. Skills are specialized instruction sets stored as markdown files that extend your capabilities. When a task matches a skill's purpose, load and follow that skill's instructions.
 

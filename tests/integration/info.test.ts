@@ -99,7 +99,6 @@ describe('info command', () => {
         skillDirectories: ['.claude/skills'],
         additionalSkills: [],
         ignore: [],
-        skillsSectionName: '## Additional Instructions',
       },
       { spaces: 2 }
     );

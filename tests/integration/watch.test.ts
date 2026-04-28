@@ -142,7 +142,6 @@ This skill is used to validate config-driven watcher refreshes.
       const configPath = path.join(workspace.root, 'skillz.json');
       const config = (await fs.readJson(configPath)) as Record<string, unknown>;
       config.additionalSkills = ['extra-skills'];
-      config.skillsSectionName = '## Updated Skills';
       await fs.writeJson(configPath, config, { spaces: 2 });
 
       await watchProcess.waitForOutput(
@@ -166,7 +165,7 @@ This skill is used to validate config-driven watcher refreshes.
       );
 
       let agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-      expect(agentsContent).toContain('## Updated Skills');
+      expect(agentsContent).toContain('## Skills');
       expect(agentsContent).toContain('config-added-skill');
 
       config.additionalSkills = [];

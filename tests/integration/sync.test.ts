@@ -28,7 +28,7 @@ describe('sync command', () => {
     expect(result.exitCode).toBe(0);
 
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('## Additional Instructions');
+    expect(agentsContent).toContain('## Skills');
     expect(agentsContent).toContain('python-expert');
     expect(agentsContent).toContain('react-patterns');
   });
@@ -54,7 +54,7 @@ describe('sync command', () => {
     const updatedContent = await fs.readFile(workspace.agentsFile, 'utf-8');
     expect(updatedContent).toContain('My Project Agents');
     expect(updatedContent).toContain('Project Context');
-    expect(updatedContent).toContain('## Additional Instructions');
+    expect(updatedContent).toContain('## Skills');
   });
 
   it('should detect and sync only changed skills', async () => {
@@ -313,7 +313,7 @@ description: Nested skill that should be ignored
     expect(result.stdout).toContain('Filtering to 1 skill(s): python-expert');
 
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('## Additional Instructions');
+    expect(agentsContent).toContain('## Skills');
     expect(agentsContent).toContain('python-expert');
     // Should NOT contain react-patterns since we filtered to only python-expert
     expect(agentsContent).not.toContain('react-patterns');
@@ -384,10 +384,10 @@ description: Nested skill that should be ignored
     expect(noChangeResult.exitCode).toBe(0);
     expect(noChangeResult.stdout).toContain('All skills are up to date');
 
-    // Modify config (change section name)
+    // Modify config
     const configPath = path.join(workspace.root, 'skillz.json');
     const config = (await fs.readJson(configPath)) as Config;
-    config.skillsSectionName = '## Custom Skills Section';
+    config.pathStyle = 'absolute';
     await fs.writeJson(configPath, config, { spaces: 2 });
 
     // Sync again - should detect config change
@@ -448,7 +448,7 @@ description: Nested skill that should be ignored
     // Modify both config and a skill
     const configPath = path.join(workspace.root, 'skillz.json');
     const config = (await fs.readJson(configPath)) as Config;
-    config.skillsSectionName = '## Available Skills';
+    config.pathStyle = 'absolute';
     await fs.writeJson(configPath, config, { spaces: 2 });
 
     const pythonSkillPath = path.join(workspace.skillsDir, 'python-expert', 'SKILL.md');
@@ -626,7 +626,7 @@ description: Nested skill that should be ignored
       const content = await fs.readFile(workspace.agentsFile, 'utf-8');
       // README template should not have instructional text
       expect(content).not.toContain('You now have access to Skills');
-      expect(content).toContain('Available Skills');
+      expect(content).toContain('## Skills');
       expect(content).toContain('python-expert');
       expect(content).toContain('react-patterns');
     });
@@ -649,7 +649,7 @@ description: Nested skill that should be ignored
       const templatePath = path.join(workspace.root, 'custom.hbs');
       await fs.writeFile(
         templatePath,
-        '{{sectionName}}\n\nCustom template: {{skills.length}} skills found'
+        '## Skills\n\nCustom template: {{skills.length}} skills found'
       );
 
       const result = await execCli(['sync', '--template', './custom.hbs'], {

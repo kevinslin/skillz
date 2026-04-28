@@ -25,7 +25,6 @@ type SkillsConfig = {
   skillDirectories: Array<{ localPath: string; remotePath?: string }>;
   additionalSkills: string[];
   ignore: string[];
-  skillsSectionName?: string;
 };
 
 describe('native sync mode', () => {
@@ -250,7 +249,6 @@ description: Old skill that should be removed
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
-      skillsSectionName: '## Additional Instructions',
     };
 
     await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
@@ -263,7 +261,7 @@ description: Old skill that should be removed
 
     // Verify prompt target was written
     const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('## Additional Instructions');
+    expect(agentsContent).toContain('## Skills');
     expect(agentsContent).toContain('python-expert');
 
     // Verify native target was copied

@@ -283,7 +283,7 @@ The sync command maintains a managed section in the target file:
 
 ... your custom content ...
 
-## Additional Instructions
+## Skills
 
 You now have access to Skills. Skills are specialized instruction sets stored as markdown files...
 [comprehensive skill usage instructions]
@@ -297,7 +297,7 @@ Below is the list of skills you can access. Load a skill by reading its SKILL.md
 - [typescript-helper](.claude/skills/typescript-helper/SKILL.md): TypeScript type safety and advanced patterns
 ```
 
-The managed section starts at the configurable section heading (default: `## Additional Instructions`) and continues to the end of the file. Any content before this heading is preserved.
+The managed section starts at the canonical `## Skills` heading and continues to the end of the file. Any content before this heading is preserved.
 
 #### `skillz list [options]`
 
@@ -470,7 +470,9 @@ Handlebars templates in `src/templates/` (e.g., `skills-list.hbs`, `skills-full.
 
 ```handlebars
 {{! Default template: skills-list.hbs }}
-## Additional Instructions You can use skills. These are custom instructions that help you
+## Skills
+
+You can use skills. These are custom instructions that help you
 accomplish specific tasks. Your list of available skills below:
 
 {{#each skills}}
@@ -483,10 +485,10 @@ Users can provide custom templates via config or `--template`.
 
 ### Managed Section Structure
 
-Managed sections start at a configurable heading (default `## Additional Instructions`) and extend to EOF:
+Managed sections start at the canonical `## Skills` heading and extend to EOF:
 
 ```markdown
-## Additional Instructions
+## Skills
 
 You now have access to Skills...
 

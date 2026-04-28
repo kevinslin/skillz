@@ -15,7 +15,6 @@
   ],
   "additionalSkills": [],
   "ignore": [],
-  "skillsSectionName": "## Additional Instructions",
   "defaultEditor": "vim",
   "autoSyncAfterEdit": true,
   "template": "default",
