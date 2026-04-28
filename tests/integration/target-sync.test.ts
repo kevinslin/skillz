@@ -21,13 +21,13 @@ const JSON_INDENTATION_SPACES = 2;
 
 type SkillsConfig = {
   version: string;
-  targets: Array<{ destination: string; syncMode?: string; deleteExistingFromTarget?: boolean }>;
+  targets: Array<{ destination: string; deleteExistingFromTarget?: boolean }>;
   skillDirectories: Array<{ localPath: string; remotePath?: string }>;
   additionalSkills: string[];
   ignore: string[];
 };
 
-describe('native sync mode', () => {
+describe('target directory sync', () => {
   let workspace: MockWorkspace;
 
   beforeEach(async () => {
@@ -41,7 +41,7 @@ describe('native sync mode', () => {
   it('should copy skills to target directory', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -79,7 +79,7 @@ describe('native sync mode', () => {
   it('should abort with error when conflicts exist', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -108,7 +108,7 @@ describe('native sync mode', () => {
   it('should list all conflicts in error message', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -133,7 +133,7 @@ describe('native sync mode', () => {
   it('should remove pre-existing skills when deleteExistingFromTarget is set', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
+      targets: [{ destination: '.skills', deleteExistingFromTarget: true }],
       skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.skills' }],
       additionalSkills: [],
       ignore: ['obsolete-*'],
@@ -163,10 +163,10 @@ description: Old skill that should be removed
     expect(await fs.pathExists(pythonDir)).toBe(true);
   });
 
-  it('should create cache for native targets', async () => {
+  it('should create cache for targets', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -186,7 +186,7 @@ description: Old skill that should be removed
   it('should detect changes and re-copy when upstream skill changes', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -219,7 +219,7 @@ description: Old skill that should be removed
   it('should not re-copy when skills have not changed', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -239,13 +239,10 @@ description: Old skill that should be removed
     expect(result.stdout).toContain('All skills are up to date');
   });
 
-  it('should support mixed targets (some prompt, some native)', async () => {
+  it('should support multiple targets', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [
-        { destination: 'AGENTS.md', syncMode: 'prompt' },
-        { destination: '.skills', syncMode: 'native' },
-      ],
+      targets: [{ destination: '.skills' }, { destination: '.more-skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -259,14 +256,10 @@ description: Old skill that should be removed
 
     expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
 
-    // Verify prompt target was written
-    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('## Skills');
-    expect(agentsContent).toContain('python-expert');
-
-    // Verify native target was copied
     const pythonDir = path.join(workspace.root, '.skills/python-expert');
+    const secondTargetPythonDir = path.join(workspace.root, '.more-skills/python-expert');
     expect(await fs.pathExists(pythonDir)).toBe(true);
+    expect(await fs.pathExists(secondTargetPythonDir)).toBe(true);
 
     const stat = await fs.lstat(pythonDir);
     expect(stat.isDirectory()).toBe(true);
@@ -277,10 +270,10 @@ description: Old skill that should be removed
     expect(await fs.pathExists(cachePath)).toBe(true);
   });
 
-  it('should respect --dry-run for native mode', async () => {
+  it('should respect --dry-run for target directory sync', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -305,7 +298,7 @@ description: Old skill that should be removed
   it('should create target directory if it does not exist', async () => {
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: 'some/nested/skills', syncMode: 'native' }],
+      targets: [{ destination: 'some/nested/skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -345,7 +338,7 @@ Web development best practices.`
 
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.claude/more-skills' }],
       additionalSkills: [],
       ignore: [],
@@ -386,7 +379,7 @@ Test content`
 
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native', deleteExistingFromTarget: true }],
+      targets: [{ destination: '.skills', deleteExistingFromTarget: true }],
       skillDirectories: [{ localPath: '.claude/skills' }],
       additionalSkills: [],
       ignore: [],
@@ -438,7 +431,7 @@ Frontend content`
 
     const config: SkillsConfig = {
       version: '2.0',
-      targets: [{ destination: '.skills', syncMode: 'native' }],
+      targets: [{ destination: '.skills' }],
       skillDirectories: [{ localPath: '.claude/skills' }, { localPath: '.claude/more-skills' }],
       additionalSkills: [],
       ignore: [],

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**36 of 37 tests passing** | **All core functionality complete** | **4 commands remaining**
+**Core sync is directory-only** | **All active sync targets are skill directories**
 
 ### Recently Completed (Latest Session)
 
@@ -10,6 +10,7 @@
 - ✅ **No-target init**: Added support for `skillz init` with no preset/target for skill management only mode
 - ✅ **Validation update**: Relaxed config validation to allow empty targets array
 - ✅ **Documentation**: Updated all docs and tests to reflect skillz.json naming
+- ✅ **Target-file sync removal**: Removed section rendering and file sync
 
 ---
 
@@ -26,7 +27,7 @@
 
 ### ✅ Phase 2: Type Definitions and Core Interfaces
 
-- [x] Core TypeScript interfaces (Skill, Config, CacheFile, ManagedSection, SkillChange)
+- [x] Core TypeScript interfaces (Skill, Config, CacheFile, Target, SkillChange)
 - [x] Zod validation schemas
 - [x] Validation functions for config, cache, and skill frontmatter
 
@@ -50,19 +51,17 @@
 - [x] **skill-parser.ts**: Parse SKILL.md with gray-matter, validate structure, calculate hashes
 - [x] **skill-scanner.ts**: Recursive directory scanning, glob ignore patterns, duplicate detection
 
-### ✅ Phase 6: Template Engine
+### ✅ Phase 6: Skill Creation Templates
 
-- [x] **template-engine.ts**: Handlebars-based templating with caching
-- [x] **skills-list.hbs**: Default template (skill links)
-- [x] **skills-full.hbs**: Full content template
-- [x] Relative path calculation for skill links
+- [x] **skill-template-generator.ts**: Handlebars-based SKILL.md generation
+- [x] **skill-interactive.hbs**: Interactive skill creation template
 
-### ✅ Phase 7: Target File Management
+### ✅ Phase 7: Target Directory Management
 
-- [x] **target-manager.ts**: Extract/replace managed sections
-- [x] HTML comment delimiters for managed sections
-- [x] Preserve content outside managed section
-- [x] Atomic file writes
+- [x] **skill-target-manager.ts**: Validate target conflicts and copy skill directories
+- [x] Flatten copied skills by `skill.name`
+- [x] Remove stale copied skill directories with `deleteExistingFromTarget`
+- [x] Atomic config/cache file writes
 
 ### ✅ Phase 8: Change Detection
 
@@ -78,10 +77,9 @@
 
 - [x] Create `src/commands/init.ts`
 - [x] Preset handling (--preset agentsmd, aider)
-- [x] Custom target files (--target)
+- [x] Custom target directories (--target)
 - [x] Additional skill directories (--additional-skills)
 - [x] Global skills support (--global-skills)
-- [x] Template flags
 - [x] Auto-sync or --no-sync
 - [x] No-target mode for skill management only
 - [x] Add .skillz-cache.json to .gitignore
@@ -150,31 +148,23 @@
 - [ ] Register command in CLI
 - [ ] Write 4-5 integration tests
 
-### ❌ Phase 9.6: Watch Command - TODO
+### ✅ Phase 9.6: Watch Command - COMPLETE
 
-**Priority: Medium** | **Estimated: 60 mins**
+- [x] Create `src/commands/watch.ts`
+- [x] Implement polling watcher
+- [x] Implement debouncing logic
+- [x] Add --interval flag
+- [x] Handle SIGINT for graceful shutdown
+- [x] Auto-sync on changes
+- [x] Refresh watched roots after config changes
+- [x] Register command in CLI
+- [x] Write integration tests
 
-- [ ] Create `src/commands/watch.ts`
-- [ ] Set up chokidar file watcher
-- [ ] Implement debouncing logic
-- [ ] Add --interval flag
-- [ ] Add --no-debounce flag
-- [ ] Handle SIGINT for graceful shutdown
-- [ ] Auto-sync on changes
-- [ ] Register command in CLI
-- [ ] Write 4-5 integration tests
+### ❌ Phase 9.7: Clean Command - REMOVED FROM ACTIVE PLAN
 
-### ❌ Phase 9.7: Clean Command - TODO
-
-**Priority: Low** | **Estimated: 30 mins**
-
-- [ ] Create `src/commands/clean.ts`
-- [ ] Remove managed section from targets
-- [ ] Remove .skillz-cache.json
-- [ ] Add --dry-run mode
-- [ ] Add confirmation prompt with inquirer
-- [ ] Register command in CLI
-- [ ] Write 3-4 integration tests
+Target-file section sync no longer exists. A future cleanup command, if needed,
+should delete copied target directories or cache entries rather than editing
+unrelated project files.
 
 ---
 
@@ -191,7 +181,7 @@
 
 ### ⚠️ Remaining
 
-- [ ] Register validate, config, watch, clean commands
+- [ ] Register validate and config commands
 - [ ] Add command aliases (s, l, v, w, c)
 - [ ] Enhance help text with examples
 - [ ] Test all commands locally
@@ -224,8 +214,7 @@
 
 - [ ] **validate.test.ts**: 4-5 tests (validate command)
 - [ ] **config.test.ts**: 4-5 tests (config command)
-- [ ] **watch.test.ts**: 4-5 tests (watch command - may skip due to complexity)
-- [ ] **clean.test.ts**: 3-4 tests (clean command)
+- [x] **watch.test.ts**: watcher sync and config refresh coverage
 - [ ] **workflows.test.ts**: End-to-end workflow tests
 
 ---
@@ -306,10 +295,8 @@
 
 1. **Validate Command** (~45 mins) - High value for debugging
 2. **Config Command** (~30 mins) - Essential utility
-3. **Clean Command** (~30 mins) - Simple, completes basic functionality
-4. **Watch Command** (~60 mins) - Nice to have, more complex
-5. **Documentation Pass** (~45 mins) - Enhance README, create CHANGELOG
-6. **Polish & Review** (~30 mins) - Error messages, test coverage
+3. **Documentation Pass** (~45 mins) - Enhance README, create CHANGELOG
+4. **Polish & Review** (~30 mins) - Error messages, test coverage
 
 ---
 
@@ -348,7 +335,7 @@ Time:        ~9-10 seconds
 ## Notes
 
 - Build script automatically copies template files to dist/
-- Templates use relative paths for skill links
+- Skill creation templates generate new `SKILL.md` files only
 - Cache file (.skillz-cache.json) automatically added to .gitignore
 - All file operations use atomic writes (temp + rename)
 - Config file is now `skillz.json` (without leading dot)

@@ -164,9 +164,13 @@ This skill is used to validate config-driven watcher refreshes.
         SYNC_WAIT_TIMEOUT_MS
       );
 
-      let agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-      expect(agentsContent).toContain('## Skills');
-      expect(agentsContent).toContain('config-added-skill');
+      const syncedExtraSkillPath = path.join(
+        workspace.root,
+        '.skills',
+        'config-added-skill',
+        'SKILL.md'
+      );
+      await expect(fs.pathExists(syncedExtraSkillPath)).resolves.toBe(true);
 
       config.additionalSkills = [];
       await fs.writeJson(configPath, config, { spaces: 2 });
@@ -181,8 +185,7 @@ This skill is used to validate config-driven watcher refreshes.
       );
 
       await sleep(WATCH_SETTLE_MS);
-      agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-      expect(agentsContent).not.toContain('config-added-skill');
+      await expect(fs.pathExists(path.dirname(syncedExtraSkillPath))).resolves.toBe(false);
 
       const syncCountAfterRemoval = countOccurrences(
         watchProcess.output.stdout,

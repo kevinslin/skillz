@@ -23,7 +23,6 @@ interface InitOptions {
   globalSkills?: boolean;
   remote?: boolean;
   sync?: boolean;
-  template?: string;
   nonInteractive?: boolean;
 }
 
@@ -107,17 +106,13 @@ export async function initCommand(options: InitOptions): Promise<void> {
     }
   }
 
-  if (options.template) {
-    config.template = options.template;
-  }
-
   // Only infer targets if a preset was specified but no explicit target given
   // This allows users to init without any targets for skill management only
   if (options.preset && !options.target && !config.targets.length) {
     const detected: DetectedConfig = await inferConfig(cwd);
     if (detected.targets.length > 0) {
       info(
-        `Detected existing target files: ${detected.targets.map((t) => t.destination).join(', ')}`
+        `Detected existing target directories: ${detected.targets.map((t) => t.destination).join(', ')}`
       );
       config.targets = detected.targets;
     }
@@ -154,7 +149,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
     await syncCommand({});
   } else if (config.targets.length === 0) {
     info('No targets configured. Use `skillz create` and `skillz list` to manage skills.');
-    info('Add targets later with `skillz config targets --add <file>` to enable syncing.');
+    info('Add target directories later in skillz.json to enable syncing.');
   } else {
     info('Skipping initial sync (use `skillz sync` to sync skills)');
   }

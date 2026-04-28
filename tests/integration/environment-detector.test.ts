@@ -42,10 +42,9 @@ describe('environment-detector', () => {
     expect(codexEnv).toBeDefined();
     expect(codexEnv?.preset).toBe('agentsmd');
 
-    // Snapshot the synced AGENTS.md file
-    const agentsFile = await fs.readFile(path.join(cleanWorkspace.root, 'AGENTS.md'), 'utf-8');
-    const normalizedAgents = agentsFile.replaceAll(cleanWorkspace.root, '<workspace>');
-    expect(normalizedAgents).toMatchSnapshot();
+    expect(
+      await fs.pathExists(path.join(cleanWorkspace.root, '.skills/python-expert/SKILL.md'))
+    ).toBe(true);
 
     await cleanWorkspace.cleanup();
   });
@@ -70,15 +69,13 @@ describe('environment-detector', () => {
     const cursorEnv = detected.find((env) => env.id === 'cursor');
     expect(cursorEnv).toBeDefined();
     expect(cursorEnv?.preset).toBe('cursor');
-    expect(cursorEnv?.targets.map((t) => t.destination)).toContain('.cursor/rules/skills.mdc');
+    expect(cursorEnv?.targets).toEqual([
+      { destination: '.skills', deleteExistingFromTarget: true },
+    ]);
 
-    // Snapshot the generated skills.mdc file
-    const skillsMdcFile = await fs.readFile(
-      path.join(cleanWorkspace.root, '.cursor/rules/skills.mdc'),
-      'utf-8'
-    );
-    const normalizedSkills = skillsMdcFile.replaceAll(cleanWorkspace.root, '<workspace>');
-    expect(normalizedSkills).toMatchSnapshot('skills.mdc');
+    expect(
+      await fs.pathExists(path.join(cleanWorkspace.root, '.skills/python-expert/SKILL.md'))
+    ).toBe(true);
 
     await cleanWorkspace.cleanup();
   });
@@ -91,7 +88,9 @@ describe('environment-detector', () => {
     const claudeEnv = detected.find((env) => env.id === 'claude');
     expect(claudeEnv).toBeDefined();
     expect(claudeEnv?.preset).toBe('claude');
-    expect(claudeEnv?.targets.map((t) => t.destination)).toContain('CLAUDE.md');
+    expect(claudeEnv?.targets).toEqual([
+      { destination: '.skills', deleteExistingFromTarget: true },
+    ]);
   });
 
   it('should detect Aider environment', async () => {
@@ -103,7 +102,7 @@ describe('environment-detector', () => {
     const aiderEnv = detected.find((env) => env.id === 'aider');
     expect(aiderEnv).toBeDefined();
     expect(aiderEnv?.preset).toBe('aider');
-    expect(aiderEnv?.targets.map((t) => t.destination)).toContain('.aider/conventions.md');
+    expect(aiderEnv?.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
   });
 
   it('should detect multiple environments', async () => {
@@ -118,14 +117,6 @@ describe('environment-detector', () => {
     expect(detected.some((env) => env.id === 'codex')).toBe(true); // AGENTS.md from mock
     expect(detected.some((env) => env.id === 'cursor')).toBe(true);
     expect(detected.some((env) => env.id === 'claude')).toBe(true);
-    // snapshot the detected environments
-    expect(await fs.readFile(path.join(workspace.root, 'AGENTS.md'), 'utf-8')).toMatchSnapshot();
-    expect(
-      await fs.readFile(path.join(workspace.root, '.cursor/rules/skills.mdc'), 'utf-8')
-    ).toMatchSnapshot();
-    expect(await fs.readFile(path.join(workspace.root, 'CLAUDE.md'), 'utf-8')).toMatchSnapshot();
-    // print workspace root
-    console.log(workspace.root);
   });
 
   it('should return primary environment', async () => {

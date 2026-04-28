@@ -18,13 +18,16 @@ This flow documents how `skillz sync` decides whether a skill has changed. It an
 ### Phase 1: Discover candidate skill directories
 
 Trigger / entry condition:
+
 - `skillz sync` starts and loads config successfully.
 
 Entrypoints:
+
 - `src/commands/sync.ts:30` via `syncCommand(...)`
 - `src/core/skill-scanner.ts:50` via `scanAllSkillDirectories(config)`
 
 Ordered call path:
+
 - `syncCommand` calls `scanAllSkillDirectories(config)` after validating sync options (`src/commands/sync.ts:95-98`).
 - `scanAllSkillDirectories` expands `config.skillDirectories` plus `config.additionalSkills` into `directoryEntries` (`src/core/skill-scanner.ts:51-54`).
 - For each configured entry, it either:
@@ -33,15 +36,18 @@ Ordered call path:
 - `scanDirectory` only returns subdirectories whose basename is not ignored and whose directory contains `SKILL.md` (`src/core/skill-scanner.ts:11-45`).
 
 State transitions / outputs:
+
 - Input: loaded `config`
 - Output: a list of candidate skill directories, each defined by the presence of `SKILL.md`
 
 Branch points:
+
 - `entry.syncFromRoot`: switches between single-root parsing and subdirectory scanning.
 - `ignore` / `entry.ignore`: skips matching directory basenames before parsing.
 - Missing configured root: returns no candidates for that root instead of failing the scan (`src/core/skill-scanner.ts:14-17`).
 
 External boundaries:
+
 - Filesystem reads only; no HTTP/RPC boundaries identified.
 
 #### Sudocode (Phase 1: Discover candidate skill directories)
@@ -76,14 +82,17 @@ for entry in directoryEntries
 ### Phase 2: Parse `SKILL.md` and compute the per-skill hash
 
 Trigger / entry condition:
+
 - `scanAllSkillDirectories` has a candidate `skillDir` to parse.
 
 Entrypoints:
+
 - `src/core/skill-scanner.ts:79` via `parseSkill(skillDir)`
 - `src/core/skill-parser.ts:11` via `parseSkill(skillPath)`
 - `src/utils/hash.ts:8` via `calculateSkillHash(skill)`
 
 Ordered call path:
+
 - `parseSkill` resolves `<skillDir>/SKILL.md` and reads that file only (`src/core/skill-parser.ts:12-18`).
 - `gray-matter` splits the file into `frontmatter` and markdown `body` (`src/core/skill-parser.ts:20-21`).
 - `validateSkillFrontmatter` validates the parsed metadata (`src/core/skill-parser.ts:23-29`).
@@ -92,19 +101,22 @@ Ordered call path:
   - `description` from frontmatter,
   - `content` from `body.trim()`,
   - `lastModified` from `SKILL.md` file stats (`src/core/skill-parser.ts:31-46`).
-- `calculateSkillHash` concatenates exactly ``${skill.name}:${skill.description}:${skill.content}`` and hashes that string with SHA-256, truncating to 12 hex chars (`src/utils/hash.ts:8-10`).
+- `calculateSkillHash` concatenates exactly `${skill.name}:${skill.description}:${skill.content}` and hashes that string with SHA-256, truncating to 12 hex chars (`src/utils/hash.ts:8-10`).
 - `scanAllSkillDirectories` then adds scanner-derived metadata like `relativePath` and `sourceDirectory`, but those fields are not included in the hash input (`src/core/skill-scanner.ts:80-85`).
 
 State transitions / outputs:
+
 - Input: `skillDir`
 - Output: `Skill` with `hash`, `name`, `description`, `content`, `path`, `relativePath`, and `sourceDirectory`
 
 Branch points:
+
 - Missing or unreadable `SKILL.md`: `parseSkill` throws and the scanner records a warning instead of returning a skill (`src/core/skill-parser.ts:16-18`, `src/core/skill-scanner.ts:113-115`).
 - Invalid frontmatter: `parseSkill` throws before any hash is produced (`src/core/skill-parser.ts:23-29`).
 - Duplicate skill names or include-filter misses are filtered after parsing, not during hash construction (`src/core/skill-scanner.ts:97-108`).
 
 External boundaries:
+
 - Filesystem reads only; no HTTP/RPC boundaries identified.
 
 #### Sudocode (Phase 2: Parse `SKILL.md` and compute the per-skill hash)
@@ -150,31 +162,37 @@ function calculateSkillHash(skill)
 ### Phase 3: Compare the new hash against cache and decide whether sync work is needed
 
 Trigger / entry condition:
+
 - `syncCommand` has a current `skills` list and has loaded `.skillz-cache.json`, if present.
 
 Entrypoints:
+
 - `src/commands/sync.ts:124` via the cached sync decision block
 - `src/core/change-detector.ts:7` via `detectChanges(currentSkills, cache)`
 - `src/core/cache-manager.ts:64` via `updateCache(skills, targetFile, config)`
 
 Ordered call path:
+
 - `syncCommand` loads cache from `.skillz-cache.json` (`src/core/cache-manager.ts:13-43`).
 - If cache exists and `--force` is not set, `syncCommand` separately computes `currentConfigHash` from the whole config and compares it with `cache.configHash` (`src/commands/sync.ts:125-128`, `src/utils/hash.ts:31-34`).
 - `detectChanges` compares each `skill.hash` against `cache.skills[skill.relativePath].hash` (`src/core/change-detector.ts:12-38`).
 - If there is no cached entry for a `relativePath`, the skill is `new`; if the hash differs, it is `modified`; otherwise it is `unchanged` (`src/core/change-detector.ts:15-38`).
-- If neither config nor skills changed, `syncCommand` exits early with `All skills are up to date` and does not touch prompt or native targets (`src/commands/sync.ts:134-137`).
+- If neither config nor skills changed, `syncCommand` exits early with `All skills are up to date` and does not touch target directories (`src/commands/sync.ts`).
 - After a real sync completes, `updateCache` stores the current `skill.hash` values back into `.skillz-cache.json` (`src/core/cache-manager.ts:64-82`).
 
 State transitions / outputs:
+
 - Input: `skills`, optional `cache`, and loaded `config`
 - Output: change classification per skill plus a decision to skip or continue syncing
 
 Branch points:
+
 - `options.force`: bypasses change detection and proceeds to sync (`src/commands/sync.ts:167-170`).
 - `!cache`: treats the run as a full sync (`src/commands/sync.ts:167-168`).
 - `!configChanged && !skillsChanged`: returns early with no target writes (`src/commands/sync.ts:134-137`).
 
 External boundaries:
+
 - Filesystem read/write of `.skillz-cache.json`; no HTTP/RPC boundaries identified.
 
 #### Sudocode (Phase 3: Compare the new hash against cache and decide whether sync work is needed)
@@ -224,35 +242,41 @@ function detectChanges(currentSkills, cache)
     changes.push({ skill: null, type: 'removed', oldHash: cache.skills[removedPath].hash })
 ```
 
-### Phase 4: Copy the full skill directory after the hash decision (native sync only)
+### Phase 4: Copy the full skill directory after the hash decision
 
 Trigger / entry condition:
-- Change detection has decided sync should proceed, and at least one target resolves to native mode.
+
+- Change detection has decided sync should proceed, and at least one target directory is configured.
 
 Entrypoints:
-- `src/commands/sync.ts:205` native-target validation block
-- `src/core/target-manager.ts:260` via `copySkillsToTarget(target, skills, cwd, cleanupSkills)`
+
+- `src/commands/sync.ts` target validation block
+- `src/core/skill-target-manager.ts` via `copySkillsToTarget(target, skills, cwd, cleanupSkills)`
 
 Ordered call path:
-- `syncCommand` validates native target conflicts before copying (`src/commands/sync.ts:205-210`, `src/core/target-manager.ts:215-255`).
-- `copySkillsToTarget` resolves the destination directory, optionally removes stale skills, removes the existing destination directory for each skill, and then calls `copyDirectory(sourcePath, destPath)` (`src/core/target-manager.ts:260-291`).
+
+- `syncCommand` validates target conflicts before copying (`src/commands/sync.ts`, `src/core/skill-target-manager.ts`).
+- `copySkillsToTarget` resolves the destination directory, optionally removes stale skills, removes the existing destination directory for each skill, and then calls `copyDirectory(sourcePath, destPath)` (`src/core/skill-target-manager.ts`).
 - Because this copy step happens after change detection, extra files inside the skill directory are copied when a sync occurs, but those files do not participate in the earlier `skill.hash` comparison.
 
 State transitions / outputs:
-- Input: changed `skills` selected for sync and native-mode `target`
-- Output: full directory copies under the native target
+
+- Input: changed `skills` selected for sync and `target`
+- Output: full directory copies under the target directory
 
 Branch points:
-- `target.deleteExistingFromTarget`: removes stale copied skill directories before copying (`src/core/target-manager.ts:271-274`).
-- If destination already exists for a managed skill, it is removed and recopied (`src/core/target-manager.ts:285-290`).
+
+- `target.deleteExistingFromTarget`: removes stale copied skill directories before copying (`src/core/skill-target-manager.ts`).
+- If destination already exists for a copied skill, it is removed and recopied (`src/core/skill-target-manager.ts`).
 
 External boundaries:
+
 - Filesystem directory copy only; no HTTP/RPC boundaries identified.
 
 #### Sudocode (Phase 4: Copy the full skill directory after the hash decision)
 
 ```ts
-// Source: src/core/target-manager.ts
+// Source: src/core/skill-target-manager.ts
 function copySkillsToTarget(target, skills, cwd, cleanupSkills=skills)
   targetDir := resolveDirectoryPath(target.destination, cwd)
   ensureDir(targetDir)
@@ -277,19 +301,20 @@ function copySkillsToTarget(target, skills, cwd, cleanupSkills=skills)
 
 ### Core state values (source of truth and usage)
 
-| Value | Source of truth | Representation | Initialization point | First consumer | Initialized before consuming context is captured? |
-|---|---|---|---|---|---|
-| `skillFile` | `<skillDir>/SKILL.md` on disk | absolute file path string | `parseSkill` builds it with `path.join(resolvedSkillPath, 'SKILL.md')` | `safeReadFile(skillFile)` and `getFileStats(skillFile)` | Yes |
-| `frontmatter` | `gray-matter` parse of `SKILL.md` | object (`data`) | `matter(content)` in `parseSkill` | `validateSkillFrontmatter(frontmatter)` and `skill.name` / `skill.description` assignment | Yes |
-| `body` / `skill.content` | markdown body of `SKILL.md` | trimmed string | `matter(content)` then `body.trim()` in `parseSkill` | `calculateSkillHash(skill)` | Yes |
-| `skill.hash` | `calculateSkillHash(skill)` | 12-char SHA-256 hex prefix | after `Skill` object construction in `parseSkill` | `detectChanges(...)` and later `updateCache(...)` | Yes |
-| `cache.skills[relativePath].hash` | `.skillz-cache.json` | cached hash string keyed by `relativePath` | `loadCache(cwd)` | `detectChanges(...)` | Yes |
-| `configHash` | `calculateConfigHash(config)` | 12-char SHA-256 hex prefix of sorted-key JSON | in `syncCommand` or `updateCache(...)` | cache invalidation / config change detection | Yes |
+| Value                             | Source of truth                   | Representation                                | Initialization point                                                   | First consumer                                                                            | Initialized before consuming context is captured? |
+| --------------------------------- | --------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `skillFile`                       | `<skillDir>/SKILL.md` on disk     | absolute file path string                     | `parseSkill` builds it with `path.join(resolvedSkillPath, 'SKILL.md')` | `safeReadFile(skillFile)` and `getFileStats(skillFile)`                                   | Yes                                               |
+| `frontmatter`                     | `gray-matter` parse of `SKILL.md` | object (`data`)                               | `matter(content)` in `parseSkill`                                      | `validateSkillFrontmatter(frontmatter)` and `skill.name` / `skill.description` assignment | Yes                                               |
+| `body` / `skill.content`          | markdown body of `SKILL.md`       | trimmed string                                | `matter(content)` then `body.trim()` in `parseSkill`                   | `calculateSkillHash(skill)`                                                               | Yes                                               |
+| `skill.hash`                      | `calculateSkillHash(skill)`       | 12-char SHA-256 hex prefix                    | after `Skill` object construction in `parseSkill`                      | `detectChanges(...)` and later `updateCache(...)`                                         | Yes                                               |
+| `cache.skills[relativePath].hash` | `.skillz-cache.json`              | cached hash string keyed by `relativePath`    | `loadCache(cwd)`                                                       | `detectChanges(...)`                                                                      | Yes                                               |
+| `configHash`                      | `calculateConfigHash(config)`     | 12-char SHA-256 hex prefix of sorted-key JSON | in `syncCommand` or `updateCache(...)`                                 | cache invalidation / config change detection                                              | Yes                                               |
 
 Answer to the user’s question:
+
 - No. The current skill hash does not walk the full skill directory.
 - It hashes only `skill.name`, `skill.description`, and `skill.content`, where `skill.content` is the trimmed markdown body of `SKILL.md` (`src/utils/hash.ts:8-10`, `src/core/skill-parser.ts:20-21`, `src/core/skill-parser.ts:36-49`).
-- Non-`SKILL.md` files can still be copied in native mode, but they do not currently affect the change-detection hash (`src/core/target-manager.ts:276-290`).
+- Non-`SKILL.md` files can still be copied as part of a skill directory, but they do not currently affect the change-detection hash (`src/core/skill-target-manager.ts`).
 
 ### Statsig (or `None identified`)
 
@@ -301,15 +326,15 @@ None identified.
 
 ### Other User-Settable Inputs (or `None identified`)
 
-| Name | Type | Where Read | Effect on Flow |
-|---|---|---|---|
-| `skillDirectories[].localPath` | config path | `src/core/skill-scanner.ts:60-75` | chooses which roots are scanned for skills |
-| `additionalSkills[]` | config path list | `src/core/skill-scanner.ts:51-54` | adds extra roots to scan |
-| `ignore` / `skillDirectories[].ignore` | config glob list | `src/core/skill-scanner.ts:64`, `src/core/skill-scanner.ts:25-37` | prunes candidate directories before parsing |
-| `skillDirectories[].include` | config allowlist | `src/core/skill-scanner.ts:63`, `src/core/skill-scanner.ts:97-101` | filters parsed skills after hash calculation |
-| `skillDirectories[].syncFromRoot` | config boolean | `src/core/skill-scanner.ts:66-73` | switches between parsing one root skill versus enumerating subdirectories |
-| `options.only` | CLI list | `src/commands/sync.ts:112-121` | narrows which already-parsed skills are compared and synced |
-| `options.force` | CLI boolean | `src/commands/sync.ts:124-170` | bypasses the early-return hash/cache short circuit |
+| Name                                   | Type             | Where Read                                                         | Effect on Flow                                                            |
+| -------------------------------------- | ---------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `skillDirectories[].localPath`         | config path      | `src/core/skill-scanner.ts:60-75`                                  | chooses which roots are scanned for skills                                |
+| `additionalSkills[]`                   | config path list | `src/core/skill-scanner.ts:51-54`                                  | adds extra roots to scan                                                  |
+| `ignore` / `skillDirectories[].ignore` | config glob list | `src/core/skill-scanner.ts:64`, `src/core/skill-scanner.ts:25-37`  | prunes candidate directories before parsing                               |
+| `skillDirectories[].include`           | config allowlist | `src/core/skill-scanner.ts:63`, `src/core/skill-scanner.ts:97-101` | filters parsed skills after hash calculation                              |
+| `skillDirectories[].syncFromRoot`      | config boolean   | `src/core/skill-scanner.ts:66-73`                                  | switches between parsing one root skill versus enumerating subdirectories |
+| `options.only`                         | CLI list         | `src/commands/sync.ts:112-121`                                     | narrows which already-parsed skills are compared and synced               |
+| `options.force`                        | CLI boolean      | `src/commands/sync.ts:124-170`                                     | bypasses the early-return hash/cache short circuit                        |
 
 ### Important gates / branch controls
 
@@ -317,7 +342,7 @@ None identified.
 - `validateSkillFrontmatter(frontmatter)`: invalid metadata blocks hash production (`src/core/skill-parser.ts:23-29`).
 - `hashesMatch(skill.hash, cachedEntry.hash)`: decides `modified` versus `unchanged` (`src/core/change-detector.ts:22-37`).
 - `!configChanged && !skillsChanged`: returns before any target update happens (`src/commands/sync.ts:134-137`).
-- `resolveTargetSyncMode(target, config) === 'native'`: determines whether the downstream work is prompt rendering or whole-directory copy (`src/commands/sync.ts:205-210`, `src/core/target-manager.ts:260-291`).
+- Configured `targets`: determine whether downstream work copies skill directories; if no targets are configured, cache writing is skipped.
 
 ## Sequence diagram
 
@@ -329,7 +354,7 @@ sequenceDiagram
     participant Hash as calculateSkillHash
     participant Cache as .skillz-cache.json
     participant Diff as detectChanges
-    participant Native as copySkillsToTarget
+    participant Target as copySkillsToTarget
 
     CLI->>Scanner: scanAllSkillDirectories(config)
     Scanner->>Scanner: find dirs with SKILL.md
@@ -348,40 +373,40 @@ sequenceDiagram
         CLI-->>CLI: return "All skills are up to date"
     else sync required
         Diff-->>CLI: new/modified/removed
-        alt native target
-            CLI->>Native: copySkillsToTarget(target, skills, cwd)
-            Native->>Native: copyDirectory(sourcePath, destPath)
-        else prompt target
-            CLI-->>CLI: render managed section
-        end
+        CLI->>Target: copySkillsToTarget(target, skills, cwd)
+        Target->>Target: copyDirectory(sourcePath, destPath)
     end
 ```
 
 ## Observability
 
 Metrics:
+
 - None identified.
 
 Logs:
+
 - `debug("scanning all skill directories from ...")` when scanning begins (`src/core/skill-scanner.ts:58`).
 - `debug("Found skill: ...")` for each parsed skill that survives validation and filters (`src/core/skill-scanner.ts:110-112`).
 - `info("Changes detected: ...")` when cache/config comparison shows work to do (`src/commands/sync.ts:166`).
 - `success("All skills are up to date")` when the hash/config checks short-circuit sync (`src/commands/sync.ts:135-137`).
 
 Useful debug checkpoints:
+
 - Put a breakpoint or temporary log in `parseSkill` after `matter(content)` to inspect the exact `name`, `description`, and `body.trim()` that feed the hash (`src/core/skill-parser.ts:20-49`).
 - Inspect `.skillz-cache.json` after a sync to confirm which `relativePath` keys and hashes were persisted (`src/core/cache-manager.ts:64-82`).
-- For native mode confusion, verify whether the observed change happened in `SKILL.md` or only in another copied file under the skill directory (`src/core/target-manager.ts:276-290`).
+- If copied target output looks stale, verify whether the observed change happened in `SKILL.md` or only in another file under the skill directory (`src/core/skill-target-manager.ts`). Non-`SKILL.md` changes are copied only when a sync run occurs.
 
 ## Related docs
 
-- `tests/integration/native-sync.test.ts:187-218`: covers re-copying when `SKILL.md` changes in native mode.
+- `tests/integration/target-sync.test.ts`: covers re-copying when `SKILL.md` changes.
 - `tests/integration/sync.test.ts:411-487`: covers config-hash caching and config-change detection.
 - No existing local architecture or flow docs were present under `docs/flows/` when this document was created.
 
-## Manual Notes 
+## Manual Notes
 
 [keep this for the user to add notes. do not change between edits]
 
 ## Changelog
+
 - 2026-03-08: Created the initial flow doc for skill hash calculation and cache comparison behavior (019cce41-bbf0-7592-b86a-f8dcebd79b39)

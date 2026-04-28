@@ -34,18 +34,18 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('agentsmd');
-    expect(config.targets.map((t) => t.destination)).toContain('AGENTS.md');
+    expect(config.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
   });
 
   it('should create skillz.json with custom target', async () => {
-    const result = await execCli(['init', '--target', '.cursorrules', '--no-sync'], {
+    const result = await execCli(['init', '--target', '.custom-skills', '--no-sync'], {
       cwd: workspace.root,
     });
 
     expect(result.exitCode).toBe(0);
 
     const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig;
-    expect(config.targets.map((t) => t.destination)).toContain('.cursorrules');
+    expect(config.targets.map((t) => t.destination)).toContain('.custom-skills');
   });
 
   it('should add .skillz-cache.json and .skills to .gitignore', async () => {
@@ -80,14 +80,15 @@ describe('init command', () => {
 
     expect(result.exitCode).toBe(0);
 
-    // Check AGENTS.md was updated with managed section
-    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    const normalizedContent = agentsContent.replaceAll(workspace.root, '<workspace>');
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/python-expert/SKILL.md'))).toBe(
+      true
+    );
+    expect(await fs.pathExists(path.join(workspace.root, '.skills/react-patterns/SKILL.md'))).toBe(
+      true
+    );
 
-    expect(normalizedContent).toContain('## Skills');
-    expect(normalizedContent).toContain('python-expert');
-    expect(normalizedContent).toContain('react-patterns');
-    expect(normalizedContent).toMatchSnapshot();
+    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
+    expect(agentsContent).toContain('## Project Context');
   });
 
   it('should create skillz.json with no targets when no preset or target specified', async () => {
@@ -138,7 +139,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('cursor');
-    expect(config.targets.map((t) => t.destination)).toContain('.cursor/rules/skills.mdc');
+    expect(config.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
   });
 
   it('should create skillz.json with claude preset', async () => {
@@ -153,7 +154,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('claude');
-    expect(config.targets.map((t) => t.destination)).toContain('CLAUDE.md');
+    expect(config.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
   });
 
   it('should create skillz.json with aider preset', async () => {
@@ -168,7 +169,7 @@ describe('init command', () => {
 
     const config = (await fs.readJson(configPath)) as SkillsConfig;
     expect(config.preset).toBe('aider');
-    expect(config.targets.map((t) => t.destination)).toContain('.aider/conventions.md');
+    expect(config.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
   });
 
   it('should include global skills directory with --global-skills flag', async () => {
@@ -202,80 +203,12 @@ describe('init command', () => {
 
     const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig;
     expect(config.preset).toBe('aider');
-    expect(config.targets.map((t) => t.destination)).toContain('.aider/conventions.md');
+    expect(config.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
 
     // Should include global skills directory
     const homeDir = process.env.HOME || '~';
     const globalSkillsPath = path.join(homeDir, '.claude/skills');
     expect(config.skillDirectories.map((dir) => dir.localPath)).toContain(globalSkillsPath);
-  });
-
-  it('should save custom template path with --template flag', async () => {
-    // Create a custom template file
-    const templatePath = path.join(workspace.root, 'custom-template.hbs');
-    await fs.writeFile(
-      templatePath,
-      `## Skills
-
-{{#each skills}}
-- [{{name}}]({{path}}): {{description}}
-{{/each}}
-`
-    );
-
-    const result = await execCli(
-      ['init', '--preset', 'agentsmd', '--template', './custom-template.hbs', '--no-sync'],
-      {
-        cwd: workspace.root,
-      }
-    );
-
-    expect(result.exitCode).toBe(0);
-
-    const config = (await fs.readJson(path.join(workspace.root, 'skillz.json'))) as SkillsConfig & {
-      template?: string;
-    };
-    expect(config.template).toBe('./custom-template.hbs');
-  });
-
-  it('should use custom template when syncing', async () => {
-    // Create a custom template file
-    const templatePath = path.join(workspace.root, 'custom-template.hbs');
-    await fs.writeFile(
-      templatePath,
-      `## Skills
-
-Custom skills list:
-
-{{#each skills}}
-* **{{name}}** - {{description}}
-{{/each}}
-
-Last synced: {{lastSync}}
-`
-    );
-
-    // Init with custom template
-    await execCli(
-      ['init', '--preset', 'agentsmd', '--template', './custom-template.hbs', '--no-sync'],
-      {
-        cwd: workspace.root,
-      }
-    );
-
-    // Run sync
-    const syncResult = await execCli(['sync'], {
-      cwd: workspace.root,
-    });
-
-    expect(syncResult.exitCode).toBe(0);
-
-    // Verify the AGENTS.md file contains the custom template format
-    const agentsContent = await fs.readFile(workspace.agentsFile, 'utf-8');
-    expect(agentsContent).toContain('Custom skills list:');
-    expect(agentsContent).toContain('* **python-expert**');
-    expect(agentsContent).toContain('* **react-patterns**');
-    expect(agentsContent).toContain('Last synced:');
   });
 
   it('should allow init in subdirectory even when parent has skillz.json', async () => {
@@ -310,11 +243,13 @@ Last synced: {{lastSync}}
     // Verify subdirectory config is different from parent
     const subConfig = (await fs.readJson(subConfigPath)) as SkillsConfig;
     expect(subConfig.preset).toBe('cursor');
-    expect(subConfig.targets.map((t) => t.destination)).toContain('.cursor/rules/skills.mdc');
+    expect(subConfig.targets).toEqual([{ destination: '.skills', deleteExistingFromTarget: true }]);
 
     // Verify parent config is unchanged
     const parentConfig = (await fs.readJson(parentConfigPath)) as SkillsConfig;
     expect(parentConfig.preset).toBe('agentsmd');
-    expect(parentConfig.targets.map((t) => t.destination)).toContain('AGENTS.md');
+    expect(parentConfig.targets).toEqual([
+      { destination: '.skills', deleteExistingFromTarget: true },
+    ]);
   });
 });
