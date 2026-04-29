@@ -2,7 +2,7 @@
 
 <img width="400" height="400" alt="ChatGPT Image Nov 9, 2025, 05_20_01 PM" src="https://ik.imagekit.io/fpjzhqpv1/ChatGPT%20Image%20Nov%209,%202025,%2005_20_01%20PM_KQnKRx_Zt.png?updatedAt=1762739794959" />
 
-Skillz is a CLI that enables [skills](https://open.substack.com/pub/treeandforest/p/skills-as-object-oriented-programming) across LLM-powered tools in a matter of seconds.
+Skillz is a CLI that enables [skills](https://open.substack.com/pub/treeandforest/p/skills-as-object-oriented-programming) across LLM-powered tools.
 It scans skill source directories and copies each discovered skill directory into configured target directories such as `.skills`.
 
 ## Key Features
