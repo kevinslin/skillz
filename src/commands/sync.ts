@@ -1,12 +1,8 @@
-import { loadConfig, resolveTargetSyncMode } from '../core/config.js';
+import { loadConfig } from '../core/config.js';
 import { scanAllSkillDirectories } from '../core/skill-scanner.js';
 import { loadCache, saveCache, updateCache } from '../core/cache-manager.js';
 import { detectChanges, hasChanges, summarizeChanges } from '../core/change-detector.js';
-import {
-  writeTargetFile,
-  validateNativeTargets,
-  copySkillsToTarget,
-} from '../core/target-manager.js';
+import { validateSkillTargets, copySkillsToTarget } from '../core/skill-target-manager.js';
 import {
   info,
   success,
@@ -27,8 +23,6 @@ interface SyncOptions {
   force?: boolean;
   verbose?: boolean;
   only?: string[];
-  pathStyle?: string;
-  template?: string;
 }
 
 interface SyncContext {
@@ -50,48 +44,6 @@ export async function syncCommand(options: SyncOptions, context: SyncContext = {
     process.exit(1);
   }
 
-  // Handle --path-style option
-  if (options.pathStyle) {
-    // Normalize shorthand values
-    const normalizedStyle = options.pathStyle.toLowerCase();
-    if (normalizedStyle === 'rel') {
-      config.pathStyle = 'relative';
-    } else if (normalizedStyle === 'abs') {
-      config.pathStyle = 'absolute';
-    } else if (normalizedStyle === 'relative' || normalizedStyle === 'absolute') {
-      config.pathStyle = normalizedStyle as 'relative' | 'absolute';
-    } else {
-      error(
-        `Invalid path style: "${options.pathStyle}". Must be one of: relative, absolute, rel, abs`
-      );
-      process.exit(1);
-    }
-    debug(`Using path style from CLI: ${config.pathStyle}`);
-  } else if (config.pathStyle) {
-    debug(`Using path style from config: ${config.pathStyle}`);
-  } else {
-    debug('Using default path style: relative');
-  }
-
-  // Handle --template option
-  if (options.template) {
-    config.template = options.template;
-    debug(`Using template from CLI: ${config.template}`);
-  } else if (config.template) {
-    debug(`Using template from config: ${config.template}`);
-  } else {
-    debug('Using default template');
-  }
-
-  for (const target of config.targets) {
-    if (target.deleteExistingFromTarget && resolveTargetSyncMode(target, config) !== 'native') {
-      error(
-        `deleteExistingFromTarget can only be used with native sync targets: ${target.destination}`
-      );
-      process.exit(1);
-    }
-  }
-
   // Scan skills
   const spin = spinner('Scanning skill directories...\n').start();
   const skills = await scanAllSkillDirectories(config);
@@ -106,7 +58,7 @@ export async function syncCommand(options: SyncOptions, context: SyncContext = {
     if (!cache) {
       return;
     }
-    info('Continuing sync with empty skill set to clear stale managed output');
+    info('Continuing sync with empty skill set to clear stale target output');
   }
 
   // Filter to --only skills if specified
@@ -174,24 +126,9 @@ export async function syncCommand(options: SyncOptions, context: SyncContext = {
   if (options.dryRun) {
     info('Dry run mode: no files will be modified');
 
-    const promptTargets = config.targets.filter(
-      (t) => resolveTargetSyncMode(t, config) === 'prompt'
-    );
-    const nativeTargets = config.targets.filter(
-      (t) => resolveTargetSyncMode(t, config) === 'native'
-    );
-
-    if (promptTargets.length > 0) {
-      info(
-        `Would sync ${filteredSkills.length} skill(s) to ${promptTargets.length} file target(s)`
-      );
-    }
-
-    if (nativeTargets.length > 0) {
-      info(
-        `Would copy ${filteredSkills.length} skill(s) to ${nativeTargets.length} directory target(s):`
-      );
-      for (const target of nativeTargets) {
+    if (config.targets.length > 0) {
+      info(`Would copy ${filteredSkills.length} skill(s) to ${config.targets.length} target(s):`);
+      for (const target of config.targets) {
         info(`  → ${target.destination}/`);
         for (const skill of filteredSkills) {
           info(`    - ${skill.name}`);
@@ -202,16 +139,13 @@ export async function syncCommand(options: SyncOptions, context: SyncContext = {
     return;
   }
 
-  // Validate native targets upfront (abort early if conflicts)
-  const nativeTargets = config.targets.filter((t) => resolveTargetSyncMode(t, config) === 'native');
-
-  if (nativeTargets.length > 0) {
-    const validationSpin = spinner('Validating native targets...\n').start();
+  if (config.targets.length > 0) {
+    const validationSpin = spinner('Validating targets...\n').start();
 
     try {
       // Get cached skill relativePaths to skip validation for managed copies
       const cachedSkillPaths = cache ? new Set(Object.keys(cache.skills)) : new Set<string>();
-      await validateNativeTargets(nativeTargets, filteredSkills, cwd, cachedSkillPaths);
+      await validateSkillTargets(config.targets, filteredSkills, cwd, cachedSkillPaths);
       validationSpin.succeed('No conflicts detected');
     } catch (err) {
       validationSpin.fail('Validation failed');
@@ -225,16 +159,9 @@ export async function syncCommand(options: SyncOptions, context: SyncContext = {
 
   try {
     for (const target of config.targets) {
-      const syncMode = resolveTargetSyncMode(target, config);
-      info(`Syncing ${filteredSkills.length} skills to ${target.destination} in ${syncMode} mode`);
-
-      if (syncMode === 'native') {
-        await copySkillsToTarget(target, filteredSkills, cwd, skills);
-        debug(`Copied ${filteredSkills.length} skills to ${target.destination}`);
-      } else {
-        await writeTargetFile(target, filteredSkills, config, cwd);
-        debug(`Updated ${target.destination}`);
-      }
+      info(`Copying ${filteredSkills.length} skills to ${target.destination}`);
+      await copySkillsToTarget(target, filteredSkills, cwd, skills);
+      debug(`Copied ${filteredSkills.length} skills to ${target.destination}`);
     }
 
     syncSpin.succeed(`Synced to ${config.targets.length} target(s)`);
@@ -243,7 +170,7 @@ export async function syncCommand(options: SyncOptions, context: SyncContext = {
     throw err;
   }
 
-  // Update cache for both prompt and native mode targets
+  // Update cache after successful target sync
   if (config.targets.length > 0) {
     const newCache = updateCache(filteredSkills, config.targets[0].destination, config);
     await saveCache(newCache, cwd);

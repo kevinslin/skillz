@@ -5,6 +5,15 @@ import { validateConfig } from '../utils/validation.js';
 import { debug, info, success } from '../utils/logger.js';
 
 const CONFIG_FILE = 'skillz.json';
+const DEFAULT_TARGET = '.skills';
+const REMOVED_CONFIG_FIELDS = ['template', 'pathStyle', 'syncMode', 'skillsSectionName'] as const;
+const REMOVED_TARGET_FIELDS = [
+  'template',
+  'preset',
+  'pathStyle',
+  'syncMode',
+  'skillsSectionName',
+] as const;
 
 /**
  * Load configuration from file
@@ -14,6 +23,15 @@ export async function loadConfig(cwd: string): Promise<Config | null> {
 
   if (!config) {
     return null;
+  }
+
+  const removedFields = collectRemovedConfigFields(config);
+  if (removedFields.length > 0) {
+    throw new Error(
+      `Invalid configuration: removed config fields are no longer supported: ${removedFields.join(
+        ', '
+      )}`
+    );
   }
 
   // Auto-migrate legacy target formats and version 1.0 configs
@@ -31,6 +49,38 @@ export async function loadConfig(cwd: string): Promise<Config | null> {
   }
 
   return config;
+}
+
+function collectRemovedConfigFields(config: unknown): string[] {
+  if (!config || typeof config !== 'object') {
+    return [];
+  }
+
+  const parsed = config as Record<string, unknown>;
+  const removedFields: string[] = [];
+
+  for (const field of REMOVED_CONFIG_FIELDS) {
+    if (field in parsed) {
+      removedFields.push(field);
+    }
+  }
+
+  if (Array.isArray(parsed.targets)) {
+    parsed.targets.forEach((target, index) => {
+      if (!target || typeof target !== 'object') {
+        return;
+      }
+
+      const targetRecord = target as Record<string, unknown>;
+      for (const field of REMOVED_TARGET_FIELDS) {
+        if (field in targetRecord) {
+          removedFields.push(`targets[${index}].${field}`);
+        }
+      }
+    });
+  }
+
+  return removedFields;
 }
 
 /**
@@ -58,18 +108,15 @@ export function getDefaultConfig(preset?: string): Config {
     skillDirectories: [{ localPath: '.claude/skills' }],
     additionalSkills: [],
     ignore: [],
-    skillsSectionName: '## Additional Instructions',
     defaultEditor: process.env.EDITOR || 'vi',
     autoSyncAfterEdit: true,
-    template: 'default',
-    pathStyle: 'relative',
   };
 
   if (preset === 'agentsmd') {
     return {
       ...baseConfig,
       preset: 'agentsmd',
-      targets: [{ destination: 'AGENTS.md' }],
+      targets: [{ destination: DEFAULT_TARGET, deleteExistingFromTarget: true }],
     };
   }
 
@@ -77,7 +124,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'aider',
-      targets: [{ destination: '.aider/conventions.md' }],
+      targets: [{ destination: DEFAULT_TARGET, deleteExistingFromTarget: true }],
     };
   }
 
@@ -85,7 +132,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'cursor',
-      targets: [{ destination: '.cursor/rules/skills.mdc' }],
+      targets: [{ destination: DEFAULT_TARGET, deleteExistingFromTarget: true }],
     };
   }
 
@@ -93,7 +140,7 @@ export function getDefaultConfig(preset?: string): Config {
     return {
       ...baseConfig,
       preset: 'claude',
-      targets: [{ destination: 'CLAUDE.md' }],
+      targets: [{ destination: DEFAULT_TARGET, deleteExistingFromTarget: true }],
     };
   }
 
@@ -132,14 +179,7 @@ export async function inferConfig(cwd: string): Promise<DetectedConfig> {
   const targets: Target[] = [];
   const skillDirectories: string[] = [];
 
-  const potentialTargets = [
-    'AGENTS.md',
-    '.cursorrules',
-    '.cursor/rules/skills.mdc',
-    'CLAUDE.md',
-    '.claude/CLAUDE.md',
-    '.aider/conventions.md',
-  ];
+  const potentialTargets = [DEFAULT_TARGET];
 
   for (const target of potentialTargets) {
     const targetPath = path.join(cwd, target);
@@ -232,7 +272,7 @@ function normalizeSkillDirectories(
 }
 
 /**
- * Migrate config from legacy targets to Target[] targets
+ * Migrate config from legacy targets to Target[] targets.
  */
 export function migrateConfig(config: LegacyConfig): Config {
   const targets = config.targets.map((target) => {
@@ -243,10 +283,6 @@ export function migrateConfig(config: LegacyConfig): Config {
     const destination = 'destination' in target ? target.destination : target.name;
     return {
       destination,
-      template: target.template,
-      preset: target.preset,
-      pathStyle: target.pathStyle,
-      syncMode: target.syncMode,
       deleteExistingFromTarget: target.deleteExistingFromTarget,
     };
   });
@@ -255,41 +291,19 @@ export function migrateConfig(config: LegacyConfig): Config {
     Array.isArray(config.skillDirectories) ? config.skillDirectories : []
   );
 
-  return {
-    ...config,
+  const migrated: Config = {
     version: config.version === '1.0' ? '2.0' : config.version,
     targets,
     skillDirectories,
+    additionalSkills: config.additionalSkills ?? [],
+    ignore: config.ignore ?? [],
+    defaultEditor: config.defaultEditor,
+    autoSyncAfterEdit: config.autoSyncAfterEdit,
   };
-}
 
-/**
- * Resolve template for a target (target-specific > global > default)
- */
-export function resolveTargetTemplate(target: Target, config: Config): string {
-  return target.template ?? config.template ?? 'default';
-}
+  if (config.preset) {
+    migrated.preset = config.preset;
+  }
 
-/**
- * Resolve pathStyle for a target (target-specific > global > default)
- */
-export function resolveTargetPathStyle(target: Target, config: Config): 'relative' | 'absolute' {
-  return target.pathStyle ?? config.pathStyle ?? 'relative';
-}
-
-/**
- * Resolve preset for a target (target-specific > global)
- */
-export function resolveTargetPreset(
-  target: Target,
-  config: Config
-): 'agentsmd' | 'aider' | 'cursor' | 'claude' | undefined {
-  return target.preset ?? config.preset;
-}
-
-/**
- * Resolve syncMode for a target (target-specific > global > default)
- */
-export function resolveTargetSyncMode(target: Target, config: Config): 'prompt' | 'native' {
-  return target.syncMode ?? config.syncMode ?? 'prompt';
+  return migrated;
 }

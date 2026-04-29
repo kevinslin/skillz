@@ -33,7 +33,7 @@ describe('info command', () => {
 
     // Check for targets
     expect(result.stdout).toContain('Targets');
-    expect(result.stdout).toContain('AGENTS.md');
+    expect(result.stdout).toContain('.skills');
 
     // Check for skill count
     expect(result.stdout).toContain('Skills: 2');
@@ -52,7 +52,7 @@ describe('info command', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const config = await fs.readJson(configPath);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    config.targets.push({ destination: 'CLAUDE.md' });
+    config.targets.push({ destination: '.more-skills' });
     await fs.writeJson(configPath, config, { spaces: 2 });
 
     const result = await execCli(['info'], {
@@ -61,8 +61,8 @@ describe('info command', () => {
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('Targets (2)');
-    expect(result.stdout).toContain('AGENTS.md');
-    expect(result.stdout).toContain('CLAUDE.md');
+    expect(result.stdout).toContain('.skills');
+    expect(result.stdout).toContain('.more-skills');
   });
 
   it('should display no targets when none are configured', async () => {
@@ -99,7 +99,6 @@ describe('info command', () => {
         skillDirectories: ['.claude/skills'],
         additionalSkills: [],
         ignore: [],
-        skillsSectionName: '## Additional Instructions',
       },
       { spaces: 2 }
     );

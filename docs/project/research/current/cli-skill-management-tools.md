@@ -9,7 +9,7 @@
 - [Skillz project documentation](../../../CLAUDE.md)
 - [Agent instructions in AGENTS.md](../../../AGENTS.md)
 
-* * *
+---
 
 ## Executive Summary
 
@@ -27,7 +27,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 4. Are there similar "write once, sync everywhere" patterns in adjacent domains we can learn from?
 
-* * *
+---
 
 ## Research Methodology
 
@@ -45,7 +45,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 - Developer blogs and forum discussions
 - Package registries (npm, PyPI)
 
-* * *
+---
 
 ## Research Findings
 
@@ -64,7 +64,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Direct competitor with similar goals. Focuses on MCP integration as primary distribution mechanism, whereas Skillz focuses on file-based sync to multiple targets.
 
-* * *
+---
 
 #### agentskills CLI
 
@@ -79,7 +79,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Complementary tool for skill discovery. Could potentially integrate with Skillz for installation workflow.
 
-* * *
+---
 
 #### SyncAI
 
@@ -94,7 +94,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Very similar to Skillz's core mission. Uses symlinks vs. Skillz's managed-section approach. Symlinks may be simpler but less flexible for per-target customization.
 
-* * *
+---
 
 #### Claude Agents Sync
 
@@ -109,7 +109,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Addresses specific Claude Code + AGENTS.md pattern. Skillz provides broader multi-target, multi-format support.
 
-* * *
+---
 
 #### Gemini CLI Skillz Extension
 
@@ -124,7 +124,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Shows demand for skill format portability. Validates Skillz's approach of standardizing on SKILL.md.
 
-* * *
+---
 
 #### MCP Prompt Registry
 
@@ -140,7 +140,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Solves related but different problem (prompt templates vs. agent skills). MCP integration is interesting alternative distribution mechanism.
 
-* * *
+---
 
 ### Broader Agentic CLI Tools (Not Skill-Focused)
 
@@ -157,7 +157,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Complementary to Skillz. Toad unifies agent invocation, Skillz unifies skill/instruction management.
 
-* * *
+---
 
 #### LLM (Simon Willison)
 
@@ -172,7 +172,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Different use case (direct LLM interaction vs. IDE assistant configuration).
 
-* * *
+---
 
 ### AI Coding Assistant Configuration Approaches
 
@@ -191,7 +191,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Skillz directly addresses Claude Code's skill format as a primary use case. The SKILL.md format is becoming a de facto standard.
 
-* * *
+---
 
 #### Cursor Rules
 
@@ -199,7 +199,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Details**:
 
-- Uses `.cursor/rules/` directory for instruction files
+- Uses `.cursor/rules/` directory for rule files
 - Supports `.md` and `.mdc` (markdown with metadata) formats
 - Rules can be project-specific or global
 - `.cursorrules` file deprecated in favor of CLAUDE.md
@@ -208,7 +208,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Cursor users must manually maintain separate rule files, creating duplication risk. The shift to CLAUDE.md shows convergence toward standard file names.
 
-* * *
+---
 
 #### Gemini CLI
 
@@ -224,7 +224,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Another major player adopting the `.md` configuration pattern. GEMINI.md vs CLAUDE.md shows need for multi-target sync tools like Skillz.
 
-* * *
+---
 
 #### GitHub Copilot Agent Skills
 
@@ -240,7 +240,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Major validation of SKILL.md as emerging standard. GitHub adoption significantly increases Skillz's potential value proposition.
 
-* * *
+---
 
 #### Aider
 
@@ -256,7 +256,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Aider focuses on single-project configuration rather than cross-tool skill sharing. YAML config is different paradigm from markdown-based instructions.
 
-* * *
+---
 
 ### Current Developer Sync Approaches
 
@@ -274,7 +274,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Simple and effective for single-direction sync, but brittle across platforms and doesn't support per-target customization.
 
-* * *
+---
 
 #### Hard Links
 
@@ -289,7 +289,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Solves some symlink limitations but still one-size-fits-all approach.
 
-* * *
+---
 
 #### Pointer Files
 
@@ -304,7 +304,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Low-tech solution that works but requires manual updates and doesn't provide true sync.
 
-* * *
+---
 
 #### Manual Copy-Paste
 
@@ -319,7 +319,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: The problem Skillz solves. Manual sync is current painful reality for most developers.
 
-* * *
+---
 
 ### Adjacent Domain Patterns
 
@@ -338,7 +338,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Inspiration for file syncing patterns, but symlink-only approach too limited for multi-format LLM configs. Lack of templating means no per-target customization.
 
-* * *
+---
 
 #### Chezmoi
 
@@ -355,7 +355,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Templates and multi-target support are good patterns to emulate. However, focused on cross-machine sync rather than cross-tool format transformation.
 
-* * *
+---
 
 #### Configuration Sync Tools (Syncthing, Mackup)
 
@@ -370,25 +370,25 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 **Assessment**: Solves different problem (cross-machine sync vs. cross-tool format adaptation). Skillz needs content transformation, not just file copying.
 
-* * *
+---
 
 ## Comparative Analysis
 
-| Criteria | Skillz | SyncAI | Skillport | Manual Symlinks | Dotfile Managers | MCP Prompt Registry |
-| --- | --- | --- | --- | --- | --- | --- |
-| Multi-tool support | ✅ | ✅ | ✅ | Limited | ❌ | Via MCP only |
-| Per-target templates | ✅ | ❌ | ❓ | ❌ | ✅ (Chezmoi) | ❌ |
-| Change detection | ✅ (hashing) | ❌ | ❓ | Instant | Varies | ❓ |
-| CLI workflow | ✅ | ✅ | ✅ | Manual | ✅ | ✅ |
-| Cross-platform | ✅ | ❓ | ✅ | Unix/Mac only | ✅ (Chezmoi) | ✅ |
-| Native mode support | ✅ | ❌ | ❓ | N/A | N/A | N/A |
-| SKILL.md format | ✅ | ❓ | ✅ | ✅ | N/A | ❌ (JSON) |
-| Watch mode | 🔜 (planned) | ❓ | ❓ | N/A | ✅ (Chezmoi) | ❓ |
-| Version control friendly | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Criteria                 | Skillz       | SyncAI | Skillport | Manual Symlinks | Dotfile Managers | MCP Prompt Registry |
+| ------------------------ | ------------ | ------ | --------- | --------------- | ---------------- | ------------------- |
+| Multi-tool support       | ✅           | ✅     | ✅        | Limited         | ❌               | Via MCP only        |
+| Per-target templates     | ✅           | ❌     | ❓        | ❌              | ✅ (Chezmoi)     | ❌                  |
+| Change detection         | ✅ (hashing) | ❌     | ❓        | Instant         | Varies           | ❓                  |
+| CLI workflow             | ✅           | ✅     | ✅        | Manual          | ✅               | ✅                  |
+| Cross-platform           | ✅           | ❓     | ✅        | Unix/Mac only   | ✅ (Chezmoi)     | ✅                  |
+| Native mode support      | ✅           | ❌     | ❓        | N/A             | N/A              | N/A                 |
+| SKILL.md format          | ✅           | ❓     | ✅        | ✅              | N/A              | ❌ (JSON)           |
+| Watch mode               | 🔜 (planned) | ❓     | ❓        | N/A             | ✅ (Chezmoi)     | ❓                  |
+| Version control friendly | ✅           | ✅     | ✅        | ✅              | ✅               | ✅                  |
 
 **Strengths/Weaknesses Summary**:
 
-- **Skillz**: Comprehensive feature set with templates, change detection, and both prompt/native sync modes. TypeScript/Node.js stack. Still under active development (75% complete). Differentiator is per-target template support and dual sync modes.
+- **Skillz**: Directory-based skill sync with change detection. TypeScript/Node.js stack. Still under active development.
 
 - **SyncAI**: Simple symlink-based approach. Good for basic use cases. Limited flexibility - one file fits all targets. No per-target customization.
 
@@ -400,7 +400,7 @@ Skillz addresses the fragmentation problem where Claude Code, Cursor, Aider, and
 
 - **MCP Prompt Registry**: Leverages Model Context Protocol. Different paradigm (prompt templates vs. agent skills). JSON format vs. markdown. Good for programmatic access.
 
-* * *
+---
 
 ## Best Practices
 
@@ -412,17 +412,17 @@ From analyzing existing tools and approaches, these patterns emerge:
 
 3. **Change Detection via Hashing**: Compare content hashes rather than timestamps to detect real changes. Skillz uses SHA-256 hashing. Avoids unnecessary syncs and provides reliable change tracking.
 
-4. **Template-Based Generation**: Support per-target customization via templates rather than one-size-fits-all copying. Chezmoi demonstrates this for dotfiles; Skillz applies it to LLM configs.
+4. **Directory-Based Sync**: Copy self-contained skill directories into predictable targets. This keeps source material inspectable and avoids generated rule-file drift.
 
-5. **Version Control Friendly**: Generate files in predictable, diffable format. Managed sections should have clear boundaries. All tools in this space prioritize git-friendliness.
+5. **Version Control Friendly**: Generate predictable directory trees that are easy to diff. All tools in this space prioritize git-friendliness.
 
-6. **Preserve Manual Edits**: When syncing to existing files, preserve content outside managed sections. Skillz's managed-section approach follows this principle.
+6. **Avoid Partial Writes**: Validate all target conflicts before copying so failed syncs do not leave half-updated target trees.
 
-7. **Fail Fast on Conflicts**: Validate all targets before making any changes (native mode). Prevents partial sync states that are hard to recover from.
+7. **Fail Fast on Conflicts**: Validate all targets before making any changes. Prevents partial sync states that are hard to recover from.
 
 8. **Standard File Formats**: Prefer markdown with YAML frontmatter for human readability and tool compatibility. SKILL.md format gaining adoption across Claude Code, GitHub Copilot, and Gemini extensions.
 
-* * *
+---
 
 ## Open Research Questions
 
@@ -440,7 +440,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 
 7. **Skill Composition**: Should skills be able to reference other skills? How to handle dependencies?
 
-* * *
+---
 
 ## Recommendations
 
@@ -451,28 +451,32 @@ From analyzing existing tools and approaches, these patterns emerge:
 1. The multi-tool sync problem is real and painful (manual copy-paste is most common approach)
 2. SKILL.md format is becoming a de facto standard (Anthropic, GitHub, community adoption)
 3. Existing solutions are either too simple (symlinks) or solve different problems (MCP, dotfiles)
-4. Skillz's differentiation (templates + dual sync modes + change detection) addresses unmet needs
+4. Skillz's differentiation (filesystem skill sync + change detection) addresses unmet needs
 
 ### Recommended Approach
 
 **Continue development of Skillz with these strategic priorities:**
 
 **1. Complete Core MVP (Target: Q1 2025)**
+
 - Finish remaining commands: `validate`, `config`, `watch`, `clean`
 - Solidify testing coverage and documentation
 - Release v1.0 with current feature set
 
 **2. MCP Integration (Target: Q2 2025)**
+
 - Add optional MCP server mode alongside file-based sync
 - Position Skillz as hybrid solution: file-based for immediate compatibility, MCP for future-proofing
 - Monitor MCP adoption trajectory (OpenAI, Google confirmed support)
 
 **3. Skills Discovery Integration**
+
 - Consider integration with anthropics/skills repository
 - Evaluate partnership/integration with agentskills CLI for installation workflow
 - Add `skillz install <skill-name>` command to fetch from registry
 
 **4. Enterprise Features (If Market Demand)**
+
 - Team collaboration features (shared skill repositories)
 - Approval workflows for skill changes
 - Multi-environment support (dev/staging/prod skill sets)
@@ -481,7 +485,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 
 - **Market Timing**: GitHub Copilot Agent Skills announcement (Dec 2025) validates SKILL.md standard at critical moment. First-mover advantage window still open.
 
-- **Differentiation Holds**: Template system + native/prompt dual modes + change detection remain unique. SyncAI and Skillport don't offer per-target customization.
+- **Differentiation Holds**: Filesystem skill sync plus change detection remains useful. SyncAI and Skillport do not focus on copied skill-directory targets.
 
 - **Hedge Against MCP**: File-based sync provides immediate value while MCP ecosystem matures. Hybrid approach captures both markets.
 
@@ -499,7 +503,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 
 4. **IDE Extension Path**: Build VS Code extension instead of CLI. Captures more users but higher development cost and platform lock-in.
 
-* * *
+---
 
 ## References
 
@@ -551,13 +555,14 @@ From analyzing existing tools and approaches, these patterns emerge:
 - [PromptLayer Documentation](https://www.promptlayer.com/)
 - [Stop Losing Prompts - Build MCP Prompt Registry](https://dev.to/stevengonsalvez/stop-losing-prompts-build-your-own-mcp-prompt-registry-4fi1)
 
-* * *
+---
 
 ## Appendices
 
 ### Appendix A: Directory Structure Patterns
 
 **Claude Code:**
+
 ```
 .claude/
 └── skills/
@@ -568,6 +573,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 ```
 
 **GitHub Copilot:**
+
 ```
 .github/
 └── skills/
@@ -578,6 +584,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 ```
 
 **Gemini CLI:**
+
 ```
 .gemini/
 └── skills/
@@ -585,6 +592,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 ```
 
 **Cursor:**
+
 ```
 .cursor/
 └── rules/
@@ -594,15 +602,16 @@ From analyzing existing tools and approaches, these patterns emerge:
 
 ### Appendix B: File Naming Conventions
 
-| Tool | Project Config | User Config | Skills Location |
-| --- | --- | --- | --- |
-| Claude Code | CLAUDE.md | ~/.claude/CLAUDE.md | .claude/skills/ |
-| Cursor | CLAUDE.md | N/A | .cursor/rules/ |
-| Gemini CLI | GEMINI.md | ~/.gemini/GEMINI.md | Various |
-| GitHub Copilot | AGENTS.md (?) | N/A | .github/skills/ |
-| Aider | .aider.conf.yml | ~/.aider.conf.yml | N/A |
+| Tool           | Project Config  | User Config         | Skills Location |
+| -------------- | --------------- | ------------------- | --------------- |
+| Claude Code    | CLAUDE.md       | ~/.claude/CLAUDE.md | .claude/skills/ |
+| Cursor         | CLAUDE.md       | N/A                 | .cursor/rules/  |
+| Gemini CLI     | GEMINI.md       | ~/.gemini/GEMINI.md | Various         |
+| GitHub Copilot | AGENTS.md (?)   | N/A                 | .github/skills/ |
+| Aider          | .aider.conf.yml | ~/.aider.conf.yml   | N/A             |
 
 **Observations:**
+
 - CLAUDE.md emerging as common project-level config file
 - AGENTS.md also widely used (originally from Claude ecosystem)
 - `.md` extension standard for configuration files
@@ -611,6 +620,7 @@ From analyzing existing tools and approaches, these patterns emerge:
 ### Appendix C: Sync Approach Comparison
 
 **Symlink Approach (Manual):**
+
 ```bash
 # Create AGENTS.md as source of truth
 echo "# Instructions" > AGENTS.md
@@ -625,7 +635,8 @@ ln -sf AGENTS.md GEMINI.md
 **Pros:** Instant sync, zero dependencies
 **Cons:** Platform-specific, all files identical (no customization)
 
-**Skillz Approach (Managed Sections):**
+**Skillz Approach (Filesystem Skills):**
+
 ```bash
 # Initialize configuration
 skillz init --preset agentsmd
@@ -633,17 +644,17 @@ skillz init --preset agentsmd
 # Skills stay in canonical location
 .claude/skills/python-expert/SKILL.md
 
-# Sync renders skills to targets with templates
+# Sync copies skills to target directories
 skillz sync
 
-# AGENTS.md gets managed section appended
-# .cursor/rules/skills.mdc gets different format
+# .skills/python-expert/SKILL.md is copied into the target tree
 ```
 
-**Pros:** Per-target customization, cross-platform, version-controlled
+**Pros:** Cross-platform, version-controlled, direct skill filesystem layout
 **Cons:** Requires build step (not instant sync)
 
 **MCP Approach (Skillport/Prompt Registry):**
+
 ```bash
 # Skills served via MCP protocol
 # Clients connect to MCP server
@@ -686,16 +697,17 @@ skillport serve
 
 ### Appendix E: Technology Stack Comparison
 
-| Tool | Language | Package Manager | Distribution | Stars (approx) |
-| --- | --- | --- | --- | --- |
-| Skillz | TypeScript | npm | npm, binary | N/A (new) |
-| SyncAI | ? | ? | GitHub | ~100-500 (est) |
-| Skillport | Go (likely) | go | ? | <100 (est) |
-| agentskills | TypeScript/JS | npm | npm | <100 (est) |
-| Chezmoi | Go | go | brew, binary | 12.5k+ |
-| LLM (Willison) | Python | pip | pip, brew | 4k+ |
+| Tool           | Language      | Package Manager | Distribution | Stars (approx) |
+| -------------- | ------------- | --------------- | ------------ | -------------- |
+| Skillz         | TypeScript    | npm             | npm, binary  | N/A (new)      |
+| SyncAI         | ?             | ?               | GitHub       | ~100-500 (est) |
+| Skillport      | Go (likely)   | go              | ?            | <100 (est)     |
+| agentskills    | TypeScript/JS | npm             | npm          | <100 (est)     |
+| Chezmoi        | Go            | go              | brew, binary | 12.5k+         |
+| LLM (Willison) | Python        | pip             | pip, brew    | 4k+            |
 
 **Observations:**
+
 - TypeScript/Node.js common for LLM tooling (good ecosystem)
 - Go popular for system tools (Chezmoi, likely Skillport)
 - Distribution via package managers + standalone binaries is standard

@@ -3,40 +3,36 @@ import { z } from 'zod';
 /**
  * Schema for Target
  */
-export const TargetSchema = z.object({
-  destination: z.string().min(1, 'Target destination is required'),
-  template: z.string().optional(),
-  preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
-  pathStyle: z.enum(['relative', 'absolute']).optional(),
-  syncMode: z.enum(['prompt', 'native']).optional(),
-  deleteExistingFromTarget: z.boolean().optional(),
-});
+export const TargetSchema = z
+  .object({
+    destination: z.string().min(1, 'Target destination is required'),
+    deleteExistingFromTarget: z.boolean().optional(),
+  })
+  .strict();
 
 /**
  * Schema for Config
  */
-export const ConfigSchema = z.object({
-  version: z.string(),
-  preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
-  targets: z.array(TargetSchema), // Allow empty array for skill management only
-  skillDirectories: z.array(
-    z.object({
-      localPath: z.string().min(1, 'Skill directory localPath is required'),
-      remotePath: z.string().min(1).optional(),
-      syncFromRoot: z.boolean().optional(),
-      include: z.array(z.string()).optional(),
-      ignore: z.array(z.string()).optional(),
-    })
-  ),
-  additionalSkills: z.array(z.string()),
-  ignore: z.array(z.string()),
-  skillsSectionName: z.string().default('## Additional Instructions'),
-  defaultEditor: z.string().optional(),
-  autoSyncAfterEdit: z.boolean().optional(),
-  template: z.string().optional(),
-  pathStyle: z.enum(['relative', 'absolute']).optional().default('relative'),
-  syncMode: z.enum(['prompt', 'native']).optional().default('prompt'),
-});
+export const ConfigSchema = z
+  .object({
+    version: z.string(),
+    preset: z.enum(['agentsmd', 'aider', 'cursor', 'claude']).optional(),
+    targets: z.array(TargetSchema), // Allow empty array for skill management only
+    skillDirectories: z.array(
+      z.object({
+        localPath: z.string().min(1, 'Skill directory localPath is required'),
+        remotePath: z.string().min(1).optional(),
+        syncFromRoot: z.boolean().optional(),
+        include: z.array(z.string()).optional(),
+        ignore: z.array(z.string()).optional(),
+      })
+    ),
+    additionalSkills: z.array(z.string()),
+    ignore: z.array(z.string()),
+    defaultEditor: z.string().optional(),
+    autoSyncAfterEdit: z.boolean().optional(),
+  })
+  .strict();
 
 /**
  * Schema for skill frontmatter

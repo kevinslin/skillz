@@ -2,6 +2,10 @@ import path from 'path';
 import { fileExists } from '../utils/fs-helpers.js';
 import type { SkillDirectory, Target } from '../types/index.js';
 
+function defaultTarget(): Target {
+  return { destination: '.skills', deleteExistingFromTarget: true };
+}
+
 /**
  * Represents a detected development environment
  */
@@ -25,7 +29,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Codex-style AGENTS.md workspace',
     preset: 'agentsmd',
     markers: ['AGENTS.md'],
-    targets: [{ destination: 'AGENTS.md' }],
+    targets: [defaultTarget()],
     skillDirectories: [{ localPath: '.claude/skills' }],
   },
   {
@@ -34,7 +38,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Cursor IDE with .cursor/rules',
     preset: 'cursor',
     markers: ['.cursor/rules'],
-    targets: [{ destination: '.cursor/rules/skills.mdc' }],
+    targets: [defaultTarget()],
     skillDirectories: [{ localPath: '.claude/skills' }],
   },
   {
@@ -43,7 +47,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Claude Code with CLAUDE.md',
     preset: 'claude',
     markers: ['CLAUDE.md', '.claude/CLAUDE.md'],
-    targets: [{ destination: 'CLAUDE.md' }],
+    targets: [defaultTarget()],
     skillDirectories: [{ localPath: '.claude/skills' }],
   },
   {
@@ -52,7 +56,7 @@ export const ENVIRONMENTS: DetectedEnvironment[] = [
     description: 'Aider conventions file',
     preset: 'aider',
     markers: ['.aider/conventions.md'],
-    targets: [{ destination: '.aider/conventions.md' }],
+    targets: [defaultTarget()],
     skillDirectories: [{ localPath: '.claude/skills' }],
   },
 ];

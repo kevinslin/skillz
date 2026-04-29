@@ -17,7 +17,6 @@ type InitOptions = {
   globalSkills?: boolean;
   remote?: boolean;
   sync?: boolean;
-  template?: string;
   nonInteractive?: boolean;
 };
 
@@ -26,8 +25,6 @@ type SyncOptions = {
   force?: boolean;
   verbose?: boolean;
   only?: string[];
-  pathStyle?: string;
-  template?: string;
 };
 
 type ListOptions = {
@@ -63,12 +60,11 @@ program
   .command('init')
   .description('Initialize skillz in the current directory')
   .option('--preset <name>', 'Use a preset configuration (agentsmd, aider)')
-  .option('--target <file>', 'Specify custom target file path')
+  .option('--target <directory>', 'Specify custom target directory path')
   .option('--additional-skills <path>', 'Add additional skill directories', collect, [])
   .option('--global-skills', 'Include global ~/.claude/skills/ directory')
   .option('--remote', 'Pull skills from remotePath into .skills using existing skillz.json')
   .option('--no-sync', 'Skip initial sync after initialization')
-  .option('--template <path>', 'Custom template for skill formatting')
   .option('--non-interactive', 'Run in non-interactive mode (auto-confirm all prompts)')
   .action(async (options: InitOptions) => {
     try {
@@ -82,16 +78,11 @@ program
 // Sync command
 program
   .command('sync')
-  .description('Synchronize skills from source directories to target files')
+  .description('Synchronize skills from source directories to target directories')
   .option('--dry-run', 'Show what would be synced without making changes')
   .option('--force', 'Overwrite target even if no changes detected')
   .option('--verbose', 'Show detailed operation logs')
   .option('--only <skill-name>', 'Sync only specific skill(s)', collect, [])
-  .option(
-    '--path-style <style>',
-    'Path style for skill links: relative, absolute (or shorthand: rel, abs)'
-  )
-  .option('--template <name>', 'Template: default, readme, or path to .hbs file')
   .action(async (options: SyncOptions) => {
     try {
       await syncCommand(options);
