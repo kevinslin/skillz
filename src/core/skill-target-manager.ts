@@ -65,7 +65,7 @@ function formatConflictsError(
 
 /**
  * Validate targets for conflicts before copying any skills.
- * Skips validation for skills that are already in cache.
+ * Skips targets configured to replace existing paths and skills already in cache.
  */
 export async function validateSkillTargets(
   targets: Target[],
@@ -76,6 +76,10 @@ export async function validateSkillTargets(
   const conflicts: Array<{ target: string; skill: string; path: string }> = [];
 
   for (const target of targets) {
+    if (target.deleteExistingFromTarget === true) {
+      continue;
+    }
+
     const targetDir = resolveDirectoryPath(target.destination, cwd);
 
     for (const skill of skills) {

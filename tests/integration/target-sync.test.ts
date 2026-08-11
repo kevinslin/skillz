@@ -130,6 +130,31 @@ describe('target directory sync', () => {
     expect(result.stderr).toContain('destination conflicts detected');
   });
 
+  it('should replace conflicting paths when deleteExistingFromTarget is set', async () => {
+    const config: SkillsConfig = {
+      version: '2.0',
+      targets: [{ destination: '.skills', deleteExistingFromTarget: true }],
+      skillDirectories: [{ localPath: '.claude/skills' }],
+      additionalSkills: [],
+      ignore: [],
+    };
+
+    await fs.writeJson(path.join(workspace.root, 'skillz.json'), config, {
+      spaces: JSON_INDENTATION_SPACES,
+    });
+
+    const emptyDirectory = path.join(workspace.root, '.skills/python-expert');
+    const existingFile = path.join(workspace.root, '.skills/react-patterns');
+    await fs.ensureDir(emptyDirectory);
+    await fs.writeFile(existingFile, 'conflict');
+
+    const result = await execCli(['sync'], { cwd: workspace.root });
+
+    expect(result.exitCode).toBe(EXIT_CODE_SUCCESS);
+    expect(await fs.pathExists(path.join(emptyDirectory, 'SKILL.md'))).toBe(true);
+    expect(await fs.pathExists(path.join(existingFile, 'SKILL.md'))).toBe(true);
+  });
+
   it('should remove pre-existing skills when deleteExistingFromTarget is set', async () => {
     const config: SkillsConfig = {
       version: '2.0',
